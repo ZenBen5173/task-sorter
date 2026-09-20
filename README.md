@@ -91,7 +91,9 @@ stakes, so the player is judging, not guessing.
 - GOOD — `'Essay due in 2 weeks, 20% of grade'` — clearly Do Later
 
 The `why` is shown on the END SCREEN, in the "What you missed" list, not
-during the round. A banner mid-round is unreadable at speed and it covers
+during the round. **If you FAILED, the reason is all you get** - the right
+corner is held back until you pass, so the retry is where the thinking
+happens instead of you being handed the answer and forgetting it. A banner mid-round is unreadable at speed and it covers
 the card you are meant to be looking at. This is still the line that does
 the teaching, so write it properly. If you cannot write a
 `why` that convinces you, cut the card.
@@ -480,3 +482,27 @@ Building it for real would mean: a hosted server (or a service such as
 HUAWEI's own game services), player accounts or at least anonymous IDs, a
 matchmaking queue, sending both players the SAME shuffled deck so it is fair,
 and deciding what happens when someone's connection drops mid-round.
+
+---
+
+## Putting it online
+
+The repo is committed and ready. It is a static site - no build step - so a
+host only has to serve the folder.
+
+**1. Make a GitHub repo** at <https://github.com/new>. Call it `task-sorter`.
+Do NOT tick "Add a README", the repo already has one. Then, in this folder:
+
+```bash
+git remote add origin https://github.com/YOUR-USERNAME/task-sorter.git
+git branch -M main
+git push -u origin main
+```
+
+**2. Deploy** at <https://vercel.com/new>. Sign in with GitHub, pick the repo,
+and press Deploy. Framework preset: **Other**. No build command, no output
+directory - `vercel.json` already says what is needed. You get a public
+`https://task-sorter-....vercel.app` address in about a minute.
+
+`archive/` (the old Focus Village build) is in `.gitignore`, so it is not
+uploaded and does not count towards the competition's 100 MB.
