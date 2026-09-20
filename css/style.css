@@ -1569,3 +1569,78 @@ body {
 }
 .hero-name:hover { border-bottom-color: var(--line); }
 .hero-name:focus { background: var(--bg-1); border-bottom-color: var(--good); }
+
+/* ================= ACCOUNT =================
+   Sits at the top of the Character screen. Two states in one box:
+   signed out (name, password, two buttons) or signed in (one line and
+   a way out). Only one is ever visible. */
+.acct {
+  margin-bottom: 14px;
+  padding: 13px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.acct-lead {
+  margin: 0 0 11px;
+  font-size: 12.5px; line-height: 1.5;
+  color: var(--tx-dim);
+}
+.acct-lead b { display: block; color: var(--tx-hi); font-size: 13.5px; margin-bottom: 2px; }
+
+.acct-fields { display: flex; flex-direction: column; gap: 7px; margin-bottom: 9px; }
+.acct-fields input {
+  width: 100%;
+  padding: 10px 11px;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit; font-size: 14px;
+  color: var(--tx-hi);
+  outline: none;
+  transition: border-color .16s;
+}
+.acct-fields input::placeholder { color: var(--tx-dim); }
+.acct-fields input:focus { border-color: var(--good); }
+
+.acct-buttons { display: flex; gap: 8px; }
+.acct-buttons .btn { flex: 1 1 0; font-size: 13px; padding: 10px 8px; }
+
+.acct-privacy {
+  margin: 9px 0 0;
+  font-size: 11px; font-style: italic;
+  color: var(--tx-dim);
+  text-align: center;
+}
+
+/* signed in */
+.acct-in { display: flex; align-items: center; gap: 9px; }
+.acct-dot {
+  flex: 0 0 auto;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--good);
+  box-shadow: 0 0 7px rgba(92,196,106,.8);
+}
+.acct-who { flex: 1; min-width: 0; font-size: 13px; color: var(--tx-dim); }
+.acct-who b { color: var(--tx-hi); }
+
+/* whatever just happened, good or bad */
+.acct-msg {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px; line-height: 1.4;
+  background: rgba(224,82,74,.1);
+  border: 1px solid rgba(224,82,74,.35);
+  color: #f0938c;
+}
+.acct-msg.is-good {
+  background: rgba(92,196,106,.1);
+  border-color: rgba(92,196,106,.35);
+  color: #8fe09a;
+}
+.acct-msg.is-busy {
+  background: var(--bg-3);
+  border-color: var(--line);
+  color: var(--tx-dim);
+}

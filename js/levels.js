@@ -161,8 +161,16 @@ var Progress = (function () {
     }
   }
 
+  /* Anyone who wants to know when the save changed. The cloud save uses
+     this to push progress up without every single button in the game
+     having to remember to call it. */
+  var listeners = [];
+
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
+    for (var i = 0; i < listeners.length; i++) {
+      try { listeners[i](data); } catch (e) {}
+    }
   }
 
   return {
@@ -229,6 +237,29 @@ var Progress = (function () {
     rivalsBeaten: function () { return data.rivals || 0; },
     beatRival: function (n) { if (n > (data.rivals || 0)) { data.rivals = n; save(); } },
 
-    reset: function () { data = blank(); save(); }
+    reset: function () { data = blank(); save(); },
+
+    /* ---- the whole save, for the cloud ----
+       `all` hands out a copy so nothing outside can quietly edit the
+       live save. `replaceAll` takes a whole save back, keeping only the
+       keys this version of the game knows about, so a save written by a
+       newer or older build can never break this one. */
+    all: function () { return JSON.parse(JSON.stringify(data)); },
+
+    replaceAll: function (incoming) {
+      if (!incoming || typeof incoming !== 'object') return false;
+      var fresh = blank();
+      for (var k in fresh) {
+        if (incoming[k] !== undefined && incoming[k] !== null) fresh[k] = incoming[k];
+      }
+      if (!Array.isArray(fresh.owned)) fresh.owned = [];
+      if (!fresh.equipped) fresh.equipped = blank().equipped;
+      data = fresh;
+      save();
+      return true;
+    },
+
+    /** Called after every save, with the new save. */
+    subscribe: function (fn) { if (typeof fn === 'function') listeners.push(fn); }
   };
 })();

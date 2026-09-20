@@ -509,3 +509,53 @@ is public, so the forwarding address is the right thing to use.
 
 `archive/` (the old Focus Village build) is in `.gitignore`, so it is not
 uploaded and does not count towards the competition's 100 MB.
+
+---
+
+## Accounts and saving online
+
+Make an account with a **username and a password**. Progress is then kept on a
+server, so the same account picks up where it left off on any device.
+
+**No email is ever asked for.** The username becomes
+`username@tasksorter.invalid` behind the scenes. `.invalid` is reserved by
+RFC 2606 so it can never be registered by anyone and nothing can ever be
+delivered to a real person. This is a game for children; the less personal
+information it holds, the better.
+
+**The game still works with no internet.** All of this sits on top of the
+ordinary browser save. If the server cannot be reached the game carries on
+exactly as before.
+
+### Which save wins
+
+| Signing in to... | What happens |
+|---|---|
+| an account never played | the progress on this device is uploaded to it |
+| an account with progress | the account's progress replaces what is on this device |
+
+Blunt on purpose. Merging two saves would have to guess, and a guess that
+silently deletes somebody's coins is worse than a rule you can predict. The
+game says out loud which way the save went.
+
+### The server
+
+Supabase project **task-sorter** (`grhnczwqilayvxfaypmj`), Singapore region,
+free tier. One table, `profiles`: the player id, their username, and the whole
+save as JSON.
+
+Row Level Security is on, and the three policies only ever match
+`auth.uid() = id`. **A player can only read and write their own row**, and the
+database enforces it - not the game - so a tampered copy of the game cannot
+reach anyone else's save.
+
+The key in `js/cloud.js` is a publishable key. It is meant to be public and
+grants nothing by itself.
+
+### Before accounts will work
+
+New Supabase projects require a new account to confirm its email address, and
+a `.invalid` address can never receive one. Turn that off once, in the
+dashboard:
+
+**Authentication -> Sign In / Providers -> Email -> "Confirm email" OFF**

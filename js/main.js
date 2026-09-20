@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', function () {
   Hero.init();
   Themes.init();
   Tips.init();
+  Cloud.init();
   var coinIcons = document.querySelectorAll('.tab-coin-ico');
   for (var i = 0; i < coinIcons.length; i++) Sprites.apply(coinIcons[i], 'coin');
 
@@ -105,6 +106,71 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
     UI.showScreen('levels');
+  });
+
+  /* ---- account ---- */
+
+  function acctMsg(text, kind) {
+    var el = UI.$('acct-msg');
+    el.hidden = !text;
+    el.textContent = text || '';
+    el.className = 'acct-msg' + (kind ? ' is-' + kind : '');
+  }
+
+  function acctBusy(on) {
+    ['btn-signin', 'btn-signup', 'btn-signout'].forEach(function (id) {
+      UI.$(id).disabled = on;
+    });
+  }
+
+  /* One place decides what the account box looks like, and it runs on
+     every change - signing in, signing out, a failed upload. Nothing
+     else is allowed to poke at those elements. */
+  Cloud.onChange(function (state) {
+    UI.$('acct-in').hidden = !state.signedIn;
+    UI.$('acct-out').hidden = state.signedIn;
+    UI.$('acct-name').textContent = state.username || '';
+    if (state.error) acctMsg(state.error, null);
+  });
+
+  function tryAccount(which) {
+    var name = UI.$('acct-user').value.trim();
+    var pass = UI.$('acct-pass').value;
+    acctBusy(true);
+    acctMsg(which === 'up' ? 'Making your account...' : 'Signing in...', 'busy');
+
+    var run = which === 'up' ? Cloud.signUp(name, pass) : Cloud.signIn(name, pass);
+    run.then(function (what) {
+      UI.$('acct-pass').value = '';
+      /* Say which way the save went. Somebody whose progress was just
+         replaced by their account deserves to be told, not left
+         wondering where their coins went. */
+      acctMsg(what === 'downloaded'
+        ? 'Signed in. Your saved progress has been loaded onto this device.'
+        : 'Signed in. The progress on this device is now saved to your account.',
+        'good');
+      paintLevels();
+      Hero.paint();
+      UI.$('hero-name').value = Progress.heroName();
+      Themes.apply();
+    }).catch(function (e) {
+      acctMsg(e.message || 'That did not work', null);
+    }).then(function () {
+      acctBusy(false);
+    });
+  }
+
+  UI.$('btn-signin').addEventListener('click', function () { tryAccount('in'); });
+  UI.$('btn-signup').addEventListener('click', function () { tryAccount('up'); });
+  UI.$('acct-pass').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') tryAccount('in');
+    e.stopPropagation();
+  });
+  UI.$('acct-user').addEventListener('keydown', function (e) { e.stopPropagation(); });
+
+  UI.$('btn-signout').addEventListener('click', function () {
+    Cloud.signOut();
+    acctMsg('Signed out. Your progress is still here on this device.', 'good');
   });
 
   UI.$('tab-guide').addEventListener('click', function () {

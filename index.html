@@ -232,6 +232,39 @@
     </header>
 
     <div class="hero-body">
+
+      <!-- ==================== ACCOUNT ====================
+           A username and a password. No email is asked for, ever -
+           see the note at the top of js/cloud.js for why. -->
+      <div class="acct" id="acct">
+        <div class="acct-in" id="acct-in" hidden>
+          <span class="acct-dot"></span>
+          <span class="acct-who">Signed in as <b id="acct-name"></b></span>
+          <button class="btn btn-ghost btn-tiny" id="btn-signout" type="button">Sign out</button>
+        </div>
+
+        <div class="acct-out" id="acct-out">
+          <p class="acct-lead">
+            <b>Save your progress online.</b>
+            Make an account and your levels, coins and gear follow you to any
+            phone or computer.
+          </p>
+          <div class="acct-fields">
+            <input id="acct-user" type="text" maxlength="14" autocomplete="username"
+                   autocapitalize="none" spellcheck="false" placeholder="Username">
+            <input id="acct-pass" type="password" maxlength="64" autocomplete="current-password"
+                   placeholder="Password">
+          </div>
+          <div class="acct-buttons">
+            <button class="btn btn-primary" id="btn-signin" type="button">Sign in</button>
+            <button class="btn" id="btn-signup" type="button">Create account</button>
+          </div>
+          <p class="acct-privacy">No email needed. Just a name you make up.</p>
+        </div>
+
+        <p class="acct-msg" id="acct-msg" hidden></p>
+      </div>
+
       <div class="hero-stage">
         <button class="slot slot-left" id="slot-pet" type="button">
           <span class="slot-k">Pet</span>
@@ -440,6 +473,7 @@
 <script src="js/battle.js"></script>
 <script src="js/sprites.js"></script>
 <script src="js/themes.js"></script>
+<script src="js/cloud.js"></script>
 <script src="js/tips.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/game.js"></script>
