@@ -1,0 +1,1571 @@
+/* ============================================================
+   Task Sorter - styles
+   The four corner colours are the game's language. They are used
+   identically everywhere: corners, card glow, floating points.
+   ============================================================ */
+
+:root {
+  --bg-0: #0e1218;
+  --bg-1: #12161b;
+  --bg-2: #1a212a;
+  --bg-3: #232c37;
+  --line: #2e3945;
+
+  --tx-hi: #eef2f6;
+  --tx: #c3ccd6;
+  --tx-dim: #8794a1;
+
+  /* the four boxes */
+  --now:   #e0524a;
+  --later: #4a86c4;
+  --give:  #f2a03d;
+  --drop:  #7a8290;
+
+  --good: #5cc46a;
+  --gold: #f2c14e;
+
+  --spring: cubic-bezier(.2, .9, .25, 1);
+  --snap: cubic-bezier(.34, 1.5, .5, 1);
+
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0; padding: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+body {
+  background: var(--bg-1);
+  color: var(--tx);
+  font-family: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+#app {
+  position: relative;
+  width: 100%; height: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  background: var(--bg-1);
+  overflow: hidden;
+}
+
+.px-art {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+}
+
+/* ---------------- screens ---------------- */
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  padding-top: var(--safe-t);
+}
+.screen.is-on { display: flex; animation: screen-in .25s var(--spring); }
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---------------- buttons ---------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: 14px 22px;
+  font: inherit; font-weight: 700;
+  color: var(--tx-hi);
+  background: var(--bg-3);
+  cursor: pointer;
+  transition: transform .15s var(--snap);
+}
+.btn:active { transform: scale(.95); }
+.btn-lg { font-size: 18px; padding: 16px 30px; width: 100%; max-width: 300px; }
+.btn-primary {
+  background: linear-gradient(180deg, #6bd07a, var(--good));
+  color: #06180a;
+  box-shadow: 0 8px 22px rgba(92,196,106,.3);
+}
+.btn-ghost { background: none; color: var(--tx-dim); }
+
+/* ---------------- title ---------------- */
+
+/* ---- The home screen background ----
+   This is already wired up for a picture. To use one:
+
+       save your image as   assets/home.jpg
+
+   That is the whole job - nothing here needs editing. Until that file
+   exists the browser just ignores the line and you get the plain dark
+   blue underneath, so the game never breaks either way.
+
+   Keep it under about 300 KB. The whole game is 121 KB right now, so a
+   big photo would be the largest thing in it by far.
+   Other names work too - change the two url() lines to match. */
+#screen-title {
+  align-items: center; justify-content: center;
+  padding: 24px;
+  background:
+    url('../assets/home.jpg') center / cover no-repeat,
+    radial-gradient(120% 70% at 50% 0%, #22303f, transparent 70%),
+    var(--bg-1);
+}
+
+/* Darkens the picture behind the words. Without this the white logo and
+   the grey hint text vanish into a bright sky. Harmless when there is no
+   picture - it just deepens the blue slightly. */
+#screen-title::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(8,6,18,.55), rgba(8,6,18,.25) 45%, rgba(8,6,18,.62));
+  pointer-events: none;
+  z-index: 0;
+}
+.title-wrap { position: relative; z-index: 1; }
+
+.title-wrap { width: 100%; max-width: 360px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+
+.eyebrow {
+  margin: 0 0 10px;
+  font-size: 11.5px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--tx-dim);
+}
+.logo {
+  margin: 0 0 12px;
+  font-size: 46px; font-weight: 700; line-height: .95;
+  letter-spacing: -.03em; color: var(--tx-hi);
+}
+.logo span { color: var(--gold); }
+.tagline { margin: 0 0 26px; color: var(--tx-dim); font-size: 15.5px; }
+
+.legend {
+  width: 100%;
+  display: flex; flex-direction: column; gap: 1px;
+  margin-bottom: 28px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.legend-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 10px 14px;
+  background: var(--bg-2);
+  font-size: 13.5px;
+}
+.legend-row b { color: var(--tx-hi); }
+.legend-row span { color: var(--tx-dim); font-size: 12.5px; }
+.legend-row:nth-child(1) b { color: var(--now); }
+.legend-row:nth-child(2) b { color: var(--later); }
+.legend-row:nth-child(3) b { color: var(--give); }
+.legend-row:nth-child(4) b { color: var(--drop); }
+
+.hint-keys { margin: 14px 0 0; font-size: 12px; color: var(--tx-dim); }
+
+/* ---------------- level map ---------------- */
+
+.lv-head {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 16px 8px;
+}
+.lv-head > div { flex: 1; min-width: 0; }
+/* Sits on its own row above the title: sharing a line squeezed the pack
+   name down to one letter per line on a phone. min-height keeps it a real
+   tap target - at 22px tall a thumb misses it more often than it hits. */
+.btn-back {
+  flex: 0 0 100%;
+  justify-content: flex-start;
+  min-height: 44px;
+  padding: 10px 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.btn-tiny { font-size: 11.5px; padding: 8px 12px; }
+.lv-title { margin: 0; font-size: 21px; color: var(--tx-hi); letter-spacing: -.02em; }
+.lv-sub { margin: 0; font-size: 12px; color: var(--tx-dim); }
+
+/* The scene the trail winds through: a pine forest at golden hour.
+   Drawn entirely from gradients - no picture file - so it costs almost
+   nothing in size and stays sharp on any screen.
+
+   Built back to front, like a stage set:
+     1. the sky through the canopy, bright at the top, dark at the floor
+     2. warm light pouring in from above, and two slanting sunbeams
+     3. a far line of pines, pale and misty                (::before)
+     4. a near line of pines along the bottom, almost black (::after)
+     5. fireflies drifting over the top of it all           (.deco)
+
+   Every pine is one CSS triangle. A conic gradient drawn from a point
+   at the top of a tile, 60 degrees wide and pointing down, fills a
+   triangle whose point is at the top - which is a pine tree. Repeat it
+   sideways and you have a treeline. Two rows at different sizes and
+   shades, offset from each other, are what make it read as a forest
+   rather than a row of teeth.
+
+   To use a real forest photo instead, drop it in assets/ and add:
+       background-image: url('../assets/forest.jpg');
+       background-size: cover;
+   above the gradient stack below. */
+.lv-scene {
+  position: relative;
+  flex: 1; min-height: 0;
+  margin: 4px 12px calc(14px + var(--safe-b));
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid #2c4a33;
+  background:
+    /* two sunbeams slanting down through the trees */
+    linear-gradient(112deg, transparent 34%, rgba(255,236,170,.10) 40%, transparent 47%),
+    linear-gradient(112deg, transparent 55%, rgba(255,236,170,.07) 59%, transparent 64%),
+    /* the bright gap in the canopy the light comes through */
+    radial-gradient(ellipse 70% 38% at 50% 0%, rgba(246,232,160,.34), transparent 72%),
+    /* a band of mist lying just below the far treeline */
+    linear-gradient(180deg, transparent 24%, rgba(200,226,190,.12) 32%, transparent 44%),
+    /* the forest itself, light up top, dark on the floor */
+    linear-gradient(180deg, #5d8a5f 0%, #37623f 30%, #214430 62%, #132a1d 100%);
+}
+
+.lv-scene::before,
+.lv-scene::after {
+  content: '';
+  position: absolute; inset: 0;
+  pointer-events: none;
+}
+
+/* the far treeline: small, pale, soft - distance and mist.
+
+   Each tile is at least as WIDE as its triangle is at the base (1.155 x
+   the height, for a 60 degree tree). Any narrower and the neighbours
+   overlap so much that their lower halves fuse into one flat strip, and
+   the forest turns into a hedge with teeth on top. */
+.lv-scene::before {
+  background:
+    /* mist drifting over the foot of the far trees, so they fade into
+       the forest instead of stopping on a ruler-straight line */
+    linear-gradient(180deg, transparent 23%, rgba(150,190,150,.95) 31%, transparent 41%),
+    conic-gradient(from 150deg at 50% 0, #739e73 0 60deg, transparent 0)
+      0 15% / 54px 46px repeat-x,
+    conic-gradient(from 150deg at 50% 0, #5f8b62 0 60deg, transparent 0)
+      27px 20% / 68px 58px repeat-x,
+    conic-gradient(from 150deg at 50% 0, #527d57 0 60deg, transparent 0)
+      11px 24% / 50px 42px repeat-x;
+  opacity: .7;
+}
+
+/* the near treeline: big, dark, right along the bottom edge */
+.lv-scene::after {
+  background:
+    conic-gradient(from 150deg at 50% 0, #0f2217 0 60deg, transparent 0)
+      0 100% / 62px 88px repeat-x,
+    conic-gradient(from 150deg at 50% 0, #17301f 0 60deg, transparent 0)
+      31px 100% / 74px 116px repeat-x;
+}
+/* the winding trail */
+.lv-path { position: absolute; inset: 0; width: 100%; height: 100%; }
+.trail-base {
+  fill: none;
+  stroke: #e8dcc0;
+  stroke-width: 16;
+  stroke-linecap: round;
+  opacity: .95;
+}
+.trail-dash {
+  fill: none;
+  stroke: #c9b894;
+  stroke-width: 16;
+  stroke-linecap: butt;
+  stroke-dasharray: 2 10;
+  opacity: .8;
+}
+
+
+/* the place name, on a ribbon */
+.lv-ribbon {
+  position: absolute;
+  /* tucked into the empty bottom-right of the trail, clear of every marker */
+  left: 62%; top: 93%;
+  transform: translate(-50%, -50%);
+  padding: 6px 20px;
+  background: linear-gradient(180deg, #f4e4bd, #e3cd9b);
+  color: #5a3c1c;
+  font-size: 13px; font-weight: 800;
+  letter-spacing: .02em;
+  border-radius: 4px;
+  box-shadow: 0 3px 0 #b99a6a, 0 8px 18px rgba(0,0,0,.35);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
+}
+.lv-ribbon::before, .lv-ribbon::after {
+  content: '';
+  position: absolute; top: 0; width: 12px; height: 100%;
+  background: linear-gradient(180deg, #d8c08d, #c4a97a);
+}
+.lv-ribbon::before { left: -10px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 40% 50%); }
+.lv-ribbon::after  { right: -10px; clip-path: polygon(0 0, 100% 0, 60% 50%, 100% 100%, 0 100%); }
+
+/* a level marker sitting on the trail */
+.lv-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 58px; height: 58px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  z-index: 4;
+  transition: transform .16s var(--snap);
+}
+.lv-node:active { transform: translate(-50%, -50%) scale(.9); }
+.lv-node.is-locked { cursor: default; }
+
+.lv-face {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  font-size: 24px; font-weight: 800;
+  color: #2a3a1e;
+  background: linear-gradient(180deg, #9fe08a, #6cbf5c);
+  border: 3px solid #f4f6ef;
+  box-shadow: 0 4px 0 #3f7a36, 0 8px 16px rgba(0,0,0,.4);
+}
+.lv-node.is-locked .lv-face {
+  background: linear-gradient(180deg, #5a6470, #444d58);
+  border-color: #7a838f;
+  box-shadow: 0 4px 0 #2c333c, 0 8px 16px rgba(0,0,0,.4);
+  font-size: 20px;
+}
+.lv-face.is-lock { color: #cfd6de; }
+
+/* beaten levels show the grade in its colour */
+.lv-node.is-done .lv-face {
+  background: linear-gradient(180deg, #ffe9a8, #f0c75a);
+  box-shadow: 0 4px 0 #a8791a, 0 8px 16px rgba(0,0,0,.4);
+  color: #4a3410;
+}
+.lv-face.grade-S { color: #7a4a00; }
+.lv-face.grade-A { color: #2c5a24; }
+.lv-face.grade-B { color: #24405a; }
+.lv-face.grade-C { color: #4a4a4a; }
+
+/* the one you should play next gently bounces */
+.lv-node.is-next { animation: node-bob 1.6s ease-in-out infinite; }
+@keyframes node-bob {
+  0%, 100% { transform: translate(-50%, -50%); }
+  50%      { transform: translate(-50%, calc(-50% - 6px)); }
+}
+.lv-node.is-next .lv-face { box-shadow: 0 4px 0 #3f7a36, 0 0 0 6px rgba(159,224,138,.25), 0 8px 16px rgba(0,0,0,.4); }
+
+/* ---------------- HUD ---------------- */
+
+.hud {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 12px 16px 6px;
+}
+.hud-k {
+  display: block;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--tx-dim);
+}
+.hud-clock b { font-size: 22px; font-weight: 700; color: var(--tx-hi); font-variant-numeric: tabular-nums; }
+.hud-clock { text-align: right; }
+
+.odo { display: flex; height: 1.15em; overflow: hidden; font-size: 24px; font-weight: 700; color: var(--tx-hi); font-variant-numeric: tabular-nums; }
+.odo-col { display: block; width: .62em; height: 1.15em; overflow: hidden; }
+.odo-strip { display: block; transition: transform .35s var(--spring); will-change: transform; }
+.odo-cell { display: block; height: 1.15em; line-height: 1.15em; text-align: center; }
+
+.streak {
+  font-size: 26px; font-weight: 700;
+  color: var(--tx-dim);
+  font-variant-numeric: tabular-nums;
+  transition: color .2s;
+}
+.streak.is-hot { color: var(--gold); text-shadow: 0 0 18px rgba(242,193,78,.5); }
+.streak.punch { animation: punch .3s var(--snap); }
+@keyframes punch {
+  0% { transform: scale(1); } 45% { transform: scale(1.35); } 100% { transform: scale(1); }
+}
+
+/* ---------------- shield strip ----------------
+   Used to sit beside the desk meter. The desk is gone, so this holds
+   the row on its own and keeps the arena from jumping up when you have
+   no shield equipped. */
+.shieldbar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 0 16px 8px; min-height: 11px; }
+
+/* ---------------- arena ---------------- */
+
+.arena { position: relative; flex: 1; min-height: 0; margin: 4px 10px calc(14px + var(--safe-b)); }
+
+.corner {
+  position: absolute;
+  width: 43%; height: 27%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 2px;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  background: var(--bg-2);
+  text-align: center;
+  padding: 6px;
+  transition: transform .16s var(--snap), background .16s, border-color .16s;
+}
+.corner-tl { top: 0; left: 0; }
+.corner-tr { top: 0; right: 0; }
+.corner-bl { bottom: 0; left: 0; }
+.corner-br { bottom: 0; right: 0; }
+
+.corner-ico { width: 22px; height: 22px; opacity: .85; margin-bottom: 2px; }
+.corner-label { font-size: 14.5px; font-weight: 700; color: var(--tx-hi); }
+.corner-hint { font-size: 10.5px; color: var(--tx-dim); line-height: 1.2; }
+
+#corner-now   { border-color: color-mix(in srgb, var(--now) 45%, var(--line)); }
+#corner-later { border-color: color-mix(in srgb, var(--later) 45%, var(--line)); }
+#corner-give  { border-color: color-mix(in srgb, var(--give) 45%, var(--line)); }
+#corner-drop  { border-color: color-mix(in srgb, var(--drop) 45%, var(--line)); }
+
+#corner-now   .corner-label { color: var(--now); }
+#corner-later .corner-label { color: var(--later); }
+#corner-give  .corner-label { color: var(--give); }
+#corner-drop  .corner-label { color: var(--drop); }
+
+/* the corner you are currently aiming at */
+.corner.is-aimed { transform: scale(1.06); }
+#corner-now.is-aimed   { background: color-mix(in srgb, var(--now) 22%, var(--bg-2)); border-color: var(--now); }
+#corner-later.is-aimed { background: color-mix(in srgb, var(--later) 22%, var(--bg-2)); border-color: var(--later); }
+#corner-give.is-aimed  { background: color-mix(in srgb, var(--give) 22%, var(--bg-2)); border-color: var(--give); }
+#corner-drop.is-aimed  { background: color-mix(in srgb, var(--drop) 22%, var(--bg-2)); border-color: var(--drop); }
+
+/* the flash when a card lands */
+.corner.is-hit { animation: corner-hit .26s var(--snap); }
+@keyframes corner-hit {
+  0% { transform: scale(1); filter: brightness(1); }
+  40% { transform: scale(1.12); filter: brightness(2.2); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* ---------------- the card ---------------- */
+
+.card {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 62%;
+  min-height: 108px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 18px 16px;
+  background: linear-gradient(180deg, #fdfbf4, #ece5d5);
+  color: #1b2028;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.5), 0 2px 0 #b9b0a0;
+  cursor: grab;
+  touch-action: none;
+  transition: transform .22s var(--spring);
+  will-change: transform;
+  z-index: 5;
+}
+.card.is-held { cursor: grabbing; box-shadow: 0 18px 40px rgba(0,0,0,.6); }
+.card.is-gone { transition: transform .22s var(--spring), opacity .22s ease; opacity: 0; }
+
+.card-text {
+  font-size: 17px; font-weight: 700; line-height: 1.25;
+  text-align: center; text-wrap: balance;
+}
+
+.card.is-in { animation: card-in .22s var(--snap); }
+@keyframes card-in {
+  from { transform: translate(-50%, -50%) scale(.82); opacity: 0; }
+  to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.card.is-wrong { animation: card-shake .3s ease; }
+@keyframes card-shake {
+  0%,100% { transform: translate(-50%,-50%) rotate(0); }
+  25%  { transform: translate(calc(-50% - 9px), -50%) rotate(-4deg); }
+  75%  { transform: translate(calc(-50% + 9px), -50%) rotate(4deg); }
+}
+
+/* ---------------- feedback ---------------- */
+
+.flash {
+  position: absolute;
+  left: 50%; bottom: 30%;
+  transform: translateX(-50%);
+  max-width: 84%;
+  padding: 9px 16px;
+  border-radius: 99px;
+  background: rgba(0,0,0,.72);
+  font-size: 13px; font-weight: 600;
+  color: var(--tx-hi);
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 8;
+}
+.flash.is-on { animation: flash-in .35s var(--snap) forwards; }
+.flash.is-bad { background: rgba(224,82,74,.92); }
+@keyframes flash-in {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.float-pts {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  font-size: 20px; font-weight: 800;
+  color: var(--good);
+  pointer-events: none;
+  z-index: 50;
+  animation: float-up .95s var(--spring) forwards;
+  text-shadow: 0 2px 8px rgba(0,0,0,.6);
+}
+.float-pts.is-perfect { color: var(--gold); font-size: 24px; }
+@keyframes float-up {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.7); }
+  20% { opacity: 1; transform: translate(-50%, -60%) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -160%) scale(1); }
+}
+
+/* a wrong answer bruises the whole screen for a moment */
+#screen-play.is-bad::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(120% 80% at 50% 50%, transparent 40%, rgba(224,82,74,.35));
+  pointer-events: none;
+  animation: bruise .35s ease forwards;
+}
+@keyframes bruise { from { opacity: 1; } to { opacity: 0; } }
+
+/* the final rush */
+#screen-play.is-rush { background: radial-gradient(130% 70% at 50% 100%, rgba(224,82,74,.16), transparent 70%); }
+#screen-play.is-rush .hud-clock b { color: var(--now); animation: punch .5s var(--snap) infinite; }
+
+/* ---------------- end screen ---------------- */
+
+#screen-end { align-items: center; justify-content: flex-start; padding: 24px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.end-wrap { width: 100%; max-width: 340px; margin: auto 0; flex-shrink: 0; text-align: center; display: flex; flex-direction: column; align-items: center; }
+
+.end-title { margin: 0 0 4px; font-size: 27px; color: var(--tx-hi); letter-spacing: -.02em; }
+.end-sub { margin: 0 0 18px; color: var(--tx-dim); font-size: 14.5px; }
+
+.grade {
+  width: 108px; height: 108px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 22px;
+  font-size: 62px; font-weight: 800;
+  border: 4px solid currentColor;
+  border-radius: 24px;
+  animation: stamp .45s var(--snap);
+}
+.grade-S { color: var(--gold); }
+.grade-A { color: var(--good); }
+.grade-B { color: var(--later); }
+.grade-C { color: var(--tx-dim); }
+@keyframes stamp {
+  0% { transform: scale(2.4) rotate(-14deg); opacity: 0; }
+  60% { transform: scale(.92) rotate(3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); }
+}
+
+.end-stats { list-style: none; margin: 0 0 26px; padding: 0; width: 100%; }
+.end-stats li {
+  display: flex; justify-content: space-between;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14.5px; color: var(--tx-dim);
+}
+.end-stats li:last-child { border-bottom: 0; }
+.end-stats b { color: var(--tx-hi); font-variant-numeric: tabular-nums; }
+
+#btn-again { margin-bottom: 6px; }
+
+/* ---------------- short screens ---------------- */
+
+@media (max-height: 680px) {
+  .corner { height: 25%; }
+  .card { min-height: 92px; }
+  .card-text { font-size: 15.5px; }
+  .logo { font-size: 38px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* the grade badge, dimmed when you did not pass */
+.grade.is-dim { opacity: .45; }
+
+/* level + target line above the score */
+.hud-k b { color: var(--tx); font-weight: 700; }
+
+/* ---------------- bottom bar ---------------- */
+
+.tabbar {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+  padding: 8px 16px calc(10px + var(--safe-b));
+  background: var(--bg-2);
+  border-top: 1px solid var(--line);
+  z-index: 20;
+}
+
+.tab {
+  flex: 1 1 0;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 6px;
+  background: none; border: 0; border-radius: 12px;
+  font: inherit; font-size: 11.5px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: var(--tx-dim);
+  cursor: pointer;
+  transition: color .16s, background .16s, transform .15s var(--snap);
+}
+.tab:active { transform: scale(.94); }
+.tab.is-on { color: var(--good); background: rgba(92,196,106,.1); }
+.tab-ico { font-size: 15px; }
+
+.tab-coins {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 14px;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 99px;
+}
+.tab-coins b { font-size: 16px; color: var(--gold); font-variant-numeric: tabular-nums; }
+.tab-coin-ico {
+  width: 18px; height: 18px;
+  background-repeat: no-repeat; background-position: center;
+  background-size: contain; image-rendering: pixelated;
+}
+
+/* the map and shop leave room for the bar */
+#screen-levels, #screen-shop { padding-bottom: 74px; }
+
+/* ---------------- shop ---------------- */
+
+.shop-body {
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 14px 14px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+
+.shop-head { display: flex; flex-direction: column; margin-bottom: 10px; }
+.shop-head b { font-size: 17px; color: var(--tx-hi); }
+.shop-head small { font-size: 12.5px; color: var(--tx-dim); }
+
+.shop-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.shop-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 14px 10px 12px;
+  background: var(--bg-2);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  font: inherit; color: var(--tx);
+  text-align: center; cursor: pointer;
+  transition: transform .15s var(--snap), border-color .2s;
+}
+.shop-tile:active { transform: scale(.97); }
+.shop-tile b { font-size: 14px; color: var(--tx-hi); }
+.shop-tile small { font-size: 11.5px; color: var(--tx-dim); line-height: 1.3; min-height: 2.6em; }
+.shop-tile.is-broke { opacity: .55; }
+.shop-tile.is-worn { border-color: var(--good); background: rgba(92,196,106,.08); }
+
+.shop-art {
+  width: 40px; height: 40px;
+  background-repeat: no-repeat; background-position: center;
+  background-size: contain; image-rendering: pixelated;
+}
+
+.shop-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 2px;
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: var(--bg-3);
+  font-size: 12.5px; font-weight: 700;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.shop-tag.is-worn { background: var(--good); color: #06180a; }
+.shop-tag.is-use { background: var(--bg-3); color: var(--tx-hi); }
+.shop-coin {
+  width: 14px; height: 14px;
+  background-repeat: no-repeat; background-position: center;
+  background-size: contain; image-rendering: pixelated;
+}
+
+.shop-flash {
+  position: absolute;
+  left: 50%; bottom: 88px;
+  transform: translateX(-50%);
+  padding: 9px 18px;
+  border-radius: 99px;
+  background: rgba(0,0,0,.82);
+  font-size: 13px; font-weight: 600;
+  color: var(--tx-hi);
+  white-space: nowrap;
+  opacity: 0; pointer-events: none;
+  z-index: 25;
+}
+.shop-flash.is-on { animation: flash-in .3s var(--snap) forwards; }
+
+/* ---------------- hero screen ---------------- */
+
+.coin-pill {
+  display: flex; align-items: center; gap: 6px;
+  flex: 0 0 auto;
+  padding: 7px 13px;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 99px;
+}
+.coin-pill b { font-size: 15px; color: var(--gold); font-variant-numeric: tabular-nums; }
+
+.hero-body {
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 14px 14px;
+  display: flex; flex-direction: column; gap: 14px;
+  align-items: center;
+}
+
+/* the character with slots around them */
+.hero-stage {
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-areas:
+    'left figure right'
+    'bottom bottom bottom';
+  gap: 10px;
+  align-items: center;
+}
+.slot-left   { grid-area: left; }
+.slot-right  { grid-area: right; }
+.slot-bottom { grid-area: bottom; }
+.hero-figure { grid-area: figure; }
+
+.hero-figure {
+  display: flex; align-items: center; justify-content: center;
+  width: 108px; height: 138px;
+  background: radial-gradient(70% 60% at 50% 40%, #2b3a4a, #1c242e);
+  border: 2px solid var(--line);
+  border-radius: 16px;
+}
+.hero-art {
+  width: 84px; height: 84px;
+  background-repeat: no-repeat; background-position: center;
+  background-size: contain; image-rendering: pixelated;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.5));
+  animation: hero-bob 3s ease-in-out infinite;
+}
+@keyframes hero-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+.slot {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 10px 8px;
+  background: var(--bg-2);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  font: inherit; color: var(--tx);
+  text-align: center; cursor: pointer;
+  transition: transform .15s var(--snap), border-color .2s, background .2s;
+}
+.slot:active { transform: scale(.97); }
+.slot.is-open { border-color: var(--good); background: rgba(92,196,106,.08); }
+.slot-k {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--tx-dim);
+}
+.slot-art {
+  width: 34px; height: 34px; margin: 2px 0;
+  background-repeat: no-repeat; background-position: center;
+  background-size: contain; image-rendering: pixelated;
+}
+.slot-name { font-size: 13px; color: var(--tx-hi); }
+.slot-desc { font-size: 10.5px; color: var(--tx-dim); line-height: 1.25; }
+
+/* the picker that slides in when you tap a slot */
+.hero-picker { width: 100%; display: none; }
+.hero-picker.is-on { display: block; animation: screen-in .2s var(--spring); }
+.picker-title {
+  margin: 0 0 8px;
+  font-size: 11.5px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: var(--tx-dim);
+}
+.picker-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.picker-item {
+  flex: 0 0 auto;
+  width: 82px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 6px;
+  background: var(--bg-3);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  font: inherit; color: var(--tx);
+  cursor: pointer;
+  transition: transform .15s var(--snap), border-color .2s;
+}
+.picker-item:active { transform: scale(.95); }
+.picker-item.is-worn { border-color: var(--good); background: rgba(92,196,106,.12); }
+.picker-item small { font-size: 10.5px; line-height: 1.2; text-align: center; }
+.picker-art {
+  width: 30px; height: 30px;
+  background-repeat: no-repeat; background-position: center;
+  background-size: contain; image-rendering: pixelated;
+}
+.picker-empty { margin: 6px 0 0; font-size: 12.5px; color: var(--tx-dim); }
+
+/* the stat bars */
+.hero-stats { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+.stat-row { display: flex; flex-direction: column; gap: 4px; }
+.stat-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 13.5px;
+}
+.stat-head b { color: var(--tx-hi); }
+.stat-head span { color: var(--good); font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat-track { height: 8px; background: var(--bg-3); border-radius: 99px; overflow: hidden; }
+.stat-fill {
+  height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--good), var(--gold));
+  border-radius: 99px;
+  transition: width .35s var(--spring);
+}
+.stat-hint { font-size: 11px; color: var(--tx-dim); }
+
+#screen-hero { padding-bottom: 74px; }
+
+/* says plainly whether the next level just opened */
+.end-unlock {
+  margin: -8px 0 18px;
+  padding: 8px 16px;
+  border-radius: 99px;
+  font-size: 13.5px; font-weight: 700;
+  text-align: center;
+  max-width: 300px;
+}
+.end-unlock.is-good { background: rgba(92,196,106,.16); color: var(--good); }
+.end-unlock.is-bad  { background: rgba(224,82,74,.16); color: var(--now); }
+
+/* leave a level you did not mean to start */
+.btn-exit {
+  flex: 0 0 auto;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit; font-size: 18px; line-height: 1;
+  color: var(--tx-dim);
+  cursor: pointer;
+  transition: transform .15s var(--snap), color .16s, background .16s;
+}
+.btn-exit:active { transform: scale(.9); background: var(--bg-2); color: var(--tx-hi); }
+
+/* the level + target line can go quiet on narrow phones */
+.hud { gap: 8px; }
+.hud-score { min-width: 0; }
+.hud-k { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------------- battle ---------------- */
+
+.battle-list {
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 14px 14px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.foe-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 14px;
+  background: var(--bg-2);
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  font: inherit; color: var(--tx);
+  text-align: left; cursor: pointer;
+  transition: transform .15s var(--snap), border-color .2s;
+}
+.foe-row:active { transform: scale(.98); }
+.foe-row.is-locked { opacity: .45; cursor: default; }
+.foe-row.is-beaten { border-color: var(--good); }
+
+.foe-art {
+  flex: 0 0 48px;
+  width: 48px; height: 48px;
+  background-repeat: no-repeat; background-position: center;
+  background-size: contain; image-rendering: pixelated;
+}
+.foe-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.foe-txt b { font-size: 15.5px; color: var(--tx-hi); }
+.foe-txt small { font-size: 12px; color: var(--tx-dim); line-height: 1.35; }
+.foe-stats {
+  margin-top: 3px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: var(--now);
+}
+.foe-badge {
+  flex: 0 0 auto;
+  padding: 7px 13px;
+  border-radius: 99px;
+  background: var(--bg-3);
+  font-size: 12.5px; font-weight: 700;
+  color: var(--tx-hi);
+}
+.foe-badge.is-beaten { background: var(--good); color: #06180a; }
+
+/* the two health bars during a fight */
+.fight-hud { display: none; align-items: center; gap: 10px; padding: 6px 16px 8px; }
+#screen-play.is-battle .fight-hud { display: flex; }
+#screen-play.is-battle .shieldbar,
+#screen-play.is-battle .hud-score,
+#screen-play.is-battle .streak,
+#screen-play.is-battle .hud-clock { display: none; }
+
+.fighter { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.fighter-foe { align-items: flex-end; }
+.fight-name {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--tx-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.hp-track {
+  width: 100%; height: 12px;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.hp-fill {
+  height: 100%; width: 100%;
+  background: linear-gradient(180deg, #7ee08a, var(--good));
+  transition: width .25s var(--spring), background .3s;
+}
+.hp-fill.is-foe { background: linear-gradient(180deg, #f2a03d, #d97b1e); margin-left: auto; }
+.hp-fill.is-low { background: linear-gradient(180deg, #ef6f63, var(--now)); }
+
+.fight-mid { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 0 0 auto; }
+.fight-mid b { font-size: 18px; font-weight: 800; color: var(--tx-hi); font-variant-numeric: tabular-nums; }
+.foe-art-live {
+  width: 30px; height: 30px;
+  background-repeat: no-repeat; background-position: center;
+  background-size: contain; image-rendering: pixelated;
+}
+
+/* a hit shakes the screen edge in the right colour */
+#screen-play.is-hit-you::after,
+#screen-play.is-hit-foe::after {
+  content: '';
+  position: absolute; inset: 0;
+  pointer-events: none;
+  animation: bruise .3s ease forwards;
+}
+#screen-play.is-hit-you::after {
+  background: radial-gradient(120% 80% at 50% 50%, transparent 45%, rgba(224,82,74,.4));
+}
+#screen-play.is-hit-foe::after {
+  background: radial-gradient(120% 80% at 50% 50%, transparent 45%, rgba(92,196,106,.3));
+}
+
+#screen-battle { padding-bottom: 74px; }
+
+/* the full-set bonus banner on the Hero screen */
+.hero-set {
+  width: 100%;
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 11px 15px;
+  background: var(--bg-2);
+  border: 2px dashed var(--line);
+  border-radius: 14px;
+  text-align: center;
+  transition: border-color .25s, background .25s;
+}
+.hero-set b { font-size: 14px; color: var(--tx-dim); }
+.hero-set span { font-size: 12px; color: var(--tx-dim); }
+.hero-set em { font-style: normal; font-weight: 700; }
+
+.hero-set.is-on {
+  border-style: solid;
+  border-color: var(--gold);
+  background: rgba(242,193,78,.1);
+  animation: set-pop .35s var(--snap);
+}
+.hero-set.is-on b { color: var(--gold); }
+.hero-set.is-on span { color: var(--tx); }
+.hero-set.is-on em { color: var(--gold); }
+@keyframes set-pop {
+  0% { transform: scale(.96); } 60% { transform: scale(1.03); } 100% { transform: scale(1); }
+}
+
+/* gear you have not unlocked yet */
+.shop-tile.is-sealed { opacity: .5; border-style: dashed; }
+.shop-tag.is-sealed {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--tx-dim);
+  font-size: 11px;
+}
+
+/* Fireflies instead of stars. Small warm dots with a soft glow that
+   drift up and down and fade in and out, each on its own timing so
+   they never pulse together. Kept to the edges, clear of the trail. */
+.deco {
+  position: absolute;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #fff3b0;
+  box-shadow: 0 0 8px 3px rgba(255,220,110,.7);
+  z-index: 2;
+  animation: firefly 5s ease-in-out infinite;
+}
+.deco-1 { left: 12%; top: 66%; }
+.deco-2 { left: 86%; top: 58%; animation-duration: 6.5s; animation-delay: -2s; }
+.deco-3 { left: 9%;  top: 34%; animation-duration: 4.2s; animation-delay: -1s; }
+.deco-4 { left: 90%; top: 30%; animation-duration: 5.8s; animation-delay: -3s; }
+@keyframes firefly {
+  0%, 100% { opacity: .25; transform: translate(0, 0); }
+  50%      { opacity: 1;   transform: translate(4px, -10px); }
+}
+
+/* the planks catch a little of the warm light from above */
+.trail-base { filter: drop-shadow(0 0 5px rgba(255,226,150,.35)); }
+
+/* the one stat you do not want high - card speed is the risk a pet adds */
+.stat-row.is-risk .stat-head span { color: var(--now); }
+.stat-row.is-risk .stat-fill { background: linear-gradient(90deg, var(--gold), var(--now)); }
+
+/* shield charges left this round */
+.shield-pips { display: inline-flex; gap: 4px; flex: 0 0 auto; }
+.pip {
+  width: 9px; height: 11px;
+  background: var(--later);
+  border-radius: 3px 3px 5px 5px;
+  box-shadow: 0 0 5px rgba(74,134,196,.6);
+  transition: background .2s, box-shadow .2s;
+}
+.pip.is-spent { background: var(--bg-3); box-shadow: none; }
+
+/* The counter reads "3 / 20", which is wider than "45", so it needs to
+   be a size down or it crowds the streak badge on a small phone. */
+#screen-play.is-calm .hud-clock b { font-size: 17px; }
+
+
+/* ---- "What you missed" ----
+   The list of cards you got wrong, shown after the round with the right
+   answer and the reason. During play the reason flashes past in well
+   under two seconds, which is not long enough to read AND think about.
+   This is where the game actually teaches, so it gets real room.
+
+   It lives below the buttons so that wanting another go never means
+   scrolling past ten cards first. */
+.review {
+  width: 100%;
+  margin-top: 30px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  text-align: left;
+}
+.review-head {
+  margin: 0 0 12px;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: var(--tx-dim);
+}
+.review-list { list-style: none; margin: 0; padding: 0; }
+
+.review-row {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 13px;
+  margin-bottom: 9px;
+}
+.review-task {
+  margin: 0 0 9px;
+  font-size: 14px; font-weight: 700;
+  color: var(--tx-hi);
+  line-height: 1.32;
+}
+/* "x3" on a card you got wrong more than once */
+.review-times {
+  margin-left: 7px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--bg-3);
+  color: var(--tx-dim);
+  font-size: 11px; font-weight: 700;
+  vertical-align: middle;
+}
+
+/* your answer and the real one, side by side - seeing the two together
+   is what makes it stick, rather than just being told the answer */
+.review-answers {
+  margin: 0 0 8px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+}
+.review-chip {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11.5px; font-weight: 700;
+  white-space: nowrap;
+}
+.review-chip.is-wrong {
+  background: rgba(224, 82, 74, .13);
+  border: 1px solid rgba(224, 82, 74, .4);
+  color: #f0938c;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+.review-chip.is-right::before { content: '\2192  '; opacity: .6; }
+.review-chip.is-right {
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  color: var(--tx-hi);
+}
+.review-chip.box-now   { color: var(--now); }
+.review-chip.box-later { color: var(--later); }
+.review-chip.box-give  { color: var(--give); }
+.review-chip.box-drop  { color: var(--tx); }
+
+.review-why {
+  margin: 0;
+  font-size: 12.8px;
+  line-height: 1.45;
+  color: var(--tx-dim);
+}
+
+/* ---- a tab icon that is a picture, not a text symbol ----
+   The other three tabs draw their icon with a font character, which
+   takes its colour from the tab. A picture cannot do that, so it gets
+   a fixed box and goes slightly dim until the tab is the active one. */
+.tab-pic {
+  width: 20px; height: 20px;
+  opacity: .55;
+  transition: opacity .16s, transform .15s var(--snap);
+}
+.tab.is-on .tab-pic { opacity: 1; }
+
+/* ================= GUIDE BOOK =================
+   The rulebook screen. Long, scrolling, and text-first - it is the one
+   place in the game that is meant to be READ rather than played, so it
+   gets wider line spacing and real paragraph breaks. */
+#screen-guide { padding-bottom: 74px; }
+
+.guide-body {
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 16px 28px;
+}
+
+.guide-intro {
+  margin: 0 0 22px;
+  padding: 14px 15px;
+  background: var(--bg-2);
+  border-left: 3px solid var(--good);
+  border-radius: 0 10px 10px 0;
+  font-size: 14.5px; line-height: 1.5;
+  color: var(--tx);
+}
+.guide-intro b { color: var(--tx-hi); }
+
+.guide-h {
+  margin: 26px 0 10px;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: var(--tx-dim);
+}
+.guide-h:first-of-type { margin-top: 0; }
+
+.guide-p {
+  margin: 0 0 12px;
+  font-size: 14px; line-height: 1.55;
+  color: var(--tx);
+}
+.guide-p b { color: var(--tx-hi); }
+
+.guide-ol, .guide-ul {
+  margin: 0 0 14px;
+  padding-left: 20px;
+  font-size: 14px; line-height: 1.55;
+  color: var(--tx);
+}
+.guide-ol li, .guide-ul li { margin-bottom: 8px; }
+.guide-ol b, .guide-ul b { color: var(--tx-hi); }
+.guide-ol em, .guide-ul em, .guide-p em { font-style: normal; color: var(--tx-hi); }
+
+/* the four corners, laid out the way they sit on the play screen -
+   Do Now top-left, Drop bottom-right - so the shape is already familiar
+   before the first round starts */
+.guide-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-bottom: 8px;
+}
+.guide-box {
+  padding: 12px 11px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.guide-box .guide-ico {
+  display: block;
+  width: 18px; height: 18px;
+  margin-bottom: 7px;
+  background-repeat: no-repeat; background-position: left center;
+  background-size: contain; image-rendering: pixelated;
+}
+.guide-box b { display: block; font-size: 14px; margin-bottom: 2px; }
+.guide-box small { display: block; font-size: 11.5px; color: var(--tx-dim); margin-bottom: 7px; }
+.guide-box p { margin: 0; font-size: 12px; line-height: 1.45; color: var(--tx); }
+
+.guide-box.box-now   { border-color: rgba(224,82,74,.45); }
+.guide-box.box-now b { color: var(--now); }
+.guide-box.box-later   { border-color: rgba(74,134,196,.45); }
+.guide-box.box-later b { color: var(--later); }
+.guide-box.box-give   { border-color: rgba(242,160,61,.45); }
+.guide-box.box-give b { color: var(--give); }
+.guide-box.box-drop b { color: var(--drop); }
+
+/* the bits worth stopping on */
+.guide-note {
+  margin: 20px 0;
+  padding: 14px 15px;
+  background: rgba(242,193,78,.07);
+  border: 1px solid rgba(242,193,78,.3);
+  border-radius: 12px;
+}
+.guide-note > b {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--gold);
+}
+.guide-note p { margin: 0 0 10px; font-size: 13.5px; line-height: 1.5; color: var(--tx); }
+.guide-note p:last-child { margin-bottom: 0; }
+.guide-note em { font-style: normal; font-weight: 700; color: var(--tx-hi); }
+.guide-note.is-last { margin-bottom: 4px; }
+
+/* ---- five tabs instead of four ----
+   "Guide Book" does not fit on one line at 375px once there are five
+   tabs sharing the width, so it wraps to two and every label shrinks a
+   touch. The icons stay the same size; shrinking those is what would
+   actually hurt. */
+.tabbar { gap: 2px; padding-left: 8px; padding-right: 8px; }
+.tab { padding: 6px 2px; font-size: 10px; letter-spacing: .02em; line-height: 1.15; }
+
+/* ================= BACKGROUND THEMES =================
+   The paint button in the top right of a round, and the little panel
+   it opens. See js/themes.js for the list. */
+
+.btn-theme {
+  flex: 0 0 auto;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit; font-size: 15px; line-height: 1;
+  color: var(--tx-dim);
+  cursor: pointer;
+  transition: transform .15s var(--snap), color .16s, background .16s;
+}
+.btn-theme:active { transform: scale(.9); }
+.btn-theme.is-on { color: var(--good); border-color: var(--good); background: rgba(92,196,106,.12); }
+
+/* The panel floats over the arena rather than pushing it down, so
+   opening it never reflows the corners you are aiming at. */
+.theme-picker {
+  position: absolute;
+  top: 56px; right: 10px; left: 10px;
+  z-index: 30;
+  padding: 12px 12px 10px;
+  background: rgba(18, 23, 30, .97);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 14px 36px rgba(0,0,0,.55);
+  opacity: 0; transform: translateY(-6px);
+  transition: opacity .16s, transform .16s var(--spring);
+}
+.theme-picker.is-on { opacity: 1; transform: none; }
+
+.theme-title {
+  margin: 0 0 9px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: var(--tx-dim);
+}
+
+.theme-row { display: flex; gap: 8px; }
+
+.theme-chip {
+  flex: 1 1 0; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 6px 4px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color .16s, background .16s, transform .15s var(--snap);
+}
+.theme-chip:active { transform: scale(.94); }
+.theme-chip.is-worn { border-color: var(--good); background: rgba(92,196,106,.1); }
+
+.theme-swatch {
+  width: 100%; height: 34px;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+}
+.theme-chip small {
+  font-size: 10.5px; font-weight: 700;
+  color: var(--tx-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%;
+}
+.theme-chip.is-worn small { color: var(--tx-hi); }
+
+.theme-hint {
+  margin: 9px 0 0;
+  font-size: 11px;
+  color: var(--tx-dim);
+  text-align: center;
+}
+
+/* A photo background needs the cards and corners to stay readable, so
+   the corner boxes get their own dark backing instead of being nearly
+   see-through the way they are against the plain dark screen. */
+#screen-play:not([data-theme="space"]) .corner {
+  background: rgba(14, 18, 24, .62);
+  backdrop-filter: blur(2px);
+}
+
+/* the read-only background preview in the Guide Book */
+.guide-swatches {
+  display: flex; gap: 8px;
+  margin: 0 0 14px;
+}
+.guide-swatch {
+  flex: 1 1 0; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.guide-swatch-box {
+  width: 100%; height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+.guide-swatch small {
+  font-size: 10.5px; font-weight: 700;
+  color: var(--tx-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ---- a corner this level does not use ----
+   Gone, not greyed. A dead box you can still aim at is clutter, and
+   this is a game about not being distracted by things that do not
+   matter. The corner beside it stretches across to take the space, so
+   the row still looks deliberate rather than half empty. */
+.corner.is-off { display: none; }
+
+/* Level 1 has no Give Away, so Drop owns the whole bottom row. */
+.arena[data-missing~="give"] .corner-br { left: 0; right: 0; width: auto; }
+.arena[data-missing~="drop"] .corner-bl { left: 0; right: 0; width: auto; }
+.arena[data-missing~="now"]   .corner-tr { left: 0; right: 0; width: auto; }
+.arena[data-missing~="later"] .corner-tl { left: 0; right: 0; width: auto; }
+
+/* ================= FIRST-TIME POPUPS =================
+   One card in the middle of a dimmed screen. Sits above everything,
+   the tab bar included, so nothing behind it can be tapped by accident
+   while someone is reading. */
+.tip {
+  position: fixed; inset: 0;
+  z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  background: rgba(6, 9, 14, .72);
+  opacity: 0;
+  transition: opacity .18s;
+}
+.tip.is-on { opacity: 1; }
+
+.tip-card {
+  width: 100%; max-width: 330px;
+  padding: 22px 20px 18px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.6);
+  text-align: center;
+  transform: translateY(10px) scale(.96);
+  transition: transform .22s var(--spring);
+}
+.tip.is-on .tip-card { transform: none; }
+
+.tip-ico {
+  display: block;
+  width: 48px; height: 48px;
+  margin: 0 auto 10px;
+  background-repeat: no-repeat; background-position: center;
+  background-size: contain; image-rendering: pixelated;
+}
+.tip-title {
+  margin: 0 0 14px;
+  font-size: 19px;
+  color: var(--tx-hi);
+}
+.tip-lines {
+  list-style: none;
+  margin: 0 0 18px; padding: 0;
+  text-align: left;
+}
+.tip-lines li {
+  position: relative;
+  padding-left: 16px;
+  margin-bottom: 10px;
+  font-size: 13.5px; line-height: 1.5;
+  color: var(--tx);
+}
+.tip-lines li::before {
+  content: '';
+  position: absolute; left: 2px; top: .62em;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--good);
+}
+.tip-lines b { color: var(--tx-hi); }
+.tip-lines em { font-style: normal; font-weight: 700; }
+.tip-lines .c-now   { color: var(--now); }
+.tip-lines .c-later { color: var(--later); }
+.tip-lines .c-give  { color: var(--give); }
+.tip-lines .c-drop  { color: var(--tx-hi); }
+
+.tip-ok { width: 100%; }
+
+/* ---- Online Battle: shown, but not built yet ----
+   A dashed outline is the usual way to say "a space for something that
+   is not here yet", and it keeps the card from being mistaken for a
+   fifth rival that is simply locked. Still tappable - it opens a popup
+   that says honestly what it is. */
+.foe-row.is-online {
+  margin-top: 6px;
+  border-style: dashed;
+  border-color: rgba(74,134,196,.55);
+  background: rgba(74,134,196,.06);
+}
+.foe-badge.is-soon {
+  background: rgba(74,134,196,.16);
+  color: #8fbde8;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* Shown only when you FAILED: says the right answers are being held
+   back, and why. Without it a review with no answers in it just looks
+   like a broken screen. */
+.review-note {
+  margin: -4px 0 12px;
+  padding: 9px 11px;
+  background: rgba(242,193,78,.08);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 8px 8px 0;
+  font-size: 12.5px; line-height: 1.45;
+  color: var(--tx);
+}
+/* the blank where the answer would be, if you had passed */
+.review-chip.is-hidden {
+  background: none;
+  border: 1px dashed var(--line);
+  color: var(--tx-dim);
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* ---- the character's name ----
+   A text box that does not look like one until you touch it. It sits
+   under the figure where a name label would go, so tapping it to type
+   is the obvious thing to do without a "rename" button anywhere.
+
+   The frame had to become a COLUMN first. It was a flex row, so the
+   art and the name box sat side by side and squashed the character to
+   nothing the moment the box was added. */
+.hero-figure {
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px;
+  height: auto; min-height: 138px;
+}
+.hero-name {
+  display: block;
+  width: 96px;
+  margin: 0;
+  padding: 3px 4px;
+  background: none;
+  border: 0;
+  border-bottom: 1px dashed transparent;
+  border-radius: 5px;
+  font: inherit;
+  font-size: 12px; font-weight: 700;
+  text-align: center;
+  color: var(--tx-hi);
+  outline: none;
+  transition: background .16s, border-color .16s;
+}
+.hero-name::placeholder {
+  color: var(--tx-dim);
+  font-weight: 400; font-style: italic; font-size: 11px;
+}
+.hero-name:hover { border-bottom-color: var(--line); }
+.hero-name:focus { background: var(--bg-1); border-bottom-color: var(--good); }

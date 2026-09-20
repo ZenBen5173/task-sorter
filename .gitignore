@@ -1,0 +1,12 @@
+# Windows / macOS junk
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# editor and tool folders
+.vscode/
+.idea/
+.claude/
+
+# the old Focus Village build, kept locally for reference only
+archive/

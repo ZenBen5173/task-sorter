@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#12161b">
+<meta name="description" content="Task Sorter - sort the pile before it buries you.">
+<title>Task Sorter</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ==================== TITLE ==================== -->
+  <section id="screen-title" class="screen is-on">
+    <div class="title-wrap">
+      <p class="eyebrow">Day to Day</p>
+      <h1 class="logo">Task<span>Sorter</span></h1>
+      <p class="tagline">Four corners. One thumb.<br>Sort it before it buries you.</p>
+
+      <div class="legend">
+        <div class="legend-row"><b>Do Now</b><span>important + due soon</span></div>
+        <div class="legend-row"><b>Do Later</b><span>important, not yet</span></div>
+        <div class="legend-row"><b>Give Away</b><span>urgent, not yours</span></div>
+        <div class="legend-row"><b>Drop</b><span>neither</span></div>
+      </div>
+
+      <button class="btn btn-primary btn-lg" id="btn-play" type="button">Play</button>
+      <p class="hint-keys">On a laptop: Q W A S for the four corners</p>
+    </div>
+  </section>
+
+  <!-- ==================== LEVEL SELECT ==================== -->
+  <section id="screen-levels" class="screen">
+    <header class="lv-head">
+      <button class="btn btn-ghost btn-back" id="btn-lv-back" type="button">&#8592; Go back to homescreen</button>
+      <div>
+        <h2 class="lv-title" id="lv-title">Day to Day</h2>
+        <p class="lv-sub" id="lv-sub">Four places. Same four corners.</p>
+      </div>
+      <div class="coin-pill"><span class="tab-coin-ico" data-sprite="coin"></span><b class="coin-count">0</b></div>
+    </header>
+
+    <div class="lv-scene" id="lv-scene">
+      <!-- the winding trail. Drawn in percent so it stretches to any phone. -->
+      <svg class="lv-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <path class="trail-base" vector-effect="non-scaling-stroke"
+              d="M 26 87 C 45 89, 64 80, 70 68 C 76 56, 42 56, 28 47 C 15 39, 52 36, 66 24"></path>
+        <path class="trail-dash" vector-effect="non-scaling-stroke"
+              d="M 26 87 C 45 89, 64 80, 70 68 C 76 56, 42 56, 28 47 C 15 39, 52 36, 66 24"></path>
+      </svg>
+
+      <span class="deco deco-1"></span>
+      <span class="deco deco-2"></span>
+      <span class="deco deco-3"></span>
+      <span class="deco deco-4"></span>
+
+      <div class="lv-ribbon" id="lv-ribbon">In the House</div>
+
+      <!-- level nodes get placed here -->
+    </div>
+  </section>
+
+
+
+
+  <!-- ==================== GUIDE BOOK ====================
+       The rulebook. Every new player is sent here before their first
+       game, and it stays on a tab so anyone can come back to it.
+       This is where the game explains the Eisenhower Matrix in plain
+       words - the screen that does the actual teaching. -->
+  <section id="screen-guide" class="screen">
+    <header class="lv-head">
+      <div>
+        <h2 class="lv-title">Guide Book</h2>
+        <p class="lv-sub">Everything you need to know</p>
+      </div>
+      <div class="coin-pill"><span class="tab-coin-ico" data-sprite="coin"></span><b class="coin-count">0</b></div>
+    </header>
+
+    <div class="guide-body">
+
+      <p class="guide-intro">
+        Every day throws jobs at you. Some matter, some are just loud.
+        <b>This book is how you tell them apart.</b>
+      </p>
+
+      <h3 class="guide-h">The two questions</h3>
+      <p class="guide-p">
+        Before every card, ask yourself two things:
+      </p>
+      <ol class="guide-ol">
+        <li><b>Does this actually matter?</b> Will skipping it cause a real problem?</li>
+        <li><b>Does it have to be now?</b> Is there a deadline today?</li>
+      </ol>
+      <p class="guide-p">
+        Your two answers point at one corner. That is the whole game.
+      </p>
+
+      <h3 class="guide-h">The four corners</h3>
+      <div class="guide-grid">
+        <div class="guide-box box-now">
+          <span class="guide-ico" data-sprite="bang"></span>
+          <b>Do Now</b>
+          <small>Matters <em>and</em> due today</small>
+          <p>Pot boiling over. Homework due at 8am.</p>
+        </div>
+        <div class="guide-box box-later">
+          <span class="guide-ico" data-sprite="cal"></span>
+          <b>Do Later</b>
+          <small>Matters, but not yet</small>
+          <p>Exam in 3 weeks. Dentist with no toothache.</p>
+        </div>
+        <div class="guide-box box-give">
+          <span class="guide-ico" data-sprite="arrow"></span>
+          <b>Give Away</b>
+          <small>Urgent, but not yours</small>
+          <p>The bin, on your brother's night.</p>
+        </div>
+        <div class="guide-box box-drop">
+          <span class="guide-ico" data-sprite="bin"></span>
+          <b>Drop</b>
+          <small>Neither</small>
+          <p>Checking who viewed your story.</p>
+        </div>
+      </div>
+
+      <p class="guide-p">
+        All four are live from Level 1. What makes the early levels easy is
+        the <b>cards</b>, not the corners - Level 1 only deals ones with an
+        obvious answer, and the tricky ones arrive later.
+      </p>
+
+      <div class="guide-note">
+        <b>The trap everyone falls into</b>
+        <p>
+          <em>Urgent</em> and <em>important</em> are not the same thing. A
+          buzzing phone feels urgent and almost never is. A big exam feels
+          far away and is the most important thing you own.
+        </p>
+        <p>
+          <b>Do Later is the corner that changes your life</b>, and it is the
+          one people skip, because nothing bad happens today if you do.
+        </p>
+      </div>
+
+      <h3 class="guide-h">How to play</h3>
+      <ul class="guide-ul">
+        <li>A card appears. <b>Swipe it into a corner.</b> On a laptop: <b>Q W A S</b>.</li>
+        <li>Get it right and your <b>streak</b> climbs, up to x8. Every card is worth more.</li>
+        <li>Get it wrong and the streak drops to x1. That is the real punishment.</li>
+        <li>Sort within 1.2 seconds for a <b>Perfect</b> and a big bonus.</li>
+      </ul>
+
+      <h3 class="guide-h">How to pass</h3>
+      <p class="guide-p">
+        One thing decides it: <b>the share you got right</b>. Level 1 needs 60%,
+        and it climbs to 75% by Level 4. Speed only changes your score, never
+        whether you pass.
+      </p>
+      <p class="guide-p">
+        Get one wrong and the round does not stop to lecture you - you just
+        hear it and see the card fly the wrong way. <b>Every mistake is
+        waiting on the end screen</b> under <b>What you missed</b>, with the
+        right answer and the reason, for as long as you want to sit and read
+        it. That is the part worth reading.
+      </p>
+
+      <h3 class="guide-h">Your gear</h3>
+      <ul class="guide-ul">
+        <li><b>Weapon</b> - more points per card. Safe, always good.</li>
+        <li><b>Armour</b> - covers wrong answers so they do not count against you.</li>
+        <li><b>Pet</b> - pays extra coins, but <em>speeds your clock up</em>. Less time, smaller score. That is the deal.</li>
+        <li>Wear all three at once for <b>+25% coins</b>.</li>
+      </ul>
+
+      <h3 class="guide-h">Battle</h3>
+      <p class="guide-p">
+        A rival sorts the same cards you do, on their own clock. Sort right to
+        hit them, sort wrong and they hit you. Your weapon decides how hard.
+      </p>
+
+      <h3 class="guide-h">Change the background</h3>
+      <p class="guide-p">
+        In a level, the round button in the <b>top right corner</b> opens the
+        background picker. Sakura, forest, waterfalls, or plain deep space.
+        Pick one and it stays that way for every round after.
+      </p>
+      <div class="guide-swatches" id="guide-swatches"></div>
+      <p class="guide-p">
+        <b>The clock stops while the picker is open</b>, so changing it never
+        costs you a second.
+      </p>
+
+      <div class="guide-note is-last">
+        <b>If you remember one thing</b>
+        <p>
+          Loud is not the same as important. Most of what shouts at you today
+          belongs in <em>Drop</em> or <em>Give Away</em> - and the thing that
+          actually matters is sitting quietly in <em>Do Later</em>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== BATTLE SELECT ==================== -->
+  <section id="screen-battle" class="screen">
+    <header class="lv-head">
+      <div>
+        <h2 class="lv-title">Battle</h2>
+        <p class="lv-sub">Out-sort a rival, one on one</p>
+      </div>
+      <div class="coin-pill">
+        <span class="tab-coin-ico" data-sprite="coin"></span>
+        <b class="coin-count">0</b>
+      </div>
+    </header>
+    <div class="battle-list" id="battle-list"></div>
+  </section>
+  <!-- ==================== HERO ==================== -->
+  <section id="screen-hero" class="screen">
+    <header class="lv-head">
+      <div>
+        <h2 class="lv-title">Character</h2>
+        <p class="lv-sub">Tap a slot to change what you carry</p>
+      </div>
+      <div class="coin-pill">
+        <span class="tab-coin-ico" data-sprite="coin"></span>
+        <b class="coin-count">0</b>
+      </div>
+    </header>
+
+    <div class="hero-body">
+      <div class="hero-stage">
+        <button class="slot slot-left" id="slot-pet" type="button">
+          <span class="slot-k">Pet</span>
+          <span class="slot-art"></span>
+          <b class="slot-name">None</b>
+          <small class="slot-desc"></small>
+        </button>
+
+        <div class="hero-figure">
+          <span class="hero-art" id="hero-art"></span>
+          <!-- Tap to type. A plain text box rather than a popup, so
+               naming your character is one tap, not three. -->
+          <input class="hero-name" id="hero-name" type="text" maxlength="14"
+                 autocomplete="off" spellcheck="false"
+                 placeholder="Name me" aria-label="Your character's name">
+        </div>
+
+        <button class="slot slot-right" id="slot-weapon" type="button">
+          <span class="slot-k">Weapon</span>
+          <span class="slot-art"></span>
+          <b class="slot-name">None</b>
+          <small class="slot-desc"></small>
+        </button>
+
+        <button class="slot slot-bottom" id="slot-armour" type="button">
+          <span class="slot-k">Armour</span>
+          <span class="slot-art"></span>
+          <b class="slot-name">None</b>
+          <small class="slot-desc"></small>
+        </button>
+      </div>
+
+      <div class="hero-set" id="hero-set"></div>
+
+      <div class="hero-picker" id="hero-picker"></div>
+
+      <div class="hero-stats" id="hero-stats"></div>
+
+      <button class="btn btn-ghost btn-tiny" id="btn-reset" type="button">Reset all progress</button>
+    </div>
+  </section>
+  <!-- ==================== SHOP ==================== -->
+  <section id="screen-shop" class="screen">
+    <header class="lv-head">
+      <div>
+        <h2 class="lv-title">Shop</h2>
+        <p class="lv-sub">Everything here changes how a round plays</p>
+      </div>
+      <div class="coin-pill"><span class="tab-coin-ico" data-sprite="coin"></span><b class="coin-count">0</b></div>
+    </header>
+
+    <div class="shop-body" id="shop-body"></div>
+    <div class="shop-flash" id="shop-flash"></div>
+  </section>
+  <!-- ==================== PLAY ==================== -->
+  <section id="screen-play" class="screen">
+    <header class="hud">
+      <button class="btn-exit" id="btn-exit" type="button" aria-label="Leave this level">&#8592;</button>
+      <div class="hud-score">
+        <span class="hud-k"><b id="play-level">Level 1</b> &middot; need <b id="play-target">0</b></span>
+        <div class="odo" id="odo"></div>
+      </div>
+      <div class="streak" id="streak">x1</div>
+      <div class="hud-clock">
+        <span class="hud-k" id="clock-k">Time</span>
+        <b id="clock">90</b>
+      </div>
+      <!-- Change the background mid-round. Opening it pauses the clock,
+           so choosing a picture never costs you seconds. -->
+      <button class="btn-theme" id="btn-theme" type="button" aria-label="Change the background">&#9673;</button>
+    </header>
+
+    <!-- the background picker, filled in by js/themes.js -->
+    <div class="theme-picker" id="theme-picker" hidden></div>
+
+    <div class="fight-hud">
+      <div class="fighter">
+        <span class="fight-name" id="you-name">You</span>
+        <div class="hp-track"><div class="hp-fill" id="hp-you"></div></div>
+      </div>
+      <div class="fight-mid">
+        <span class="foe-art-live" id="foe-art-live"></span>
+        <b id="fight-clock">60</b>
+      </div>
+      <div class="fighter fighter-foe">
+        <span class="fight-name" id="foe-name">Rival</span>
+        <div class="hp-track"><div class="hp-fill is-foe" id="hp-foe"></div></div>
+      </div>
+    </div>
+    <!-- Shield charges left this round. This strip used to sit beside the
+         desk meter; the desk is gone, so it stands on its own now. -->
+    <div class="shieldbar">
+      <span class="shield-pips" id="shield-pips" hidden></span>
+    </div>
+
+    <div class="arena" id="arena">
+      <div class="corner corner-tl" id="corner-now">
+        <span class="corner-ico"></span>
+        <b class="corner-label">Do Now</b>
+        <span class="corner-hint"></span>
+      </div>
+      <div class="corner corner-tr" id="corner-later">
+        <span class="corner-ico"></span>
+        <b class="corner-label">Do Later</b>
+        <span class="corner-hint"></span>
+      </div>
+      <div class="corner corner-bl" id="corner-give">
+        <span class="corner-ico"></span>
+        <b class="corner-label">Give Away</b>
+        <span class="corner-hint"></span>
+      </div>
+      <div class="corner corner-br" id="corner-drop">
+        <span class="corner-ico"></span>
+        <b class="corner-label">Drop</b>
+        <span class="corner-hint"></span>
+      </div>
+
+      <div class="card" id="card">
+        <span class="card-text">&nbsp;</span>
+      </div>
+
+      <div class="flash" id="flash"></div>
+    </div>
+  </section>
+
+  <!-- ==================== END ==================== -->
+  <section id="screen-end" class="screen">
+    <div class="end-wrap">
+      <h2 class="end-title" id="end-title">Time!</h2>
+      <p class="end-sub" id="end-sub">Round complete.</p>
+
+      <div class="grade" id="grade">A</div>
+      <p class="end-unlock" id="end-unlock"></p>
+
+      <ul class="end-stats">
+        <li><span>Score</span><b id="end-score">0</b></li>
+        <li><span>Needed to pass</span><b id="end-target">0</b></li>
+        <li><span>Accuracy</span><b id="end-acc">0%</b></li>
+        <li><span>Best streak</span><b id="end-streak">x1</b></li>
+        <li><span>Cards sorted</span><b id="end-sorted">0</b></li>
+        <li><span>Coins earned</span><b id="end-coins">+0</b></li>
+      </ul>
+
+      <button class="btn btn-primary btn-lg" id="btn-next" type="button" hidden>Next level</button>
+      <button class="btn btn-lg" id="btn-again" type="button">Play again</button>
+      <button class="btn btn-ghost" id="btn-home" type="button">Dashboard</button>
+
+      <!-- Every card you got wrong, with the right answer and the reason.
+           During a round the explanation flashes past in under two seconds,
+           so this is where the game actually gets to teach.
+
+           It sits BELOW the buttons on purpose: someone who just wants
+           another go should not have to scroll past ten cards to find
+           Play again. -->
+      <section class="review" id="review" hidden>
+        <h3 class="review-head" id="review-head">What you missed</h3>
+        <p class="review-note" id="review-note" hidden></p>
+        <ul class="review-list" id="review-list"></ul>
+      </section>
+    </div>
+  </section>
+
+</div>
+
+
+<!-- ==================== BOTTOM BAR ==================== -->
+
+<!-- ==================== FIRST-TIME POPUP ====================
+     One card, reused for every screen. js/tips.js fills it in the
+     first time each screen opens. -->
+<div class="tip" id="tip" hidden>
+  <div class="tip-card" role="dialog" aria-modal="true" aria-labelledby="tip-title">
+    <span class="tip-ico" id="tip-ico"></span>
+    <h3 class="tip-title" id="tip-title"></h3>
+    <ul class="tip-lines" id="tip-lines"></ul>
+    <button class="btn btn-primary tip-ok" id="tip-ok" type="button">Got it</button>
+  </div>
+</div>
+
+<nav class="tabbar" id="tabbar" hidden>
+  <button class="tab is-on" id="tab-map" type="button">
+    <span class="tab-ico tab-pic" data-sprite="map"></span>
+    <span>Map</span>
+  </button>
+  <button class="tab" id="tab-guide" type="button">
+    <span class="tab-ico tab-pic" data-sprite="book"></span>
+    <span>Guide<br>Book</span>
+  </button>
+  <button class="tab" id="tab-hero" type="button">
+    <span class="tab-ico tab-pic" data-sprite="hero"></span>
+    <span>Character</span>
+  </button>
+  <button class="tab" id="tab-battle" type="button">
+    <span class="tab-ico tab-pic" data-sprite="battle"></span>
+    <span>Battle</span>
+  </button>
+  <button class="tab" id="tab-shop" type="button">
+    <span class="tab-ico tab-pic" data-sprite="shop"></span>
+    <span>Shop</span>
+  </button>
+</nav>
+<script src="js/cards.js"></script>
+<script src="js/levels.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/hero.js"></script>
+<script src="js/battle.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/themes.js"></script>
+<script src="js/tips.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
