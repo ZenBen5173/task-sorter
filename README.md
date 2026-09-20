@@ -490,19 +490,22 @@ and deciding what happens when someone's connection drops mid-round.
 The repo is committed and ready. It is a static site - no build step - so a
 host only has to serve the folder.
 
-**1. Make a GitHub repo** at <https://github.com/new>. Call it `task-sorter`.
-Do NOT tick "Add a README", the repo already has one. Then, in this folder:
+**Done:** <https://github.com/ZenBen5173/task-sorter>
 
 ```bash
-git remote add origin https://github.com/YOUR-USERNAME/task-sorter.git
-git branch -M main
-git push -u origin main
+git push          # after the first push, this is all it takes
 ```
 
-**2. Deploy** at <https://vercel.com/new>. Sign in with GitHub, pick the repo,
-and press Deploy. Framework preset: **Other**. No build command, no output
-directory - `vercel.json` already says what is needed. You get a public
-`https://task-sorter-....vercel.app` address in about a minute.
+**Deploy** at <https://vercel.com/new>: pick the repo and press Deploy.
+Framework preset **Other**, no build command, no output directory -
+`vercel.json` already says what is needed. Once it is linked, every push
+deploys itself.
+
+### Commit author
+
+Commits use `ZenBen5173@users.noreply.github.com`, not a real address. GitHub
+rejects a push that would publish a private email (error GH007), and this repo
+is public, so the forwarding address is the right thing to use.
 
 `archive/` (the old Focus Village build) is in `.gitignore`, so it is not
 uploaded and does not count towards the competition's 100 MB.
