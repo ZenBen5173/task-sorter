@@ -60,7 +60,7 @@ you nothing.
 | `js/levels.js` | **The levels** and your saved progress |
 | `js/shop.js` | **The shop:** pets, armour, weapons and coin rewards |
 | `js/hero.js` | **The Character screen:** gear slots and stat bars |
-| `js/battle.js` | **The rivals** you duel in Battle |
+| `js/battle.js` | **The bosses** you duel |
 | `js/main.js` | Boots the game, draws the level map, wires the buttons |
 | `js/pets.js` | **The pet collection:** the thirteen sheets, and how they are played |
 | `js/weather.js` | **The falling petals, leaves and rain** behind a round |
@@ -86,7 +86,7 @@ pass *through* on the way into a round, not a section of an app.
 | | What is on it |
 |---|---|
 | **Home** | Your character in the gear you chose, your rank, your stars, your collection - and PLAY |
-| **Battle** | The four rivals, and Online Battle marked coming soon |
+| **Boss** | The four bosses, and Online Boss marked coming soon |
 | **&#9654; PLAY** | The level map. The **?** in its corner opens the Guide Book |
 | **Gear** | Your character, the three slots, the whole shop, and your stats |
 | **Me** | Your account, the background, the sound, the rulebook, and Reset |
@@ -292,9 +292,9 @@ seconds in rush mode, which is what made Level 1 unfairly brutal at first.
 
 ---
 
-## Battle
+## Boss
 
-The third tab. A **1 v 1 sorting duel** against the computer — not a separate
+A **1 v 1 sorting duel** against the computer — not a separate
 fighting game. Both of you sort the same cards:
 
 - You sort one **right** → you hit them (12 damage, 18 if you were fast)
@@ -304,9 +304,9 @@ fighting game. Both of you sort the same cards:
 Two health bars, a 60 second clock. First bar to empty loses; if the clock runs
 out, whoever has more health wins.
 
-### The rivals
+### The bosses
 
-| Rival | Is | Sorts | Accuracy | Damage |
+| Boss | Is | Sorts | Accuracy | Damage |
 |---|---|---|---|---|
 | Sticky Steve | a sticky note with a face | one every 2.6s | 60% | 9 |
 | Clip Carla | paperclips in her hair | one every 2.0s | 72% | 10 |
@@ -318,14 +318,20 @@ all named after the thing that buries people, so each one IS that thing - you
 can tell them apart by silhouette before reading a name. A rival added without
 a `sprite` falls back to the plain stand-in figure.
 
-They unlock one at a time. Winning pays 120 coins plus 60 per rival; losing
+They unlock one at a time. Winning pays 120 coins plus 60 per boss; losing
 still pays 20% of that, so a hard fight is never a total waste.
 
 Your **weapon** from the shop multiplies your damage, so gear matters here more
 than anywhere else.
 
-Everything is in `js/battle.js` — adding a rival is one entry with a `speed` and
+Everything is in `js/battle.js` — adding a boss is one entry with a `speed` and
 an `accuracy`.
+
+**The screen says Boss; the code still says battle.** A "battle" in the source
+is the duel *mechanic* - two health bars, one clock, the same cards - and it is
+what `game.js` switches into with `mode = 'battle'`. *Boss* is what the four of
+them are to a player working up the ladder. Renaming the mechanic would have
+meant touching the scoring path to change nothing anybody can see.
 
 ---
 
@@ -429,12 +435,12 @@ Nothing else changes — the shop, the Character slots and the picker all pick i
 Not everything is buyable from the start. Items carry one of two gates:
 
 - `needsLevel: 3` — you must have **reached level 3** on the map
-- `needsRival: 2` — you must have **beaten the second rival** in Battle
+- `needsRival: 2` — you must have **beaten the second boss**
 
 A locked tile shows the reason on its price tag (*"Reach level 3"*,
 *"Beat Clip Carla"*) rather than just going grey, so you always know what to go
-and do. The top item in each group is gated behind a **battle**, which is what
-gives Battle mode a purpose beyond coins.
+and do. The top item in each group is gated behind a **boss fight**, which is
+what gives the Boss screen a purpose beyond coins.
 
 There are 18 items: six per group, five of them buyable.
 
@@ -695,9 +701,9 @@ popup back.
 
 ---
 
-## Online Battle (not built yet)
+## Online Boss (not built yet)
 
-The Battle screen shows a fifth card, **Online Battle**, with a dashed outline
+The Boss screen shows a fifth card, **Online Boss**, with a dashed outline
 and a **Coming soon** badge. Tapping it opens a popup that says plainly it is
 not ready yet and why.
 

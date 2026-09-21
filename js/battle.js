@@ -1,6 +1,15 @@
 /* ============================================================
    battle.js  -  1 v 1 against the computer
    ------------------------------------------------------------
+   THE SCREEN IS CALLED BOSS. The code is not: a "battle" here is the
+   duel MECHANIC - two health bars, one clock, the same cards - and it
+   is what game.js switches into with `mode = 'battle'`. Boss is what
+   the four of them ARE to a player working up the ladder.
+
+   So every word a player reads says Boss, and every identifier still
+   says battle. Renaming the mechanic would have meant touching the
+   scoring path in game.js to change nothing anybody can see.
+   ------------------------------------------------------------
    A sorting duel, not a separate fighting game. Both of you sort
    the same kind of cards:
 
@@ -131,7 +140,7 @@ var Battle = (function () {
 
     var txt = document.createElement('span');
     txt.className = 'foe-txt';
-    txt.innerHTML = '<b>Online Battle</b>' +
+    txt.innerHTML = '<b>Online Boss</b>' +
       '<small>Out-sort a real player, anywhere in the world</small>';
 
     var badge = document.createElement('span');
@@ -146,11 +155,11 @@ var Battle = (function () {
       UI.sound.tick();
       Tips.showInfo({
         icon: 'globe',
-        title: 'Online Battle',
+        title: 'Online Boss',
         lines: [
           '<b>Coming soon.</b> Two real players, the same cards, the same clock - whoever sorts better wins.',
           'It needs an online server to find you an opponent and pass the moves between phones. That is the next big thing to build.',
-          'Until then, the four rivals above are the fight.'
+          'Until then, the four bosses above are the fight.'
         ]
       });
     });

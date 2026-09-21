@@ -89,7 +89,7 @@ var SHOP = {
   },
   weapon: {
     label: 'Weapons',
-    blurb: 'Hit harder. More points, and more damage in a battle.',
+    blurb: 'Hit harder. More points, and more damage in a boss fight.',
     items: [
       { id: 'wep0', name: 'Bare Hands',      cost: 0,    tint: 0,   mult: 1,    desc: 'Normal points.' },
       { id: 'wep1', name: 'Dagger',          cost: 100,  tint: 0,   mult: 1.10, desc: '+10% points.', sprite: 'dagger' },

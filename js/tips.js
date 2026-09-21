@@ -80,11 +80,11 @@ var TIPS = {
 
   battle: {
     icon: 'battle',
-    title: 'Battle',
+    title: 'Boss',
     lines: [
-      'Fight a rival one on one. <b>You both sort the same cards.</b>',
+      'Fight a boss one on one. <b>You both sort the same cards.</b>',
       'Sort right and you hit them. Sort wrong and they hit you.',
-      'Beat a rival to unlock the next, tougher one.'
+      'Beat a boss to unlock the next, tougher one.'
     ]
   },
 

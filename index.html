@@ -59,8 +59,8 @@
       <div class="home-row">
         <button class="home-card" id="home-battle" type="button">
           <span class="home-card-ico" data-sprite="battle"></span>
-          <b>Battle</b>
-          <small id="home-battle-sub">Out-sort a rival</small>
+          <b>Boss</b>
+          <small id="home-battle-sub">Out-sort a boss</small>
         </button>
         <button class="home-card" id="home-gear" type="button">
           <span class="home-card-ico" data-sprite="shield"></span>
@@ -232,9 +232,9 @@
         <li>Wear all three at once for <b>+25% coins</b>.</li>
       </ul>
 
-      <h3 class="guide-h">Battle</h3>
+      <h3 class="guide-h">Boss fights</h3>
       <p class="guide-p">
-        A rival sorts the same cards you do, on their own clock. Sort right to
+        A boss sorts the same cards you do, on their own clock. Sort right to
         hit them, sort wrong and they hit you. Your weapon decides how hard.
       </p>
 
@@ -265,8 +265,8 @@
   <section id="screen-battle" class="screen">
     <header class="lv-head">
       <div>
-        <h2 class="lv-title">Battle</h2>
-        <p class="lv-sub">Out-sort a rival, one on one</p>
+        <h2 class="lv-title">Boss</h2>
+        <p class="lv-sub">Out-sort a boss, one on one</p>
       </div>
       <div class="coin-pill">
         <span class="tab-coin-ico" data-sprite="coin"></span>
@@ -467,7 +467,7 @@
         <b id="fight-clock">60</b>
       </div>
       <div class="fighter fighter-foe">
-        <span class="fight-name" id="foe-name">Rival</span>
+        <span class="fight-name" id="foe-name">Boss</span>
         <div class="hp-track"><div class="hp-fill is-foe" id="hp-foe"></div></div>
       </div>
     </div>
@@ -517,7 +517,7 @@
       <p class="end-unlock" id="end-unlock"></p>
 
       <!-- The first two rows are relabelled in a battle: a duel has no
-           score and no pass mark, it has health left and a rival. The
+           score and no pass mark, it has health left and a boss. The
            ids on the labels are what js/game.js rewrites. -->
       <ul class="end-stats">
         <li><span id="end-score-k">Score</span><b id="end-score">0</b></li>
@@ -581,7 +581,7 @@
   </button>
   <button class="tab" id="tab-battle" type="button">
     <span class="tab-ico tab-pic" data-sprite="battle"></span>
-    <span>Battle</span>
+    <span>Boss</span>
   </button>
 
   <button class="tab-play" id="tab-play" type="button" aria-label="Play">

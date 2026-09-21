@@ -858,7 +858,7 @@ var Game = (function () {
       unlock.textContent = nextFoe.name + ' unlocked';
       unlock.className = 'end-unlock is-good';
     } else if (won) {
-      unlock.textContent = 'You beat every rival!';
+      unlock.textContent = 'You beat every boss!';
       unlock.className = 'end-unlock is-good';
     } else {
       unlock.textContent = 'Your health ran out. Sort faster, and stop missing.';
@@ -869,7 +869,7 @@ var Game = (function () {
        they are actually showing: the health you finished on, and who
        you were fighting. */
     UI.$('end-score-k').textContent = 'Health left';
-    UI.$('end-target-k').textContent = 'Rival';
+    UI.$('end-target-k').textContent = 'Boss';
     UI.$('end-score').textContent = Math.max(0, hpYou) + ' HP';
     UI.$('end-target').textContent = foe.name;
     UI.$('end-acc').textContent = Math.round(acc * 100) + '%';
@@ -878,9 +878,9 @@ var Game = (function () {
     UI.$("end-coins").textContent = "+" + coins + (Shop.hasFullSet() ? " (full set)" : "");
 
     UI.$("btn-next").hidden = !(won && nextFoe);
-    UI.$('btn-next').textContent = 'Next rival';
+    UI.$('btn-next').textContent = 'Next boss';
     UI.$('btn-again').textContent = won ? 'Fight again' : 'Try again';
-    UI.$('btn-home').textContent = 'Back to the rivals';
+    UI.$('btn-home').textContent = 'Back to the bosses';
 
     paintReview(won);
     UI.showScreen('end');

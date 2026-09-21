@@ -122,7 +122,7 @@ function paintHome() {
 
   var beaten = Progress.rivalsBeaten();
   UI.$('home-battle-sub').textContent = beaten >= OPPONENTS.length
-    ? 'Every rival beaten'
+    ? 'Every boss beaten'
     : 'Next: ' + OPPONENTS[beaten].name;
 
   Shop.paintCoins();
