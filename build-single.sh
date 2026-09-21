@@ -1,6 +1,11 @@
 #!/bin/sh
-# Bundles the whole game into one self-contained HTML file.
-# Usage:  sh build-single.sh   ->  writes focus-village-single.html
+# Bundles the game's code into one HTML file.
+# Usage:  sh build-single.sh   ->  writes task-sorter-single.html
+#
+# NOT fully self-contained any more. The CSS, the JavaScript and every
+# sprite drawn in code go inside; the thirteen pet sheets in assets/pets/
+# are real PNGs and stay where they are, so the file needs that folder
+# beside it. Nothing else does.
 awk '
   /<link rel="stylesheet"/ {
     print "<style>";
@@ -19,5 +24,5 @@ awk '
     next
   }
   { print }
-' index.html > focus-village-single.html
-echo "built focus-village-single.html"
+' index.html > task-sorter-single.html
+echo "built task-sorter-single.html (keep assets/ beside it)"

@@ -84,7 +84,7 @@ var Hero = (function () {
       el.classList.toggle('is-open', openSlot === slot.kind);
 
       var art = el.querySelector(".slot-art");
-      Sprites.apply(art, item.sprite);
+      Sprites.apply(art, item.sprite, 38);
       art.style.filter = item.tint ? "hue-rotate(" + item.tint + "deg)" : "";
       el.querySelector('.slot-name').textContent = item.name;
       el.querySelector('.slot-desc').textContent = item.desc;
@@ -169,7 +169,7 @@ var Hero = (function () {
 
       var art = document.createElement("span");
       art.className = "picker-art";
-      Sprites.apply(art, item.sprite);
+      Sprites.apply(art, item.sprite, 32);
       art.style.filter = item.tint ? "hue-rotate(" + item.tint + "deg)" : "";
 
       var name = document.createElement('small');

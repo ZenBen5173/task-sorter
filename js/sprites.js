@@ -18,11 +18,6 @@ var SPRITE_OVERRIDES = {
   // cal:   'assets/sprites/cal.png',
   // arrow: 'assets/sprites/arrow.png',
   // bin:   'assets/sprites/bin.png',
-  // sloth: 'assets/sprites/sleepy-sloth.png',
-  // crane: 'assets/sprites/paper-crane.png',
-  // tabby: 'assets/sprites/ink-cat.png',
-  // dragon: 'assets/sprites/desk-dragon.png',
-  // owl:    'assets/sprites/time-owl.png',
   // woodshield: 'assets/sprites/wood-shield.png',
   // silvershield: 'assets/sprites/silver-shield.png',
   // goldshield: 'assets/sprites/gold-shield.png',
@@ -36,7 +31,13 @@ var SPRITE_OVERRIDES = {
   // wingedblade: 'assets/sprites/golden-shredder.png'
 };
 
-/* 16x16 grids. '.' is see-through, every other letter is a colour. */
+/* 16x16 grids. '.' is see-through, every other letter is a colour.
+
+   NO PETS IN HERE any more. The pets are animated sheets an artist drew
+   and they live in js/pets.js; the five hand-drawn stand-ins that used
+   to sit here (crane, tabby, sloth, dragon, owl) went when the real
+   collection arrived. `cat` stayed: it is the picture the shop falls
+   back to for a group, which is what the "None" pet shows. */
 var SPRITE_DATA = {
 
   /* The Map tab - an old explorer's chart. Aged paper, a torn brown
@@ -698,125 +699,10 @@ var SPRITE_DATA = {
     ]
   },
 
-  /* Time Owl - ear tufts, orange eyes. Override: owl */
-  owl: {
-    pal: { d: '#4e4436', l: '#8a7a62', c: '#d8cdb8',
-           e: '#e8a020', k: '#1a1610', b: '#3a3228', s: '#8f8a80' },
-    px: [
-      '................',
-      '..dd......dd....',
-      '..ddd....ddd....',
-      '..dllllllllld...',
-      '..deeellleeed...',
-      '..dekellleked...',
-      '..dlllbbbllld...',
-      '...dccccccccd...',
-      '..dcdcdcdcdcd...',
-      '..dccdccdccdc...',
-      '..dcdcdcdcdcd...',
-      '..dccdccdccdc...',
-      '...dcccccccd....',
-      '....dd..dd......',
-      '..ssssssssss....',
-      '.ssssssssssss...'
-    ]
-  },
 
-  /* Desk Dragon - green, orange wings. Override: dragon */
-  dragon: {
-    pal: { r: '#c44a2a', g: '#4a8a3a', G: '#2e5f28', c: '#e8e0c8',
-           k: '#2a2018', o: '#d98a3a', O: '#a85f1e' },
-    px: [
-      '......rr.r......',
-      '.....rggr.......',
-      '.o...gggg...o...',
-      '.oo..gcckg..oo..',
-      '.ooo..gccg..ooo.',
-      '.oooo.gccg.oooo.',
-      '.OoooogccgoooO..',
-      '..OooggccggoooO.',
-      '...OOggccggOO...',
-      '....ggccccgg....',
-      '....gccccccg....',
-      '....gcccccgg....',
-      '...ggcccccggG...',
-      '..GGgg...ggGG...',
-      '..GG......GG....',
-      '................'
-    ]
-  },
 
-  /* Ink Cat - sitting striped tabby. Override: tabby */
-  tabby: {
-    pal: { d: '#5e4a2e', l: '#8a7048', c: '#c4ae86',
-           e: '#6fae4a', n: '#b8746a' },
-    px: [
-      '................',
-      '..dd........dd..',
-      '..dld......dld..',
-      '...dlllllllld...',
-      '..dlldllllddll..',
-      '..lleelllleell..',
-      '..llllcnncllll..',
-      '...llccccccll...',
-      '....llllllll....',
-      '...llccccccll...',
-      '..lldccccccdll..',
-      '..llldccccdlll..',
-      '..llllccccllll..',
-      '..llllllllllll..',
-      '..ccllllllllcc..',
-      '................'
-    ]
-  },
 
-  /* Paper Crane - grey bird, red crown. Override: crane */
-  crane: {
-    pal: { r: '#c4342a', w: '#eeeae2', k: '#3a3630',
-           l: '#b8b4ac', d: '#918d85', g: '#4a4640' },
-    px: [
-      '................',
-      '...rr...........',
-      '..rwwr..........',
-      '.kkwww..........',
-      '....ww..........',
-      '.....ww.........',
-      '......ll........',
-      '......llll......',
-      '.....llllllld...',
-      '....lllllllddd..',
-      '....llllllldd...',
-      '.....lllllll....',
-      '......gg.g......',
-      '......g..g......',
-      '.....gg..gg.....',
-      '................'
-    ]
-  },
 
-  /* Sleepy Sloth - hangs from a branch. Override: sloth */
-  sloth: {
-    pal: { g: '#3d8b40', B: '#4a3320', b: '#6b4a2a',
-           d: '#8a6a30', l: '#c9a95e', f: '#e8dcc0', k: '#3a2a18' },
-    px: [
-      '..gg............',
-      'BBBBBBBBBBBBBBBB',
-      'BbbbbbbbbbbbbbbB',
-      '.......dd.......',
-      '......dd........',
-      '....llllll......',
-      '...llllllll.....',
-      '..ffffllllllll..',
-      '.ffkffkflllllll.',
-      '.ffffffflllllll.',
-      '.ffkkkfflllllll.',
-      '.ffffffflllllll.',
-      '..fffffllllllll.',
-      '...dddddddddd...',
-      '....dddddddd....',
-      '................'
-    ]
-  },
 
   cat: {
     pal: { k: '#6b5b8a', w: '#f2f2e8' },
@@ -942,7 +828,23 @@ var Sprites = (function () {
       if (!(name in cache)) cache[name] = build(name);
       return cache[name];
     },
-    apply: function (el, name) {
+    /** Puts the picture called `name` on `el`.
+
+        A pet is not one of these 16x16 grids - it is an animated sheet
+        an artist drew, and js/pets.js plays it. Rather than make every
+        caller ask which kind of picture it is about to draw, this one
+        function knows, and hands a pet straight over. `box` is how many
+        pixels across the picture should come out; it only matters for a
+        pet, because a flat sprite just fills whatever box CSS gave it. */
+    apply: function (el, name, box) {
+      if (window.Pets && Pets.has(name)) {
+        Pets.apply(el, name, box);
+        return;
+      }
+      /* Coming back from a pet: drop the frame it left behind, or the
+         creature would still be standing there under the new picture. */
+      if (el.firstChild) el.innerHTML = '';
+      el.classList.remove('pet-art');
       el.style.backgroundImage = 'url("' + this.get(name) + '")';
       el.classList.add('px-art');
     }

@@ -68,6 +68,38 @@ body {
   image-rendering: pixelated;
 }
 
+/* ---------------- animated pets ----------------
+   A pet is a sheet of frames played by sliding the background sideways
+   (js/pets.js). `.pet-art` is the BOX the pet is given - whatever size
+   the shop tile or the gear slot already decided - and `.pet-frame` is
+   one cell of the sheet, centred in it.
+
+   The frame is usually bigger than the box, because a cell is drawn
+   with room around the creature. That spare room is transparent, so it
+   never covers what is next to it - and `overflow: visible` is what
+   lets the creature itself stand taller than a 40px tile instead of
+   being sliced off at the ears. */
+.pet-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  background: none;
+}
+
+.pet-frame {
+  display: block;
+  flex: 0 0 auto;
+  background-repeat: no-repeat;
+  /* The frame hangs outside its box, and a transparent corner of it can
+     sit on top of the shop tile next door. Without this, a tap meant for
+     that tile buys this pet instead. */
+  pointer-events: none;
+  /* the sheet is scaled as a whole, so nearest-neighbour or it turns
+     to porridge on the way up */
+  image-rendering: pixelated;
+}
+
 /* ---------------- screens ---------------- */
 
 .screen {
