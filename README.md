@@ -76,16 +76,56 @@ them failing.
 
 ## How you get around
 
-Four tabs along the bottom, and every one of them is a place you go back to:
+It is a game, so it is built around the thing you came to do.
 
-| Tab | What is on it |
+**PLAY is the middle of the bottom bar**, raised and gold, and it is the only
+round button on the screen - a thumb finds it without looking. The level map
+is what it opens, so the map stopped being a tab of its own: it is a place you
+pass *through* on the way into a round, not a section of an app.
+
+| | What is on it |
 |---|---|
-| **Map** | The four levels. The **?** in the corner opens the Guide Book |
+| **Home** | Your character in the gear you chose, your rank, your stars, your collection - and PLAY |
 | **Battle** | The four rivals, and Online Battle marked coming soon |
-| **Gear** | Your character, the three slots, your stats - and the whole shop underneath |
+| **&#9654; PLAY** | The level map. The **?** in its corner opens the Guide Book |
+| **Gear** | Your character, the three slots, the whole shop, and your stats |
 | **Me** | Your account, the background, the sound, the rulebook, and Reset |
 
-It used to be five tabs, and three things were in the wrong place:
+### Home
+
+There used to be a title card: a logo, the four corners written out a second
+time, and one button. You passed through it once and never came back.
+
+**A game's home is where you see what you have got.** Your character stands on
+it wearing what you chose, with the pet you bought beside them, and around
+that: your rank, your stars, the pets you have caught, and what the next level
+is called. PLAY names where it is going - *"Level 3, On Your Phone"* is a
+reason to tap it; *"Play"* on its own is furniture.
+
+### Stars and ranks
+
+A grade is a mark. **Stars are the thing you collect** - which is why every
+game that wants you to replay a level counts them. A letter tells you how you
+did; three empty stars tell you there is something still on the table.
+
+| Grade | Stars |
+|---|---|
+| **S** | 3 |
+| **A** | 2 |
+| **B** or **C** | 1 |
+
+Clearing a level *is* the achievement, so a pass at any grade is worth one.
+The other two are for doing it well. Twelve is everything the pack has, and
+they add up to a rank: **Beginner, Sorter, Organiser, Pro, Master**. A number
+going up is a score; a name going up is a reason to keep going. Both live in
+`js/levels.js` - `RANKS`, and `Progress.stars()`.
+
+---
+
+## What was wrong before
+
+Three things were in the wrong place, back when this was five tabs of Map,
+Guide Book, Character, Battle and Shop:
 
 - **Saving your progress was on the Character page**, in among the pets and
   the swords. Nobody looking for "keep my progress" opens a page about gear.
@@ -96,6 +136,13 @@ It used to be five tabs, and three things were in the wrong place:
   and then, which is a button, not a fifth of the bottom bar. It kept its
   place in the first-run flow and gained a **?** on the map, so it is still
   one tap away.
+
+And one thing was simply broken: when the shop moved onto the Gear page it
+kept `flex: 1; min-height: 0; overflow-y: auto` from the days when it was its
+own screen. Nested inside another scrolling box it **collapsed to nothing**,
+so all twenty-six tiles were there in the page and none of them could be
+reached. The page had no clearance under the bottom bar either, so the last
+thing on it ended up underneath the bar.
 
 Two things gained a home they never had. The **background** could only be
 changed from inside a round - you had to start playing something to change

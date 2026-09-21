@@ -801,9 +801,25 @@ body {
   flex: 1; min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 4px 14px 14px;
+  /* The bottom bar floats over this, so the last thing on the page needs
+     room to clear it. Without this the page simply ends under the bar and
+     everything past it - which, since the shop moved in here, was the
+     whole shop - is unreachable. */
+  padding: 4px 14px calc(92px + var(--safe-b));
   display: flex; flex-direction: column; gap: 14px;
   align-items: center;
+}
+
+/* The shop inside the Gear page is NOT its own scrolling box. On its own
+   screen it was the thing that scrolled; here the page scrolls and it is
+   just a section of it. Left as a flex child with `flex: 1; min-height: 0`
+   it collapsed to nothing and took every tile with it. */
+.hero-body .shop-body {
+  flex: none;
+  min-height: auto;
+  overflow: visible;
+  width: 100%;
+  padding: 0;
 }
 
 /* the character with slots around them */
@@ -1860,3 +1876,165 @@ body {
    action rather than "OK", so nobody confirms something they have not
    read. */
 .btn.is-danger { background: var(--now); border-color: var(--now); color: #fff; }
+
+/* ==================== HOME ====================
+   The front door. It used to be a title card you passed through once:
+   a logo, the four corners written out again, and one button. A game's
+   home is where you SEE what you have - so your character stands on it
+   wearing what you chose, with the rank and the stars they earned, and
+   the biggest thing on the screen is PLAY. */
+
+.home-top {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px 4px;
+}
+.logo-sm { font-size: 22px; margin: 0; }
+.home-pills { display: flex; align-items: center; gap: 8px; }
+.star-pill .star-ico { font-size: 14px; color: var(--gold, #f2c14e); line-height: 1; }
+
+.home-body {
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 16px calc(96px + var(--safe-b));
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+/* The character, and the pet you actually bought standing next to them.
+   Nothing else on the screen proves the coins were worth spending. */
+.home-stage {
+  position: relative;
+  margin-top: 6px;
+  min-height: 150px;
+  display: flex; align-items: flex-end; justify-content: center; gap: 10px;
+  padding-bottom: 26px;
+}
+.home-hero {
+  width: 104px; height: 104px;
+  background-repeat: no-repeat; background-position: center;
+  background-size: contain; image-rendering: pixelated;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.5));
+  animation: hero-bob 3s ease-in-out infinite;
+}
+.home-pet { display: flex; align-items: flex-end; }
+.home-name {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  text-align: center;
+  font-size: 14px; color: var(--tx-hi);
+}
+
+/* Rank and stars: the one line that says who you have become. */
+.home-rank {
+  padding: 12px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.rank-line { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.rank-line b { font-size: 15px; color: var(--tx-hi); }
+.rank-line span { font-size: 12px; color: var(--tx-dim); }
+.rank-track {
+  margin-top: 9px; height: 7px;
+  background: var(--bg-3);
+  border-radius: 999px; overflow: hidden;
+}
+.rank-fill {
+  height: 100%; width: 0;
+  background: linear-gradient(90deg, #f2c14e, #ffe08a);
+  border-radius: 999px;
+  transition: width .5s var(--spring);
+}
+
+/* PLAY. The biggest, loudest thing in the game. */
+.btn-play-big {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  padding: 16px 20px;
+  background: linear-gradient(180deg, #ffd873, #f0b32e);
+  border: 0; border-radius: 18px;
+  box-shadow: 0 6px 0 #b9851a, 0 12px 26px rgba(0,0,0,.45);
+  color: #2a1e04;
+  cursor: pointer;
+  transition: transform .1s var(--snap), box-shadow .1s;
+}
+.btn-play-big:active { transform: translateY(4px); box-shadow: 0 2px 0 #b9851a, 0 6px 16px rgba(0,0,0,.4); }
+.play-tri { font-size: 24px; line-height: 1; }
+.play-words { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
+.play-words b { font-size: 22px; letter-spacing: .06em; }
+.play-words small { font-size: 11.5px; opacity: .75; font-weight: 600; }
+
+.home-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.home-card {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 14px 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: inherit; font: inherit;
+  cursor: pointer;
+}
+.home-card:active { transform: scale(.97); }
+.home-card-ico {
+  width: 30px; height: 30px;
+  background-repeat: no-repeat; background-position: center;
+  background-size: contain; image-rendering: pixelated;
+}
+.home-card b { font-size: 14px; color: var(--tx-hi); }
+.home-card small { font-size: 10.5px; color: var(--tx-dim); text-align: center; }
+
+/* ---- stars on the map markers ---- */
+.lv-stars {
+  position: absolute; left: 50%; bottom: -15px;
+  transform: translateX(-50%);
+  display: flex; gap: 1px;
+  font-size: 11px; line-height: 1;
+  white-space: nowrap;
+}
+.lv-star { color: rgba(255,255,255,.18); }
+.lv-star.is-on { color: #f2c14e; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+
+/* ---- the raised PLAY in the bottom bar ----
+   The only round button on the screen, so a thumb finds it without
+   looking. The map is what it opens: a place you pass through on the
+   way into a round, not a section of an app. */
+.tab-play {
+  flex: 0 0 auto;
+  width: 56px; height: 56px;
+  margin-top: -22px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(180deg, #ffd873, #f0b32e);
+  border: 3px solid var(--bg-2);
+  border-radius: 50%;
+  box-shadow: 0 5px 0 #b9851a, 0 10px 22px rgba(0,0,0,.45);
+  color: #2a1e04;
+  cursor: pointer;
+  transition: transform .1s var(--snap), box-shadow .1s;
+}
+.tab-play:active { transform: translateY(3px); box-shadow: 0 2px 0 #b9851a, 0 5px 14px rgba(0,0,0,.4); }
+.tab-play-tri { font-size: 20px; margin-left: 3px; line-height: 1; }
+.tab-play.is-on { filter: brightness(1.08); }
+
+/* The collection strip on the home screen: the pets you have actually
+   caught, walking along the bottom. Only ones you own - an empty slot
+   here would make it a shopping list, and it is meant to be a shelf. */
+.home-collect {
+  display: flex; flex-direction: column; gap: 9px;
+  padding: 13px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: inherit; font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.home-collect:active { transform: scale(.99); }
+.collect-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.collect-head b { font-size: 14px; color: var(--tx-hi); }
+.collect-head small { font-size: 11.5px; color: var(--tx-dim); }
+.collect-row {
+  display: flex; align-items: flex-end; flex-wrap: wrap;
+  gap: 4px 2px;
+  min-height: 34px;
+}
+.collect-pet { display: flex; align-items: flex-end; }
+.collect-none { font-size: 11.5px; color: var(--tx-dim); }

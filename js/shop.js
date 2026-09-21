@@ -352,6 +352,9 @@ var Shop = (function () {
     isUnlocked: isUnlocked,
     lockReason: lockReason,
     hasFullSet: hasFullSet,
-    coinBonus: coinBonus
+    coinBonus: coinBonus,
+    /** The item worn in a slot. The home screen uses it to stand your
+        pet next to you. */
+    equippedItem: equipped
   };
 })();

@@ -12,29 +12,81 @@
 
 <div id="app">
 
-  <!-- ==================== TITLE ==================== -->
-  <section id="screen-title" class="screen is-on">
-    <div class="title-wrap">
-      <p class="eyebrow">Day to Day</p>
-      <h1 class="logo">Task<span>Sorter</span></h1>
-      <p class="tagline">Four corners. One thumb.<br>Sort it before it buries you.</p>
+  <!-- ==================== HOME ====================
+       The front door, and the only screen you land on. It used to be a
+       title card: a logo, the four corners written out again, and one
+       button - a screen you passed through once and never came back to.
 
-      <div class="legend">
-        <div class="legend-row"><b>Do Now</b><span>important + due soon</span></div>
-        <div class="legend-row"><b>Do Later</b><span>important, not yet</span></div>
-        <div class="legend-row"><b>Give Away</b><span>urgent, not yours</span></div>
-        <div class="legend-row"><b>Drop</b><span>neither</span></div>
+       A game's home is where you SEE what you have got. Your character
+       stands here wearing what you chose, with your rank, your stars and
+       your coins around them, and the biggest thing on it is PLAY. -->
+  <section id="screen-home" class="screen is-on">
+    <header class="home-top">
+      <h1 class="logo logo-sm">Task<span>Sorter</span></h1>
+      <div class="home-pills">
+        <div class="coin-pill star-pill"><span class="star-ico">&#9733;</span><b id="home-stars">0</b></div>
+        <div class="coin-pill"><span class="tab-coin-ico" data-sprite="coin"></span><b class="coin-count">0</b></div>
+      </div>
+    </header>
+
+    <div class="home-body">
+
+      <!-- Your character, wearing what you actually chose, with the pet
+           you actually bought walking about next to them. Nothing else
+           on the screen proves the gear was worth the coins. -->
+      <div class="home-stage">
+        <span class="home-pet" id="home-pet"></span>
+        <span class="home-hero" id="home-hero"></span>
+        <b class="home-name" id="home-name">You</b>
       </div>
 
-      <button class="btn btn-primary btn-lg" id="btn-play" type="button">Play</button>
-      <p class="hint-keys">On a laptop: Q W A S for the four corners</p>
+      <div class="home-rank">
+        <div class="rank-line">
+          <b id="rank-name">Beginner</b>
+          <span id="rank-stars">0 / 12 stars</span>
+        </div>
+        <div class="rank-track"><div class="rank-fill" id="rank-fill"></div></div>
+      </div>
+
+      <button class="btn-play-big" id="btn-play" type="button">
+        <span class="play-tri">&#9654;</span>
+        <span class="play-words">
+          <b>PLAY</b>
+          <small id="play-next">Level 1 &middot; In the House</small>
+        </span>
+      </button>
+
+      <div class="home-row">
+        <button class="home-card" id="home-battle" type="button">
+          <span class="home-card-ico" data-sprite="battle"></span>
+          <b>Battle</b>
+          <small id="home-battle-sub">Out-sort a rival</small>
+        </button>
+        <button class="home-card" id="home-gear" type="button">
+          <span class="home-card-ico" data-sprite="shield"></span>
+          <b>Gear</b>
+          <small id="home-gear-sub">Pets, armour, weapons</small>
+        </button>
+      </div>
+
+      <!-- The other thing you are working towards. Stars come from
+           playing well; the collection comes from playing a lot, and a
+           row of creatures you have actually caught is worth more on a
+           home screen than a number. -->
+      <button class="home-collect" id="home-collect" type="button">
+        <span class="collect-head">
+          <b>Collection</b>
+          <small id="collect-count">0 of 13 pets</small>
+        </span>
+        <span class="collect-row" id="collect-row"></span>
+      </button>
     </div>
   </section>
 
   <!-- ==================== LEVEL SELECT ==================== -->
   <section id="screen-levels" class="screen">
     <header class="lv-head">
-      <button class="btn btn-ghost btn-back" id="btn-lv-back" type="button">&#8592; Go back to homescreen</button>
+      <button class="btn btn-ghost btn-back" id="btn-lv-back" type="button">&#8592; Home</button>
       <div>
         <h2 class="lv-title" id="lv-title">Day to Day</h2>
         <p class="lv-sub" id="lv-sub">Four places. Same four corners.</p>
@@ -281,10 +333,13 @@
 
       <div class="hero-picker" id="hero-picker"></div>
 
-      <div class="hero-stats" id="hero-stats"></div>
-
-      <!-- everything you can buy, right under the character wearing it -->
+      <!-- Everything you can buy, directly under the character who would
+           be wearing it. It goes ABOVE the stat bars because it is what
+           people come to this page for; the bars are a readout of what
+           you already chose, so they read last. -->
       <div class="shop-body" id="shop-body"></div>
+
+      <div class="hero-stats" id="hero-stats"></div>
     </div>
     <div class="shop-flash" id="shop-flash"></div>
   </section>
@@ -514,18 +569,25 @@
   </div>
 </div>
 
+<!-- The bottom bar is built around the thing you came to do. PLAY sits
+     in the middle, raised and gold, and it is the only round button on
+     the screen - you can hit it without looking. The level map is what
+     it opens, so the map stopped being a tab of its own: it is a place
+     you go through on the way into a round, not a section of an app. -->
 <nav class="tabbar" id="tabbar" hidden>
-  <button class="tab is-on" id="tab-map" type="button">
-    <span class="tab-ico tab-pic" data-sprite="map"></span>
-    <span>Map</span>
+  <button class="tab" id="tab-home" type="button">
+    <span class="tab-ico tab-pic" data-sprite="house"></span>
+    <span>Home</span>
   </button>
   <button class="tab" id="tab-battle" type="button">
     <span class="tab-ico tab-pic" data-sprite="battle"></span>
     <span>Battle</span>
   </button>
-  <!-- Gear wears a shield and Me wears the character, not the other way
-       round: the book belongs to the Guide Book, which is not a tab any
-       more, and "Me" is the person, not the kit. -->
+
+  <button class="tab-play" id="tab-play" type="button" aria-label="Play">
+    <span class="tab-play-tri">&#9654;</span>
+  </button>
+
   <button class="tab" id="tab-gear" type="button">
     <span class="tab-ico tab-pic" data-sprite="shield"></span>
     <span>Gear</span>

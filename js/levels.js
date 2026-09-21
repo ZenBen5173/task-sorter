@@ -103,6 +103,31 @@ var LEVELS = [
   }
 ];
 
+/* ---------------- ranks ----------------
+   What the stars add up to. A number going up is a score; a NAME going
+   up is a reason to keep going, and it is the one line on the home
+   screen that says who the player has become.
+
+   Twelve stars is everything the Day to Day pack has - four levels at
+   three each - so the last rank is only reachable by an S on all four.
+   Add a pack later and this ladder stretches with STAR_MAX below. */
+var RANKS = [
+  { at: 0,  name: 'Beginner' },
+  { at: 3,  name: 'Sorter' },
+  { at: 6,  name: 'Organiser' },
+  { at: 9,  name: 'Pro' },
+  { at: 12, name: 'Master' }
+];
+
+/** Every star in the game, if you got an S on everything. */
+var STAR_MAX = LEVELS.length * 3;
+
+function rankFor(stars) {
+  var r = RANKS[0];
+  for (var i = 0; i < RANKS.length; i++) if (stars >= RANKS[i].at) r = RANKS[i];
+  return r;
+}
+
 /* ---------------- saved progress ---------------- */
 
 var Progress = (function () {
@@ -181,6 +206,31 @@ var Progress = (function () {
     unlocked: function () { return data.unlocked; },
     isOpen: function (n) { return n <= data.unlocked; },
     best: function (n) { return data.best[n] || null; },
+
+    /* ---- stars ----
+       A grade is a mark. STARS are the thing you collect, which is why
+       every game that wants you to replay a level counts them: a letter
+       tells you how you did, three empty stars tell you there is
+       something left on the table.
+
+       Three is mastery. A pass at any grade is worth at least one,
+       because clearing a level IS the achievement - the extra two are
+       for doing it well. */
+    starsFor: function (n) {
+      var b = data.best[n];
+      if (!b) return 0;
+      return b.grade === 'S' ? 3 : b.grade === 'A' ? 2 : 1;
+    },
+
+    /** Every star earned, across the whole pack. */
+    stars: function () {
+      var total = 0;
+      for (var n in data.best) {
+        var g = data.best[n].grade;
+        total += (g === 'S' ? 3 : g === 'A' ? 2 : 1);
+      }
+      return total;
+    },
 
     /** Called at the end of a level. Unlocks the next one on a pass.
 

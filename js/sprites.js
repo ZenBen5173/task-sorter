@@ -71,6 +71,32 @@ var SPRITE_DATA = {
     ]
   },
 
+  /* The Home tab - a little house with a lit window.
+     The map icon used to sit here, and it stopped being true the moment
+     the map became what PLAY opens rather than a tab of its own. */
+  house: {
+    pal: { R: '#c0392b', r: '#8e2820', W: '#e8e0d0', w: '#4a5460',
+           G: '#e8c14e', d: '#6e4522' },
+    px: [
+      '................',
+      '.......RR.......',
+      '......RRRR......',
+      '.....RRRRRR.....',
+      '....RRRRRRRR....',
+      '...RRRRRRRRRR...',
+      '..rRRRRRRRRRRr..',
+      '.rrrrrrrrrrrrrr.',
+      '..WWWWWWWWWWWW..',
+      '..WGGWWWWWWGGW..',
+      '..WGGWWddWWGGW..',
+      '..WWWWWddWWWWW..',
+      '..WGGWWddWWGGW..',
+      '..WGGWWddWWGGW..',
+      '..WWWWWddWWWWW..',
+      '................'
+    ]
+  },
+
   /* The Battle tab - crossed swords behind a white shield with a red
      cross, taken from Louis's picture of the knights.
      Override: battle   (assets/sprites/battle.png)

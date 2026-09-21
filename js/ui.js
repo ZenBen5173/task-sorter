@@ -18,8 +18,9 @@ var UI = (function () {
        Book gave its place up (it is a button on the map) and Shop and
        Character became one screen, Gear. */
     var TABS = {
-      levels: 'tab-map',
+      home:   'tab-home',
       battle: 'tab-battle',
+      levels: 'tab-play',     // the map is what PLAY opens
       gear:   'tab-gear',
       me:     'tab-me'
     };
@@ -28,7 +29,7 @@ var UI = (function () {
        and on the title and end screens. The Guide Book is in this list
        but not in TABS: you can still reach the other tabs from it, but
        nothing lights up, because it is not one of them any more. */
-    var BAR = { levels: 1, battle: 1, gear: 1, me: 1, guide: 1 };
+    var BAR = { home: 1, levels: 1, battle: 1, gear: 1, me: 1, guide: 1 };
 
     var bar = $('tabbar');
     if (bar) bar.hidden = !BAR[name];

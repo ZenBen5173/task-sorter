@@ -45,6 +45,22 @@ function paintLevels() {
     }
     node.appendChild(face);
 
+    /* Three stars under every level you have beaten. A grade is a mark;
+       stars are the thing you collect, and three empty ones say plainly
+       that there is something still on the table here. */
+    if (best) {
+      var stars = document.createElement('span');
+      stars.className = 'lv-stars';
+      var got = Progress.starsFor(lv.n);
+      for (var si = 1; si <= 3; si++) {
+        var st = document.createElement('span');
+        st.className = 'lv-star' + (si <= got ? ' is-on' : '');
+        st.textContent = '\u2605';
+        stars.appendChild(st);
+      }
+      node.appendChild(stars);
+    }
+
     if (open) {
       node.addEventListener('click', function () {
         UI.sound.tick();
@@ -68,7 +84,81 @@ function paintLevels() {
   Shop.paintCoins();
 }
 
+/** Draws the home hub: your character in the gear you chose, your rank,
+    your stars, and what PLAY is about to open. */
+function paintHome() {
+  var stars = Progress.stars();
+  var rank = rankFor(stars);
+
+  UI.$('home-stars').textContent = stars;
+  UI.$('rank-name').textContent = rank.name;
+  UI.$('rank-stars').textContent = stars + ' / ' + STAR_MAX + ' stars';
+  UI.$('rank-fill').style.width = (STAR_MAX ? stars / STAR_MAX * 100 : 0) + '%';
+  UI.$('home-name').textContent = Hero.name();
+
+  Sprites.apply(UI.$('home-hero'), 'hero');
+
+  /* The pet you bought, standing next to you. An empty slot shows
+     nothing at all rather than a dashed box - this is a stage, not a
+     form. */
+  var pet = Shop.equippedItem('pet');
+  var petEl = UI.$('home-pet');
+  if (pet && pet.cost !== 0) {
+    petEl.hidden = false;
+    Sprites.apply(petEl, pet.sprite, 56);
+  } else {
+    petEl.hidden = true;
+    petEl.innerHTML = '';
+  }
+
+  /* PLAY says where it is going. "Level 3 - On Your Phone" is a reason
+     to tap it; "Play" on its own is furniture. */
+  var next = LEVELS[Math.min(Progress.unlocked(), LEVELS.length) - 1];
+  UI.$('play-next').textContent = next
+    ? ('Level ' + next.n + ' \u00b7 ' + next.name)
+    : 'Every level beaten';
+
+  paintCollection();
+
+  var beaten = Progress.rivalsBeaten();
+  UI.$('home-battle-sub').textContent = beaten >= OPPONENTS.length
+    ? 'Every rival beaten'
+    : 'Next: ' + OPPONENTS[beaten].name;
+
+  Shop.paintCoins();
+}
+
+/** The pets you have actually caught, walking along the bottom of the
+    home screen. Only the ones you own: an empty slot here would be a
+    shopping list, and this is meant to be the shelf. */
+function paintCollection() {
+  var row = UI.$('collect-row');
+  var pets = SHOP.pet.items.filter(function (it) {
+    return it.cost !== 0 && Progress.owns(it.id);
+  });
+
+  UI.$('collect-count').textContent =
+    pets.length + ' of ' + (SHOP.pet.items.length - 1) + ' pets';
+
+  row.innerHTML = '';
+  if (!pets.length) {
+    var none = document.createElement('small');
+    none.className = 'collect-none';
+    none.textContent = 'No pets yet. They are in the Gear shop.';
+    row.appendChild(none);
+    return;
+  }
+  pets.forEach(function (it) {
+    var cell = document.createElement('span');
+    cell.className = 'collect-pet';
+    Sprites.apply(cell, it.sprite, 30);
+    row.appendChild(cell);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
+  var guideBackTo = 'levels';
+
   Progress.load();
   UI.sound.setOn(Progress.soundOn());
   Game.init();
@@ -77,6 +167,7 @@ document.addEventListener('DOMContentLoaded', function () {
   Themes.init();
   Tips.init();
   Cloud.init();
+  paintHome();
   var coinIcons = document.querySelectorAll('.tab-coin-ico');
   for (var i = 0; i < coinIcons.length; i++) Sprites.apply(coinIcons[i], 'coin');
 
@@ -88,26 +179,60 @@ document.addEventListener('DOMContentLoaded', function () {
     Sprites.apply(pics[p], pics[p].getAttribute('data-sprite'));
   }
 
-  UI.$('btn-play').addEventListener('click', function () {
+  /* PLAY. The one route into a round, from the big button on the home
+     screen and from the raised button in the middle of the bar.
+
+     A brand new player goes to the Guide Book first. Task Sorter asks
+     you to judge tasks against a rule; dropping someone straight into a
+     round without ever stating that rule makes it a guessing game.
+
+     It is marked read the moment it OPENS, not when they leave. There is
+     no button on that screen to mark it on the way out, so every tap on
+     PLAY would bounce them back into the book for ever. */
+  function goPlay() {
     UI.sound.tick();          // also unlocks audio on the first tap
-    paintLevels();
-
-    /* A brand new player goes to the Guide Book first. Task Sorter asks
-       you to judge tasks against a rule; dropping someone straight into
-       a round without ever stating that rule makes the game a guessing
-       game. They leave it by tapping any tab at the bottom.
-
-       It is marked read the moment it OPENS, not when they leave. There
-       is no button on that screen any more, so if it were marked on the
-       way out there would be nothing to mark it - and every tap on Play
-       would bounce them back into the book for ever. */
     if (!Progress.hasReadGuide()) {
       Progress.markGuideRead();
+      guideBackTo = 'levels';
       UI.showScreen('guide');
       return;
     }
+    paintLevels();
     UI.showScreen('levels');
+  }
+
+  UI.$('btn-play').addEventListener('click', goPlay);
+  UI.$('tab-play').addEventListener('click', goPlay);
+
+  function goHome() {
+    paintHome();
+    UI.showScreen('home');
+  }
+
+  UI.$('tab-home').addEventListener('click', function () {
+    UI.sound.tick();
+    goHome();
   });
+
+  UI.$('home-battle').addEventListener('click', function () {
+    UI.sound.tick();
+    Battle.paint();
+    UI.showScreen('battle');
+  });
+
+  function goGear() {
+    UI.sound.tick();
+    Hero.paint();
+    Shop.paint();
+    UI.showScreen('gear');
+  }
+
+  UI.$('home-gear').addEventListener('click', goGear);
+  UI.$('home-collect').addEventListener('click', goGear);
+
+  /* The Guide Book, from the ? on the map and from the Me screen.
+     `from` is where Back should return to, so the rulebook never
+     strands you on a screen with no way out. */
 
   /* ---- account ---- */
 
@@ -178,10 +303,6 @@ document.addEventListener('DOMContentLoaded', function () {
     acctMsg('Signed out. Your progress is still here on this device.', 'good');
   });
 
-  /* The Guide Book, from the ? on the map and from the Me screen.
-     `from` is where Back should return to, so the rulebook never
-     strands you on a screen with no way out. */
-  var guideBackTo = 'levels';
 
   function openGuide(from) {
     guideBackTo = from || 'levels';
@@ -214,7 +335,8 @@ document.addEventListener('DOMContentLoaded', function () {
   paintSound();
 
   UI.$('btn-lv-back').addEventListener('click', function () {
-    UI.showScreen('title');
+    UI.sound.tick();
+    goHome();
   });
 
   UI.$('btn-next').addEventListener('click', function () {
@@ -245,6 +367,7 @@ document.addEventListener('DOMContentLoaded', function () {
     UI.sound.setOn(Progress.soundOn());
     paintSound();
     paintLevels();
+    paintHome();
     Hero.paint();
     Shop.paint();
     /* Reset wipes the saved background back to Deep Space, so the play
@@ -282,12 +405,6 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   /* ---- bottom bar ---- */
-
-  UI.$('tab-map').addEventListener('click', function () {
-    UI.sound.tick();
-    paintLevels();
-    UI.showScreen('levels');
-  });
 
   UI.$("tab-battle").addEventListener("click", function () {
     UI.sound.tick();

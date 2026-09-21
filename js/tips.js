@@ -28,6 +28,16 @@ var TIPS = {
     ]
   },
 
+  home: {
+    icon: 'hero',
+    title: 'Welcome',
+    lines: [
+      'This is you. Whatever pet and gear you buy, <b>you will see it here</b>.',
+      'The big gold button starts your next level.',
+      'Stars come from beating levels well - three for an S.'
+    ]
+  },
+
   levels: {
     icon: 'map',
     title: 'The Map',
