@@ -441,7 +441,14 @@ makes it appear in every part of the screen at once.
 
 ## The shop
 
-On the **Gear** tab, under your character. Three kinds of gear, and
+On the **Gear** tab, under your character, laid out as an actual shop:
+**three items to a wooden shelf**, standing on the plank with a shadow
+pooled under each one, price on a little parchment tag, and a carved sign
+over each group. It was a two-column grid of cards, which is how a website
+lists products - a shop is a wall of shelves with things standing on them,
+and you cannot stand anything on a card.
+
+Three kinds of gear, and
 **every item changes how a round actually plays** — nothing is decoration.
 
 | Kind | What it does | Items |

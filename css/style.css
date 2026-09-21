@@ -2231,3 +2231,129 @@ body {
    enough to push the next row off the screen. */
 .shop-tile small { min-height: 0; font-size: 12px; }
 .hero-set b { font-size: 13px; font-weight: 700; letter-spacing: .06em; }
+
+/* ==================== THE SHOP, AS A SHOP ====================
+   It was a two-column grid of cards, which is how a WEBSITE lists
+   products. A shop is a wall of shelves with things standing on them,
+   and you cannot stand anything on a card.
+
+   Three items to a shelf, each on a wooden plank, each casting a
+   shadow onto it. The plank is a repeating gradient - which is the one
+   thing a repeating gradient is honestly good for, because a plank IS
+   a repeat: grain runs the length of the board. */
+
+.shop-group {
+  padding: 12px 10px 18px;
+  border-radius: 16px;
+  /* the back wall of the shop, behind the shelves */
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.18), transparent 30%),
+    repeating-linear-gradient(90deg,
+      #2a2016 0 26px, #2e2419 26px 27px, #2a2016 27px 53px, #322719 53px 54px);
+  border: 2px solid #1b140d;
+  box-shadow: 0 3px 0 var(--sink), inset 0 0 40px rgba(0,0,0,.45);
+}
+
+.shelf {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: end;
+  gap: 2px;
+  padding: 12px 6px 0;
+  margin-bottom: 20px;
+}
+.shelf:last-child { margin-bottom: 4px; }
+
+/* The plank. A light top face, grain along its length, and a dark front
+   edge below - that edge is the whole illusion, because it is what says
+   the board has thickness and the items are resting on top of it. */
+.shelf::after {
+  content: '';
+  position: absolute;
+  left: -4px; right: -4px; bottom: -11px;
+  height: 11px;
+  background:
+    linear-gradient(180deg, #a3752f 0 3px, #8a6128 3px 6px, #5e3f18 6px 100%),
+    repeating-linear-gradient(90deg, #8a6128 0 9px, #7d5724 9px 10px);
+  border-radius: 2px;
+  box-shadow: 0 3px 0 rgba(0,0,0,.45), inset 0 1px 0 rgba(255,220,150,.28);
+}
+
+.shelf-gap { display: block; }
+
+/* An item is no longer a card: it is a thing on a shelf. */
+.shop-tile {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  background-image: none;
+  border-radius: 0;
+  padding: 0 2px 6px;
+  gap: 2px;
+  justify-content: flex-end;
+}
+.shop-tile:active { transform: translateY(2px); box-shadow: none; }
+
+/* The shadow pooled under the item, which is what puts it ON the plank
+   instead of hovering above it. */
+.shop-stand {
+  position: relative;
+  display: flex; align-items: flex-end; justify-content: center;
+  min-height: 52px;
+  margin-bottom: 2px;
+}
+.shop-stand::after {
+  content: '';
+  position: absolute; left: 50%; bottom: -3px;
+  width: 34px; height: 7px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(0,0,0,.55), transparent 70%);
+}
+.shop-tile .shop-art { width: 46px; height: 46px; }
+
+/* Worn, owned, locked - read off the item itself now that there is no
+   card to colour in. */
+.shop-tile.is-worn .shop-art { filter: drop-shadow(0 0 7px rgba(92,196,106,.9)); }
+.shop-tile.is-sealed .shop-art { filter: grayscale(1) brightness(.45); }
+.shop-tile.is-blank .shop-art { opacity: .4; }
+.shop-tile b { font-size: 12.5px; color: var(--tx-hi); line-height: 1.2; }
+/* The stat stays visible. Three to a shelf is a narrow column, so it
+   goes small and is allowed to wrap - but hiding what an item DOES
+   until after you have bought it is not a shop, it is a gamble. */
+.shop-tile small {
+  font-size: 9.5px; line-height: 1.3; color: #c9b894; min-height: 0;
+  /* The pets' stat is two halves of a trade - more coins, less time -
+     and letting it flow wrapped "time" onto a line of its own on every
+     single tile. The newline in the string is the break. */
+  white-space: pre-line;
+}
+
+/* The price tag, pinned to the shelf under its item. */
+.shop-tag {
+  margin-top: 2px;
+  padding: 2px 7px;
+  background: #e8dcc0;
+  border: 1px solid #8a6128;
+  border-radius: 3px;
+  color: #3a2a12;
+  font-size: 10.5px; font-weight: 700;
+  box-shadow: 0 2px 0 rgba(0,0,0,.4);
+}
+.shop-tag.is-worn { background: var(--good); border-color: #2e7a38; color: #06180a; }
+.shop-tag.is-use { background: #cfd8e6; border-color: #6c7a90; color: #1b2430; }
+.shop-tag.is-sealed { background: #4a4238; border-color: #2a241c; color: #b9ac96; font-size: 9px; }
+.shop-tag.is-blank { background: none; border-color: transparent; box-shadow: none; color: var(--tx-dim); }
+.shop-coin { width: 12px; height: 12px; }
+
+/* The group heading is a sign over the shelves. */
+.shop-head {
+  margin: 0 2px 10px;
+  padding: 6px 10px;
+  background: linear-gradient(180deg, #8a6128, #5e3f18);
+  border: 2px solid #3a2712;
+  border-radius: 8px;
+  box-shadow: 0 3px 0 rgba(0,0,0,.45), inset 0 1px 0 rgba(255,220,150,.3);
+}
+.shop-head b { color: #ffeec4; }
+.shop-head small { color: #d8bf92; }

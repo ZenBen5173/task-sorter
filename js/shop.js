@@ -54,25 +54,25 @@ var SHOP = {
       { id: 'pet0',  name: 'None',         cost: 0,    tint: 0, fast: 1,    coin: 0,    desc: 'Empty slot' },
 
       /* --- common --- */
-      { id: 'pet1',  name: 'Duck',         cost: 120,  tint: 0, fast: 1.06, coin: 0.08, desc: '+8% coins \u00b7 -6% time',   sprite: 'duck' },
-      { id: 'pet2',  name: 'Kitten',       cost: 170,  tint: 0, fast: 1.08, coin: 0.10, desc: '+10% coins \u00b7 -8% time',  sprite: 'kitten' },
-      { id: 'pet3',  name: 'Mushroom',     cost: 230,  tint: 0, fast: 1.10, coin: 0.12, desc: '+12% coins \u00b7 -10% time', sprite: 'mushroom' },
-      { id: 'pet4',  name: 'Hatchling',    cost: 300,  tint: 0, fast: 1.12, coin: 0.15, desc: '+15% coins \u00b7 -12% time', sprite: 'hatchling' },
-      { id: 'pet5',  name: 'Bunny',        cost: 390,  tint: 0, fast: 1.16, coin: 0.20, desc: '+20% coins \u00b7 -16% time', sprite: 'bunny' },
+      { id: 'pet1',  name: 'Duck',         cost: 120,  tint: 0, fast: 1.06, coin: 0.08, desc: '+8% coins\n-6% time',   sprite: 'duck' },
+      { id: 'pet2',  name: 'Kitten',       cost: 170,  tint: 0, fast: 1.08, coin: 0.10, desc: '+10% coins\n-8% time',  sprite: 'kitten' },
+      { id: 'pet3',  name: 'Mushroom',     cost: 230,  tint: 0, fast: 1.10, coin: 0.12, desc: '+12% coins\n-10% time', sprite: 'mushroom' },
+      { id: 'pet4',  name: 'Hatchling',    cost: 300,  tint: 0, fast: 1.12, coin: 0.15, desc: '+15% coins\n-12% time', sprite: 'hatchling' },
+      { id: 'pet5',  name: 'Bunny',        cost: 390,  tint: 0, fast: 1.16, coin: 0.20, desc: '+20% coins\n-16% time', sprite: 'bunny' },
 
       /* --- rare --- */
-      { id: 'pet6',  name: 'Adventurer',   cost: 480,  tint: 0, fast: 1.18, coin: 0.22, desc: '+22% coins \u00b7 -18% time', needsLevel: 2, sprite: 'slime' },
-      { id: 'pet7',  name: 'Teddy Bear',   cost: 580,  tint: 0, fast: 1.22, coin: 0.25, desc: '+25% coins \u00b7 -22% time', needsLevel: 2, sprite: 'teddy_bear' },
-      { id: 'pet8',  name: 'Penguin',      cost: 700,  tint: 0, fast: 1.26, coin: 0.30, desc: '+30% coins \u00b7 -26% time', needsLevel: 3, sprite: 'penguin' },
+      { id: 'pet6',  name: 'Adventurer',   cost: 480,  tint: 0, fast: 1.18, coin: 0.22, desc: '+22% coins\n-18% time', needsLevel: 2, sprite: 'slime' },
+      { id: 'pet7',  name: 'Teddy Bear',   cost: 580,  tint: 0, fast: 1.22, coin: 0.25, desc: '+25% coins\n-22% time', needsLevel: 2, sprite: 'teddy_bear' },
+      { id: 'pet8',  name: 'Penguin',      cost: 700,  tint: 0, fast: 1.26, coin: 0.30, desc: '+30% coins\n-26% time', needsLevel: 3, sprite: 'penguin' },
 
       /* --- epic --- */
-      { id: 'pet9',  name: 'Zombie',       cost: 850,  tint: 0, fast: 1.32, coin: 0.38, desc: '+38% coins \u00b7 -32% time', needsLevel: 3, sprite: 'zombie' },
-      { id: 'pet10', name: 'Flame Sprite', cost: 1000, tint: 0, fast: 1.36, coin: 0.42, desc: '+42% coins \u00b7 -36% time', needsLevel: 4, sprite: 'flame_sprite' },
+      { id: 'pet9',  name: 'Zombie',       cost: 850,  tint: 0, fast: 1.32, coin: 0.38, desc: '+38% coins\n-32% time', needsLevel: 3, sprite: 'zombie' },
+      { id: 'pet10', name: 'Flame Sprite', cost: 1000, tint: 0, fast: 1.36, coin: 0.42, desc: '+42% coins\n-36% time', needsLevel: 4, sprite: 'flame_sprite' },
 
       /* --- legendary: every one of these is behind a rival --- */
-      { id: 'pet11', name: 'Polar Bear',   cost: 1200, tint: 0, fast: 1.42, coin: 0.48, desc: '+48% coins \u00b7 -42% time', needsRival: 1, sprite: 'polar_bear' },
-      { id: 'pet12', name: 'Dragon',       cost: 1500, tint: 0, fast: 1.48, coin: 0.54, desc: '+54% coins \u00b7 -48% time', needsRival: 2, sprite: 'dragon' },
-      { id: 'pet13', name: 'Phoenixling',  cost: 2000, tint: 0, fast: 1.55, coin: 0.60, desc: '+60% coins \u00b7 -55% time', needsRival: 3, sprite: 'phoenix' }
+      { id: 'pet11', name: 'Polar Bear',   cost: 1200, tint: 0, fast: 1.42, coin: 0.48, desc: '+48% coins\n-42% time', needsRival: 1, sprite: 'polar_bear' },
+      { id: 'pet12', name: 'Dragon',       cost: 1500, tint: 0, fast: 1.48, coin: 0.54, desc: '+54% coins\n-48% time', needsRival: 2, sprite: 'dragon' },
+      { id: 'pet13', name: 'Phoenixling',  cost: 2000, tint: 0, fast: 1.55, coin: 0.60, desc: '+60% coins\n-55% time', needsRival: 3, sprite: 'phoenix' }
     ]
   },
   armour: {
@@ -222,14 +222,31 @@ var Shop = (function () {
     head.innerHTML = '<b>' + group.label + '</b><small>' + group.blurb + '</small>';
     wrap.appendChild(head);
 
-    var row = document.createElement('div');
-    row.className = 'shop-row';
+    /* THREE TO A SHELF. The items used to be a two-column grid of
+       cards, which is how a website lists products - a shop is a wall
+       of shelves with things STANDING on them, and you cannot stand
+       anything on a card.
 
-    group.items.forEach(function (item) {
-      row.appendChild(tile(kind, item));
-    });
+       Chunked here rather than in CSS because each shelf needs its own
+       plank drawn underneath it, and a grid has no element per row to
+       hang one off. */
+    var PER_SHELF = 3;
+    for (var i = 0; i < group.items.length; i += PER_SHELF) {
+      var shelf = document.createElement('div');
+      shelf.className = 'shelf';
 
-    wrap.appendChild(row);
+      group.items.slice(i, i + PER_SHELF).forEach(function (item) {
+        shelf.appendChild(tile(kind, item));
+      });
+      /* A short shelf still gets a full plank, so the bottom row of a
+         group does not end in mid-air. */
+      for (var pad = group.items.slice(i, i + PER_SHELF).length; pad < PER_SHELF; pad++) {
+        var gap = document.createElement('span');
+        gap.className = 'shelf-gap';
+        shelf.appendChild(gap);
+      }
+      wrap.appendChild(shelf);
+    }
     return wrap;
   }
 
@@ -255,10 +272,16 @@ var Shop = (function () {
       + (!open ? ' is-sealed' : '')
       + (open && !owned && !afford ? ' is-broke' : '');
 
+    /* The item stands on the plank, with a shadow pooled under it. The
+       shadow is what puts it ON the shelf rather than floating over it. */
+    var stand = document.createElement('span');
+    stand.className = 'shop-stand';
+
     var art = document.createElement('span');
     art.className = 'shop-art';
-    Sprites.apply(art, item.sprite, 40);
+    Sprites.apply(art, item.sprite, 46);
     if (item.tint) art.style.filter = 'hue-rotate(' + item.tint + 'deg)';
+    stand.appendChild(art);
 
     var name = document.createElement('b');
     name.textContent = item.name;
@@ -290,7 +313,7 @@ var Shop = (function () {
       tag.appendChild(document.createTextNode(String(item.cost)));
     }
 
-    el.appendChild(art);
+    el.appendChild(stand);
     el.appendChild(name);
     el.appendChild(desc);
     el.appendChild(tag);
