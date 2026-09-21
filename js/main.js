@@ -96,20 +96,11 @@ function paintHome() {
   UI.$('rank-fill').style.width = (STAR_MAX ? stars / STAR_MAX * 100 : 0) + '%';
   UI.$('home-name').textContent = Hero.name();
 
-  Sprites.apply(UI.$('home-hero'), 'hero');
-
-  /* The pet you bought, standing next to you. An empty slot shows
-     nothing at all rather than a dashed box - this is a stage, not a
-     form. */
-  var pet = Shop.equippedItem('pet');
-  var petEl = UI.$('home-pet');
-  if (pet && pet.cost !== 0) {
-    petEl.hidden = false;
-    Sprites.apply(petEl, pet.sprite, 56);
-  } else {
-    petEl.hidden = true;
-    petEl.innerHTML = '';
-  }
+  /* The whole party in one picture: the character wearing the armour
+     and the weapon you chose, with the pet walking beside them. It used
+     to be the plain figure and a pet floating next to it, which proved
+     you owned a pet and nothing else. */
+  Hero.paintFigure(UI.$('home-hero'), true);
 
   /* PLAY says where it is going. "Level 3 - On Your Phone" is a reason
      to tap it; "Play" on its own is furniture. */

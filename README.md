@@ -97,9 +97,19 @@ There used to be a title card: a logo, the four corners written out a second
 time, and one button. You passed through it once and never came back.
 
 **A game's home is where you see what you have got.** Your character stands on
-it wearing what you chose, with the pet you bought beside them, and around
+it actually **wearing** what you chose - the shield on the off arm, the weapon
+in the near hand - with the pet you bought pacing beside them, and around
 that: your rank, your stars, the pets you have caught, and what the next level
-is called. PLAY names where it is going - *"Level 3, On Your Phone"* is a
+is called.
+
+The figure is a composite, not thirty drawings. The hero is a 16x16 sprite and
+so is every piece of gear, so `Hero.paintFigure` lays the shield and the
+weapon over the figure at the points its hands are, placed in **percent** so
+one set of numbers works at any size - big on the home screen, smaller on the
+Gear page. Both are scaled against the figure's HAND rather than its body: at
+half the rig the shield covered the character completely, which is a person
+hiding behind a shield rather than carrying one. An empty slot puts nothing
+there. PLAY names where it is going - *"Level 3, On Your Phone"* is a
 reason to tap it; *"Play"* on its own is furniture.
 
 ### Stars and ranks

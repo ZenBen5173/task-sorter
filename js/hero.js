@@ -55,6 +55,7 @@ var Hero = (function () {
   }
 
   function paint() {
+    paintFigure(UI.$('hero-art'), false);
     paintSlots();
     paintSet();
     paintStats();
@@ -201,6 +202,57 @@ var Hero = (function () {
     }
   }
 
+  /** Draws the character WEARING what you chose: the figure, with the
+      shield on the off arm and the weapon in the near hand.
+
+      The hero is a 16x16 sprite and so is every piece of gear, so this
+      is a composite rather than a redraw - the shield and the weapon
+      are laid over the figure at the points its hands are, sized and
+      placed in PERCENT so the same rig works at any size. Drawing a
+      separate hero for each of the thirty combinations of armour and
+      weapon would be thirty sprites to keep in step.
+
+      An empty slot simply puts nothing there. */
+  function paintFigure(el, withPet) {
+    if (!el) return;
+    el.innerHTML = '';
+    el.className = 'rig';
+
+    var body = document.createElement('span');
+    body.className = 'rig-body';
+    Sprites.apply(body, 'hero');
+    el.appendChild(body);
+
+    var arm = equippedItem('armour');
+    if (arm.cost !== 0) {
+      var a = document.createElement('span');
+      a.className = 'rig-armour';
+      Sprites.apply(a, arm.sprite);
+      el.appendChild(a);
+    }
+
+    var wep = equippedItem('weapon');
+    if (wep.cost !== 0) {
+      var w = document.createElement('span');
+      w.className = 'rig-weapon';
+      Sprites.apply(w, wep.sprite);
+      el.appendChild(w);
+    }
+
+    /* The pet walks beside them rather than being worn. It is its own
+       animated sheet, so it goes in a box of its own next to the rig
+       and paces on the spot. */
+    if (withPet) {
+      var pet = equippedItem('pet');
+      if (pet.cost !== 0) {
+        var p = document.createElement('span');
+        p.className = 'rig-pet';
+        Sprites.apply(p, pet.sprite, 46);
+        el.appendChild(p);
+      }
+    }
+  }
+
   /** Whatever the player called their character, or "You" if they have
       not named it yet. Used anywhere the game has to refer to them. */
   function name() {
@@ -227,6 +279,7 @@ var Hero = (function () {
 
   function init() {
     initName();
+    paintFigure(UI.$('hero-art'), false);
     SLOTS.forEach(function (slot) {
       UI.$('slot-' + slot.kind).addEventListener('click', function () {
         openSlot = (openSlot === slot.kind) ? null : slot.kind;
@@ -234,12 +287,12 @@ var Hero = (function () {
         paint();
       });
     });
-    Sprites.apply(UI.$('hero-art'), 'hero');
   }
 
   return {
     init: init,
     paint: paint,
+    paintFigure: paintFigure,
     name: name,
     close: function () { openSlot = null; }
   };

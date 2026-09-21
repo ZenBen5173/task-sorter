@@ -2568,3 +2568,74 @@ body {
   box-shadow: inset 0 2px 0 rgba(255,220,150,.12);
 }
 .collect-none { color: #c0a87c; }
+
+/* ==================== THE RIG ====================
+   The character wearing what you chose. The hero is a 16x16 sprite and
+   so is every piece of gear, so this is a COMPOSITE: the shield and the
+   weapon are laid over the figure at the points its hands are.
+
+   Everything is placed in percent of the rig box, so one set of numbers
+   works at every size the figure is drawn - big on the home screen,
+   smaller on the Gear page - and nothing has to be re-measured when it
+   moves. */
+
+.rig {
+  position: relative;
+  display: block;
+  width: 104px; height: 104px;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.5));
+  animation: hero-bob 3s ease-in-out infinite;
+}
+
+.rig-body,
+.rig-armour,
+.rig-weapon {
+  position: absolute;
+  background-repeat: no-repeat; background-position: center;
+  background-size: contain; image-rendering: pixelated;
+}
+
+.rig-body { inset: 0; }
+
+/* The shield rides on the off arm. Sized against the figure's HAND,
+   not its body: at half the rig it covered the character completely,
+   which is a person hiding behind a shield rather than carrying one. */
+.rig-armour {
+  /* Nudged down and out so it does not sit on the four-colour sash,
+     which is the one part of the figure that says which game they are
+     from. */
+  left: -4%; top: 58%;
+  width: 29%; height: 29%;
+  transform: rotate(-8deg);
+  filter: drop-shadow(1px 1px 0 rgba(0,0,0,.5));
+}
+
+/* The weapon is in the near hand, angled up and back the way a blade
+   is carried rather than pointed at the floor. Same sizing rule as the
+   shield: it belongs to the hand, so it is scaled to the hand. */
+.rig-weapon {
+  right: -2%; top: 40%;
+  width: 36%; height: 36%;
+  transform: rotate(28deg);
+  filter: drop-shadow(1px 1px 0 rgba(0,0,0,.5));
+}
+
+/* The pet paces beside them. It is its own animated sheet, so it only
+   needs putting in the right place and nudging along. */
+.rig-pet {
+  position: absolute;
+  left: -42%; bottom: 0;
+  display: flex; align-items: flex-end;
+  animation: pet-pace 3.4s ease-in-out infinite;
+}
+@keyframes pet-pace {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(9px); }
+}
+
+/* The Gear page draws the same rig at its own size. */
+.hero-figure .rig { width: 84px; height: 84px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rig, .rig-pet { animation: none; }
+}
