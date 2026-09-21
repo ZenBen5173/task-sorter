@@ -63,6 +63,7 @@ you nothing.
 | `js/battle.js` | **The rivals** you duel in Battle |
 | `js/main.js` | Boots the game, draws the level map, wires the buttons |
 | `js/pets.js` | **The pet collection:** the thirteen sheets, and how they are played |
+| `js/weather.js` | **The falling petals, leaves and rain** behind a round |
 | `js/cloud.js` | **Accounts** and saving your progress online |
 | `serve.ps1` | Local server for phone testing |
 
@@ -478,19 +479,19 @@ The round button in the top right of a level opens the background picker.
 Four choices, defined in `js/themes.js`, and your pick is remembered for
 every round after.
 
-| Theme | Picture |
-|---|---|
-| Theme | Picture | Fallback colour |
-|---|---|---|
-| Deep Space | none - the plain dark screen, and the default | dark navy |
-| Sakura | `assets/themes/sakura.jpg` | pale blossom pink |
-| Forest | `assets/themes/forest.jpg` | light leaf green |
-| Waterfalls | `assets/themes/waterfalls.jpg` | pale aqua |
+| Theme | Falling | Optional picture | Fallback colour |
+|---|---|---|---|
+| Deep Space | nothing - a still screen, and the default | none | dark navy |
+| Sakura | cherry blossom petals | `assets/themes/sakura.jpg` | pale blossom pink |
+| Forest | leaves | `assets/themes/forest.jpg` | light leaf green |
+| Waterfalls | rain | `assets/themes/waterfalls.jpg` | pale aqua |
 
-Save a picture with the exact name above and it appears. **Until the file
-exists the browser quietly ignores it and you get the plain `tint` colour
-underneath**, so a missing picture never breaks anything and never shows an
-error. Add them one at a time if you like.
+**The photographs are optional and none of them exist.** Each theme is carried
+by its colour and by what falls through it - see **Animated backgrounds** below.
+Save a picture with the exact name above and it slots in behind the weather;
+until the file exists the browser quietly ignores it and you get the plain
+`tint` colour underneath, so a missing picture never breaks anything and never
+shows an error.
 
 Adding a fifth is one line in `THEMES`: an `id`, a `name`, a `file`, a
 `tint` close to the photo, and a `dim` between 0 and 1.
@@ -522,6 +523,50 @@ over pale pink comes out a muted mauve, not a white screen.
 
 The Guide Book shows the same four swatches, read-only, built from this same
 list. Add a fifth theme and the Guide Book picks it up on its own.
+
+---
+
+## Animated backgrounds
+
+Sakura drops petals, Forest drops leaves, Waterfalls rains. Deep Space stays
+still, which is what makes it the plain default.
+
+This is what the themes were always meant to be. The photographs never turned
+up, and **a flat pink screen is not a cherry tree** - so the motion carries the
+theme instead, and it needs no image files at all.
+
+**Nothing runs per frame.** Every speck is a span with a CSS keyframe on it and
+the browser animates it alone - the same bargain `js/pets.js` makes. The only
+JavaScript is the few lines in `js/weather.js` that create the specks and hand
+each one a random size, speed, colour and starting point. A round is a fast
+game on a cheap phone, and a background that costs frames is a background that
+costs you the round.
+
+**Two spans per speck**, and it has to be two: the outer one falls and spins,
+the inner one drifts sideways. `transform` is a single property, so one element
+cannot do both - the second animation would simply overwrite the first. Running
+them separately, at their own speeds, is what stops a screenful of petals
+moving like one sheet.
+
+**Rain does not spin.** Petals tumbling is the charm of them; a raindrop turned
+the same way spends half its fall lying on its side, which reads as a glitch
+rather than as weather. Drops keep one fixed lean, set in CSS on the speck
+itself rather than in the animation that owns `transform`.
+
+**The counts are deliberately small** - 18 petals, 14 leaves, 26 drops. Every
+speck is a real element the browser composites on every frame, behind a card
+you are dragging about. Twenty reads as weather; two hundred reads as a dropped
+frame.
+
+Adding weather to a theme is one `fall` in `js/themes.js`:
+
+```js
+fall: { kind: 'petal', count: 18,
+        colors: ['#ffd7e6', '#ffc0d8', '#ff9ec4', '#fff0f6'] },
+```
+
+`kind` is `'petal'`, `'leaf'` or `'drop'`. Anyone who has asked their phone for
+less motion gets a still background and none of it is built.
 
 ---
 

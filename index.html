@@ -321,6 +321,12 @@
   </section>
   <!-- ==================== PLAY ==================== -->
   <section id="screen-play" class="screen">
+
+    <!-- The moving background: petals, leaves or rain, filled in by
+         js/weather.js. First in the section so everything else paints
+         on top of it, and it never takes a tap. -->
+    <div class="weather" id="weather" hidden></div>
+
     <header class="hud">
       <button class="btn-exit" id="btn-exit" type="button" aria-label="Leave this level">&#8592;</button>
       <div class="hud-score">
@@ -476,6 +482,7 @@
 <script src="js/battle.js"></script>
 <script src="js/sprites.js"></script>
 <script src="js/pets.js"></script>
+<script src="js/weather.js"></script>
 <script src="js/themes.js"></script>
 <script src="js/cloud.js"></script>
 <script src="js/tips.js"></script>

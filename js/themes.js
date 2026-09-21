@@ -32,6 +32,12 @@
      dim    how hard to darken the picture, 0 to 1. Cards and corner
             labels sit on top of this, and white text on a bright
             photo is unreadable - this is what keeps them legible
+     fall   OPTIONAL. Petals, leaves or rain drifting down over the
+            top, drawn by js/weather.js. Leave it out for a still
+            background. This is what makes a theme feel like a place
+            rather than a colour, and it works with no photograph at
+            all - which is why Sakura looks like a cherry tree today
+            even though sakura.jpg has never existed
    ============================================================ */
 
 var THEMES = [
@@ -42,13 +48,19 @@ var THEMES = [
      magenta carpet underneath. It is a BRIGHT picture, so it needs a
      heavier dim than the others or the corner labels wash out. */
   { id: 'sakura', name: 'Sakura',      file: 'assets/themes/sakura.jpg',
-    tint: '#f6d3e2', dim: 0.62 },
+    tint: '#f6d3e2', dim: 0.62,
+    fall: { kind: 'petal', count: 18,
+            colors: ['#ffd7e6', '#ffc0d8', '#ff9ec4', '#fff0f6'] } },
 
   { id: 'forest', name: 'Forest',      file: 'assets/themes/forest.jpg',
-    tint: '#cfe6bd', dim: 0.58 },
+    tint: '#cfe6bd', dim: 0.58,
+    fall: { kind: 'leaf', count: 14,
+            colors: ['#a8d98a', '#7fbf63', '#d8e89a', '#5fa34d'] } },
 
   { id: 'falls',  name: 'Waterfalls',  file: 'assets/themes/waterfalls.jpg',
-    tint: '#cbe6f0', dim: 0.58 }
+    tint: '#cbe6f0', dim: 0.58,
+    fall: { kind: 'drop', count: 26,
+            colors: ['#cfeaf6', '#9fd4ea', '#eaf7fd'] } }
 ];
 
 var Themes = (function () {
@@ -87,6 +99,11 @@ var Themes = (function () {
 
     el.style.background = layers.join(', ');
     el.setAttribute('data-theme', t.id);
+
+    /* The moving half of the background. A theme with a `fall` gets
+       petals, leaves or rain over the top of its colour; one without
+       gets a still screen, which is what Deep Space is for. */
+    if (window.Weather) Weather.apply(t);
   }
 
   /* ---------------- the picker ---------------- */

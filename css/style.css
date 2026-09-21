@@ -1676,3 +1676,71 @@ body {
   border-color: var(--line);
   color: var(--tx-dim);
 }
+
+/* ==================== the moving background ====================
+   Petals, leaves or rain, built by js/weather.js. Every speck is
+   animated by CSS alone: no JavaScript runs per frame, which is the
+   only way a background is allowed to exist behind a game this fast.
+
+   TWO SPANS PER SPECK. `transform` is one property, so one element
+   cannot both fall and drift - the second animation would overwrite
+   the first. The outer span falls and spins, the inner one sways, and
+   because they run on their own clocks the screen does not move like
+   a single sheet. */
+
+.weather {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* It sits under the cards and must never eat a swipe. */
+  pointer-events: none;
+}
+
+.wx-fall {
+  position: absolute;
+  top: 0;
+  animation-name: wx-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+.wx-drift {
+  display: block;
+  animation-name: wx-drift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+.wx-bit { display: block; }
+
+/* A petal: round on two corners, pointed on the other two. */
+.wx-petal { border-radius: 100% 0 100% 0; }
+
+/* A leaf is the same shape turned the other way, and a shade bigger. */
+.wx-leaf { border-radius: 0 100% 0 100%; }
+
+/* Rain is a stretched bead, not a teardrop - a teardrop shape reads as
+   a shape at this size, and rain should read as a streak.
+
+   The lean is here, on the speck itself, rather than in the falling
+   animation: the fall owns `transform`, so a tilt set there would be
+   a spin, and spinning rain lies flat on its side halfway down. */
+.wx-drop { border-radius: 40%; transform: rotate(9deg); }
+
+@keyframes wx-fall {
+  from { transform: translate3d(0, -14vh, 0) rotate(0deg); }
+  to   { transform: translate3d(0, 114vh, 0) rotate(var(--wx-spin, 360deg)); }
+}
+
+@keyframes wx-drift {
+  from { transform: translateX(calc(var(--wx-sway, 20px) * -1)); }
+  to   { transform: translateX(var(--wx-sway, 20px)); }
+}
+
+/* Asked for less motion: js/weather.js builds nothing at all, and this
+   is the belt to that pair of braces. */
+@media (prefers-reduced-motion: reduce) {
+  .weather { display: none; }
+}
