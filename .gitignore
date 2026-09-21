@@ -10,3 +10,10 @@ desktop.ini
 
 # the old Focus Village build, kept locally for reference only
 archive/
+
+# Android build output. The Gradle project itself IS committed - see
+# android/README.md - but nothing it generates is.
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties

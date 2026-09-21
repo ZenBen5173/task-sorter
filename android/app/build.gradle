@@ -1,0 +1,79 @@
+plugins { id 'com.android.application' }
+
+android {
+  namespace 'com.tasksorter.game'
+  compileSdk 35
+
+  defaultConfig {
+    applicationId "com.tasksorter.game"
+    /* Android 7. The game needs a WebView that understands CSS custom
+       properties and the Web Audio API, and 24 is the floor where that
+       is a safe assumption rather than a hope. It still covers all but
+       a sliver of devices in use. */
+    minSdk 24
+    targetSdk 35
+    versionCode 1
+    versionName "1.0"
+  }
+
+  buildTypes {
+    release {
+      /* Nothing is minified. There is no Java worth shrinking - the
+         whole app is one Activity - and the game itself is inside
+         assets where R8 does not reach. */
+      minifyEnabled false
+    }
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+}
+
+dependencies {
+  /* Pins one Kotlin standard library version across the whole graph.
+
+     Nothing here is written in Kotlin. It is needed because the AndroidX
+     libraries below drag in kotlin-stdlib at several versions at once,
+     and from 1.8 the -jdk7 and -jdk8 halves were folded back into the
+     main artifact - so an old -jdk8 alongside a new stdlib declares the
+     same classes twice and the build stops on duplicates. The bom lines
+     them all up on one version, where the two halves are empty shims. */
+  implementation platform('org.jetbrains.kotlin:kotlin-bom:1.9.24')
+
+  /* WebViewAssetLoader. See MainActivity for why the game is served
+     over https rather than loaded from file://. */
+  implementation 'androidx.webkit:webkit:1.12.1'
+  implementation 'androidx.appcompat:appcompat:1.7.0'
+}
+
+/* ---- the game goes in as assets ----
+
+   STAGED, NOT COMMITTED. The obvious thing is to copy index.html, css,
+   js and assets into app/src/main/assets and check them in, and then
+   there are two copies of the game in one repository and one of them is
+   always the wrong one. This copies from the repository root at build
+   time, so the APK is built from whatever the website is built from and
+   they cannot drift.
+
+   The staged folder is generated and is in .gitignore. */
+def gameRoot = rootProject.projectDir.parentFile
+def staged = layout.buildDirectory.dir("game-assets")
+
+tasks.register('stageGame', Copy) {
+  description = 'Copies the web game into the APK assets.'
+  from(gameRoot) {
+    include 'index.html'
+    include 'css/**'
+    include 'js/**'
+    include 'assets/**'
+    /* Credits files are documentation for the repository, not part of
+       what runs. The licences they point at are honoured either way. */
+    exclude '**/CREDITS.md'
+  }
+  into staged
+}
+
+android.sourceSets.main.assets.srcDirs += staged
+tasks.named('preBuild') { dependsOn 'stageGame' }

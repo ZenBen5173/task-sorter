@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- The cloud save only. Everything the game needs to be played -
+         the code, the art, the fonts, the soundtrack - is inside the
+         APK, so the game is fully playable with this permission
+         refused or with no signal at all. Nothing else is asked for:
+         no storage, no location, no identifiers. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:hardwareAccelerated="true"
+        android:theme="@style/Theme.TaskSorter">
+
+        <!-- screenOrientation is portrait because the arena is four
+             corners around a card. On its side that becomes a very wide,
+             very short board with the card squashed between the top and
+             bottom rows.
+
+             configChanges is there so the Activity is not torn down and
+             the whole game reloaded when a keyboard appears to type your
+             character's name. -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize|keyboardHidden|uiMode"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

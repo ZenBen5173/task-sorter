@@ -1,0 +1,65 @@
+# Builds the APK on every push, and hands it back as a downloadable
+# artifact.
+#
+# WHY THIS EXISTS. The APK is not committed - a 3 MB binary that changes
+# on every edit does not belong in git history. But somebody needs to be
+# able to GET one without installing a JDK and a 600 MB Android SDK
+# first, and for a competition entry that somebody might be a team mate
+# on a laptop that cannot run Android Studio.
+#
+# Download it from the Actions tab: open the run, then "task-sorter-apk"
+# under Artifacts.
+
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:      # and a button, for when you just want a fresh one
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # The runner already has the Android SDK. This only puts it on the
+      # path and accepts the licences.
+      - name: Set up the Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+
+      # The one failure this catches that a green build does not: the
+      # game is staged into the APK by a Copy task, and a Copy task that
+      # matches nothing still succeeds. An APK with no index.html in it
+      # builds perfectly and opens to a blank screen.
+      - name: Check the game is actually inside it
+        working-directory: android
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          for f in assets/index.html assets/css/style.css assets/js/main.js \
+                   assets/assets/fonts/fredoka-variable.woff2; do
+            unzip -l "$APK" | grep -q " $f\$" || { echo "MISSING FROM APK: $f"; exit 1; }
+          done
+          echo "APK contains the game:"
+          unzip -l "$APK" | grep -c "assets/" | xargs echo "  files:"
+          du -h "$APK"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: task-sorter-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

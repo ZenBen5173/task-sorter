@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The bg-0 custom property in css/style.css. Kept in step by hand;
+         it is one value, and it only matters for the half second between
+         tapping the icon and the page painting itself. -->
+    <color name="backdrop">#0a0e1a</color>
+</resources>

@@ -1,0 +1,13 @@
+# Build output.
+build/
+app/build/
+.gradle/
+
+# The path to whoever's Android SDK this is. Machine-specific, and the
+# one file in here that must never be committed.
+local.properties
+
+# Android Studio.
+*.iml
+.idea/
+captures/

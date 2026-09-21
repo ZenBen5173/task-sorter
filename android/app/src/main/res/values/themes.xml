@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- No action bar: the game draws its own header on every screen,
+         and a second one above it is a second one to ignore.
+
+         windowBackground is the game's own backdrop so the moment
+         between tapping the icon and the first frame is the right
+         colour rather than a white flash. -->
+    <style name="Theme.TaskSorter" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/backdrop</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

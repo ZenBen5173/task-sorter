@@ -1,0 +1,16 @@
+/* Task Sorter, as an Android app.
+
+   The game is the same HTML, CSS and JavaScript that runs on the web -
+   this project does not fork it or copy it. app/build.gradle has a task
+   that stages the repository root into the APK's assets at build time,
+   so there is exactly one copy of the game and the app can never be
+   built against a stale one. */
+pluginManagement {
+  repositories { google(); mavenCentral(); gradlePluginPortal() }
+}
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+  repositories { google(); mavenCentral() }
+}
+rootProject.name = "Task Sorter"
+include ":app"
