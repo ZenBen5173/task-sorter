@@ -14,12 +14,16 @@
      PLAY, the score, a heading) because it is very wide and unreadable
      in a paragraph. Fredoka carries everything you actually read.
 
-     If the fonts never arrive the game falls back to the system stack
-     and plays exactly the same, which is why this is a plain link and
-     not something the game waits for. -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+     BOTH FONTS SHIP WITH THE GAME. They used to be fetched from Google
+     on every load, which meant the game only looked like itself when it
+     had the internet - and this is a mobile game, demonstrated on a
+     stranger's wifi and packaged into an app that has no reason to need
+     a network at all. A round that falls back to the system stack half
+     way through a judge's three minutes is a round that looks broken.
+
+     They are in css/style.css as @font-face, so there is nothing to
+     fetch and nothing to preconnect to. See assets/fonts/CREDITS.md -
+     both are Open Font Licence. -->
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -625,6 +629,7 @@
 <script src="js/cloud.js"></script>
 <script src="js/tips.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/music.js"></script>
 <script src="js/game.js"></script>
 <script src="js/main.js"></script>
 </body>

@@ -421,6 +421,27 @@ document.addEventListener('DOMContentLoaded', function () {
     UI.showScreen('me');
   });
 
+  /* THE FIRST TAP UNLOCKS THE SOUND. A browser will not let a page
+     make a noise until the person has touched it, so the audio context
+     starts suspended and the opening tune is refused. This asks again
+     on the first real gesture, then takes itself off. */
+  (function () {
+    function wake() {
+      if (window.Music) Music.wake();
+      document.removeEventListener('pointerdown', wake);
+      document.removeEventListener('keydown', wake);
+    }
+    document.addEventListener('pointerdown', wake);
+    document.addEventListener('keydown', wake);
+  })();
+
+  /* A game has no business singing to a tab nobody is looking at, and
+     on a phone that is battery spent behind a locked screen. */
+  document.addEventListener('visibilitychange', function () {
+    if (!window.Music) return;
+    if (document.hidden) Music.pause(); else Music.resume();
+  });
+
   /* Stop the page bouncing under a card swipe.
 
      THIS USED TO BE A LIST OF EVERYTHING ALLOWED TO SCROLL, and it

@@ -14,6 +14,11 @@ var UI = (function () {
     var el = $('screen-' + name);
     if (el) el.classList.add('is-on');
 
+    /* The soundtrack follows the screen. Here rather than at each of
+       the dozen places that change screen, for the same reason the tab
+       highlighting is here: one of them would eventually be missed. */
+    if (window.Music) Music.forScreen(name);
+
     /* Which tab lights up on which screen. Four tabs now: the Guide
        Book gave its place up (it is a button on the map) and Shop and
        Character became one screen, Gear. */
@@ -131,8 +136,19 @@ var UI = (function () {
   var soundOn = true;
 
   var SOUND = {
-    /** Called once at boot and whenever the switch is flipped. */
-    setOn: function (on) { soundOn = !!on; },
+    /** The one AudioContext in the game. js/music.js plays through the
+        same one rather than opening its own: a browser allows only a
+        handful, they each cost a thread, and two of them would have to
+        be unlocked separately by the first tap. */
+    ctx: audio,
+
+    /** Called once at boot and whenever the switch is flipped. The
+        soundtrack is told as well, because it is the same switch - a
+        player turning the sound off means all of it. */
+    setOn: function (on) {
+      soundOn = !!on;
+      if (window.Music) Music.setOn(soundOn);
+    },
     isOn: function () { return soundOn; },
     good:    function (streak) { tone(520 + Math.min(streak, 10) * 40, 90, 'square'); },
     perfect: function () { tone(880, 70, 'square'); setTimeout(function () { tone(1320, 90, 'square'); }, 70); },

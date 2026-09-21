@@ -1,4 +1,45 @@
 /* ============================================================
+   THE FONTS, SHIPPED WITH THE GAME
+   ------------------------------------------------------------
+   These were two <link> tags to fonts.googleapis.com in index.html.
+   That made the game's own typography a network request: fine on a
+   desk, wrong for a mobile game that gets demonstrated on whatever
+   wifi is in the room and packaged into an app with no reason to
+   need a network at all.
+
+   ONLY THE LATIN SUBSET. Google serves seventeen @font-face blocks
+   between these two families - Cyrillic, Greek, Hebrew, Vietnamese
+   and the rest. The game is written in English, so the other sixteen
+   would be downloaded and never drawn. Latin alone is 52 KB for both
+   faces together.
+
+   FREDOKA IS ONE FILE, NOT FOUR. It is a variable font: the weights
+   400, 500, 600 and 700 were four downloads of the same bytes, which
+   `font-weight: 400 700` below asks for once and interpolates.
+
+   `font-display: swap` stays worth having even with nothing to fetch.
+   Reading a file off disk is fast, not instant, and swap means text
+   is on screen in the fallback for those few milliseconds rather
+   than invisible.
+   ============================================================ */
+
+@font-face {
+  font-family: 'Fredoka';
+  font-style: normal;
+  font-weight: 400 700;          /* variable: one file covers the range */
+  font-display: swap;
+  src: url('../assets/fonts/fredoka-variable.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Press Start 2P';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/press-start-2p-400.woff2') format('woff2');
+}
+
+/* ============================================================
    Task Sorter - styles
    The four corner colours are the game's language. They are used
    identically everywhere: corners, card glow, floating points.
