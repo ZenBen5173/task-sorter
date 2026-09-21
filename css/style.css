@@ -292,6 +292,10 @@ body {
   overflow: hidden;
   border: 1px solid #2c4a33;
   background:
+    /* The woods close in at the edges. Without this the scene is a
+       bright green rectangle and the trees look stuck onto a lawn;
+       with it you are standing INSIDE something. */
+    radial-gradient(ellipse 78% 68% at 50% 42%, transparent 40%, rgba(6,20,12,.55) 100%),
     /* two sunbeams slanting down through the trees */
     linear-gradient(112deg, transparent 34%, rgba(255,236,170,.10) 40%, transparent 47%),
     linear-gradient(112deg, transparent 55%, rgba(255,236,170,.07) 59%, transparent 64%),
@@ -299,6 +303,10 @@ body {
     radial-gradient(ellipse 70% 38% at 50% 0%, rgba(246,232,160,.34), transparent 72%),
     /* a band of mist lying just below the far treeline */
     linear-gradient(180deg, transparent 24%, rgba(200,226,190,.12) 32%, transparent 44%),
+    /* a second, fainter mist between the middle trees and the near ones,
+       which is what separates the two ranks into layers instead of one
+       crowd at different sizes */
+    linear-gradient(180deg, transparent 52%, rgba(170,205,175,.10) 60%, transparent 70%),
     /* the forest itself, light up top, dark on the floor */
     linear-gradient(180deg, #5d8a5f 0%, #37623f 30%, #214430 62%, #132a1d 100%);
 }
@@ -330,22 +338,57 @@ body {
   opacity: .7;
 }
 
-/* the near treeline: big, dark, right along the bottom edge */
+/* The near treeline, and the MIDDLE one behind it.
+
+   The middle rank is the fix for what was wrong here: the far trees sat
+   near the top, the near trees along the bottom, and everything between
+   them was an empty wash of green with a trail floating on it. A forest
+   has trees at every distance. Three ranks - pale and small up there,
+   medium through the middle, big and almost black at your feet - are
+   what turn a backdrop into somewhere you are standing.
+
+   First layer listed is the one on top, so the near rank comes first and
+   the middle rank paints behind it. The tile widths are deliberately not
+   multiples of each other (62, 74, 58, 70): rows whose widths share a
+   factor line up every few trees and the eye catches the repeat. */
 .lv-scene::after {
   background:
+    /* near: big, dark, along the bottom edge */
     conic-gradient(from 150deg at 50% 0, #0f2217 0 60deg, transparent 0)
       0 100% / 62px 88px repeat-x,
     conic-gradient(from 150deg at 50% 0, #17301f 0 60deg, transparent 0)
-      31px 100% / 74px 116px repeat-x;
+      31px 100% / 74px 116px repeat-x,
+    /* A soft floor under the near rank, so the big trees rise out of
+       something instead of standing on a lawn with a visible hem. */
+    linear-gradient(180deg, transparent 0, rgba(11,26,17,.85) 62%) 0 100% / 100% 30% no-repeat,
+    /* middle: filling the gap the trail used to float in */
+    conic-gradient(from 150deg at 50% 0, #1b3a26 0 60deg, transparent 0)
+      0 72% / 58px 70px repeat-x,
+    conic-gradient(from 150deg at 50% 0, #21452c 0 60deg, transparent 0)
+      29px 62% / 70px 82px repeat-x,
+    /* A fourth rank, halfway between the far trees and the middle ones.
+       Three ranks still left a bare green gap across the waist of the
+       picture, which is where the trail runs - so the one part of the
+       scene the eye follows was the one part with no forest in it. */
+    conic-gradient(from 150deg at 50% 0, #2d5636 0 60deg, transparent 0)
+      0 46% / 46px 54px repeat-x,
+    conic-gradient(from 150deg at 50% 0, #345f3d 0 60deg, transparent 0)
+      23px 40% / 54px 62px repeat-x;
 }
-/* the winding trail */
-.lv-path { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* The winding trail. It sits ABOVE the treelines: the new middle ranks
+   paint over it otherwise, and a path that vanishes at a tree row and
+   reappears past it reads as clipping rather than as going behind
+   something. On a level map the route has to be followable. */
+.lv-path { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
 .trail-base {
   fill: none;
   stroke: #e8dcc0;
   stroke-width: 16;
   stroke-linecap: round;
   opacity: .95;
+  /* A dark lip along the path, so it reads as worn into the forest
+     floor rather than a ribbon laid on top of it. */
+  filter: drop-shadow(0 2px 0 rgba(8,22,14,.55));
 }
 .trail-dash {
   fill: none;
