@@ -338,43 +338,80 @@ body {
   opacity: .7;
 }
 
-/* The near treeline, and the MIDDLE one behind it.
+/* THE TREES.
 
-   The middle rank is the fix for what was wrong here: the far trees sat
-   near the top, the near trees along the bottom, and everything between
-   them was an empty wash of green with a trail floating on it. A forest
-   has trees at every distance. Three ranks - pale and small up there,
-   medium through the middle, big and almost black at your feet - are
-   what turn a backdrop into somewhere you are standing.
+   A pine is not a cone. One triangle is a tooth; what reads as a pine
+   is THREE STACKED TIERS, each wider than the one above, on a trunk -
+   that stepped silhouette is the thing your eye recognises, and it is
+   why a row of plain triangles looked like bunting no matter how many
+   ranks were behind it.
 
-   First layer listed is the one on top, so the near rank comes first and
-   the middle rank paints behind it. The tile widths are deliberately not
-   multiples of each other (62, 74, 58, 70): rows whose widths share a
-   factor line up every few trees and the eye catches the repeat. */
+   Every tier is the same conic-gradient trick as before: a 60 degree
+   wedge pointing down from the top of its tile. Tiers of ONE tree share
+   a tile width, so they repeat in step and stack into a single shape;
+   each is offset upwards in px from the rank's baseline, and they
+   overlap deliberately so the silhouette is continuous rather than
+   three separate triangles in a column.
+
+   The tiers of a tree are all one colour, so their stacking order does
+   not matter - they simply union into a shape.
+
+   DISTANCE LOSES DETAIL. Only the two near ranks get tiers and trunks.
+   The far ranks stay plain triangles, because at that size a tier is
+   two pixels tall and all it does is make the edge mushy. */
 .lv-scene::after {
   background:
-    /* near: big, dark, along the bottom edge */
+    /* ---- near rank A: the big ones on the bottom edge ---- */
+    linear-gradient(90deg, transparent 45%, #0f2217 45% 55%, transparent 55%)
+      0 100% / 64px 15px repeat-x,
     conic-gradient(from 150deg at 50% 0, #0f2217 0 60deg, transparent 0)
-      0 100% / 62px 88px repeat-x,
+      0 calc(100% - 11px) / 64px 54px repeat-x,
+    conic-gradient(from 150deg at 50% 0, #0f2217 0 60deg, transparent 0)
+      0 calc(100% - 33px) / 64px 42px repeat-x,
+    conic-gradient(from 150deg at 50% 0, #0f2217 0 60deg, transparent 0)
+      0 calc(100% - 53px) / 64px 30px repeat-x,
+
+    /* ---- near rank B: taller, offset, a shade lighter ---- */
+    linear-gradient(90deg, transparent 45%, #17301f 45% 55%, transparent 55%)
+      38px 100% / 76px 18px repeat-x,
     conic-gradient(from 150deg at 50% 0, #17301f 0 60deg, transparent 0)
-      31px 100% / 74px 116px repeat-x,
+      38px calc(100% - 13px) / 76px 64px repeat-x,
+    conic-gradient(from 150deg at 50% 0, #17301f 0 60deg, transparent 0)
+      38px calc(100% - 39px) / 76px 50px repeat-x,
+    conic-gradient(from 150deg at 50% 0, #17301f 0 60deg, transparent 0)
+      38px calc(100% - 63px) / 76px 36px repeat-x,
+
     /* A soft floor under the near rank, so the big trees rise out of
        something instead of standing on a lawn with a visible hem. */
-    linear-gradient(180deg, transparent 0, rgba(11,26,17,.85) 62%) 0 100% / 100% 30% no-repeat,
-    /* middle: filling the gap the trail used to float in */
+    linear-gradient(180deg, transparent 0, rgba(11,26,17,.85) 62%)
+      0 100% / 100% 30% no-repeat,
+
+    /* ---- middle rank: tiered too, smaller, up in the waist ---- */
+    linear-gradient(90deg, transparent 46%, #1b3a26 46% 54%, transparent 54%)
+      0 76% / 54px 11px repeat-x,
     conic-gradient(from 150deg at 50% 0, #1b3a26 0 60deg, transparent 0)
-      0 72% / 58px 70px repeat-x,
+      0 calc(76% - 8px) / 54px 42px repeat-x,
+    conic-gradient(from 150deg at 50% 0, #1b3a26 0 60deg, transparent 0)
+      0 calc(76% - 25px) / 54px 32px repeat-x,
+    conic-gradient(from 150deg at 50% 0, #1b3a26 0 60deg, transparent 0)
+      0 calc(76% - 40px) / 54px 22px repeat-x,
+
+    linear-gradient(90deg, transparent 46%, #21452c 46% 54%, transparent 54%)
+      27px 65% / 66px 12px repeat-x,
     conic-gradient(from 150deg at 50% 0, #21452c 0 60deg, transparent 0)
-      29px 62% / 70px 82px repeat-x,
-    /* A fourth rank, halfway between the far trees and the middle ones.
-       Three ranks still left a bare green gap across the waist of the
-       picture, which is where the trail runs - so the one part of the
-       scene the eye follows was the one part with no forest in it. */
+      27px calc(65% - 9px) / 66px 50px repeat-x,
+    conic-gradient(from 150deg at 50% 0, #21452c 0 60deg, transparent 0)
+      27px calc(65% - 29px) / 66px 38px repeat-x,
+    conic-gradient(from 150deg at 50% 0, #21452c 0 60deg, transparent 0)
+      27px calc(65% - 47px) / 66px 26px repeat-x,
+
+    /* ---- the far rank between mist and middle: plain triangles ---- */
     conic-gradient(from 150deg at 50% 0, #2d5636 0 60deg, transparent 0)
       0 46% / 46px 54px repeat-x,
     conic-gradient(from 150deg at 50% 0, #345f3d 0 60deg, transparent 0)
       23px 40% / 54px 62px repeat-x;
 }
+
 /* The winding trail. It sits ABOVE the treelines: the new middle ranks
    paint over it otherwise, and a path that vanishes at a tree row and
    reappears past it reads as clipping rather than as going behind
