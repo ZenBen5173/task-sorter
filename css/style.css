@@ -861,100 +861,67 @@ body {
   padding: 0;
 }
 
-/* the character with slots around them */
+/* ---- the character on the Gear screen ----
+   ONE FIGURE, NOT A FORM. This was a three-column grid with a slot box
+   on the left, one on the right and one across the bottom, and a small
+   caged hero in the middle. Every box was a longer way to do what a tap
+   on a shelf below already does, so they are gone and the character has
+   the whole stage. The picker that used to slide in under them went
+   with them. */
 .hero-stage {
   position: relative;
   width: 100%;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  grid-template-areas:
-    'left figure right'
-    'bottom bottom bottom';
-  gap: 10px;
-  align-items: center;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 8px;
 }
-.slot-left   { grid-area: left; }
-.slot-right  { grid-area: right; }
-.slot-bottom { grid-area: bottom; }
-.hero-figure { grid-area: figure; }
 
+/* The plinth. Not a card round a portrait any more - a lit patch of
+   ground with the party standing on it, which is why the light pools at
+   the FEET rather than centring on the chest, and why the bottom edge is
+   soft instead of a border. A box round a character says "item in a
+   slot"; a pool of light says "here they are". */
 .hero-figure {
-  display: flex; align-items: center; justify-content: center;
-  width: 108px; height: 138px;
-  background: radial-gradient(70% 60% at 50% 40%, #2b3a4a, #1c242e);
-  border: 2px solid var(--line);
-  border-radius: 16px;
+  position: relative;
+  display: flex; align-items: flex-end; justify-content: center;
+  width: 100%; height: 168px;
+  padding-bottom: 14px;
+  background:
+    radial-gradient(56% 30% at 50% 92%, rgba(0,0,0,.42), rgba(0,0,0,0) 70%),
+    radial-gradient(60% 72% at 50% 78%, #33455a, rgba(28,36,46,0) 72%);
+  border-radius: 18px;
+  overflow: hidden;
 }
-.hero-art {
-  width: 84px; height: 84px;
-  background-repeat: no-repeat; background-position: center;
-  background-size: contain; image-rendering: pixelated;
-  filter: drop-shadow(0 6px 10px rgba(0,0,0,.5));
-  animation: hero-bob 3s ease-in-out infinite;
+
+/* Something to stand on, so the figure is not floating in a gradient. */
+.hero-figure::after {
+  content: '';
+  position: absolute; left: 50%; bottom: 12px;
+  width: 168px; height: 12px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0,0,0,.5), rgba(0,0,0,0));
 }
+
+/* NOTHING STYLES `.hero-art`. Hero.paintFigure sets `el.className =
+   'rig'`, which wipes the class off the element it is handed - the id
+   is what the JavaScript holds on to, and the rig's own rules are what
+   draw it. Sizing for this screen's rig is at the bottom of the file
+   with the other .rig rules, so it sits next to the percentages the
+   gear is placed by. */
 @keyframes hero-bob {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-5px); }
 }
 
-.slot {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 10px 8px;
-  background: var(--bg-2);
-  border: 2px solid var(--line);
-  border-radius: 14px;
-  font: inherit; color: var(--tx);
-  text-align: center; cursor: pointer;
-  transition: transform .15s var(--snap), border-color .2s, background .2s;
+/* What they have on, in words. A readout under the picture, not a row
+   of controls - the shelves below are the controls. */
+.hero-worn {
+  margin: 0;
+  font-size: 12.5px; font-weight: 600;
+  text-align: center; line-height: 1.4;
+  color: var(--tx-hi);
 }
-.slot:active { transform: scale(.97); }
-.slot.is-open { border-color: var(--good); background: rgba(92,196,106,.08); }
-.slot-k {
-  font-size: 10px; font-weight: 700;
-  letter-spacing: .1em; text-transform: uppercase;
-  color: var(--tx-dim);
-}
-.slot-art {
-  width: 34px; height: 34px; margin: 2px 0;
-  background-repeat: no-repeat; background-position: center;
-  background-size: contain; image-rendering: pixelated;
-}
-.slot-name { font-size: 13px; color: var(--tx-hi); }
-.slot-desc { font-size: 10.5px; color: var(--tx-dim); line-height: 1.25; }
-
-/* the picker that slides in when you tap a slot */
-.hero-picker { width: 100%; display: none; }
-.hero-picker.is-on { display: block; animation: screen-in .2s var(--spring); }
-.picker-title {
-  margin: 0 0 8px;
-  font-size: 11.5px; font-weight: 700;
-  letter-spacing: .08em; text-transform: uppercase;
-  color: var(--tx-dim);
-}
-.picker-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
-.picker-item {
-  flex: 0 0 auto;
-  width: 82px;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 10px 6px;
-  background: var(--bg-3);
-  border: 2px solid var(--line);
-  border-radius: 12px;
-  font: inherit; color: var(--tx);
-  cursor: pointer;
-  transition: transform .15s var(--snap), border-color .2s;
-}
-.picker-item:active { transform: scale(.95); }
-.picker-item.is-worn { border-color: var(--good); background: rgba(92,196,106,.12); }
-.picker-item.is-blank { border-style: dashed; }
-.picker-item.is-blank .picker-art { opacity: .55; }
-.picker-item small { font-size: 10.5px; line-height: 1.2; text-align: center; }
-.picker-art {
-  width: 30px; height: 30px;
-  background-repeat: no-repeat; background-position: center;
-  background-size: contain; image-rendering: pixelated;
-}
-.picker-empty { margin: 6px 0 0; font-size: 12.5px; color: var(--tx-dim); }
+.hero-worn.is-empty { font-weight: 500; color: var(--tx-dim); }
 
 /* the stat bars */
 .hero-stats { width: 100%; display: flex; flex-direction: column; gap: 12px; }
@@ -1628,24 +1595,17 @@ body {
   font-style: italic;
 }
 
-/* ---- the character's name ----
-   A text box that does not look like one until you touch it. It sits
-   under the figure where a name label would go, so tapping it to type
-   is the obvious thing to do without a "rename" button anywhere.
+/* ---- the name box ----
+   Tapping the name types it. It sits directly under the figure where a
+   name label would go, so renaming needs no "rename" button anywhere.
 
-   The frame had to become a COLUMN first. It was a flex row, so the
-   art and the name box sat side by side and squashed the character to
-   nothing the moment the box was added. */
-.hero-figure {
-  flex-direction: column;
-  justify-content: center;
-  gap: 2px;
-  padding: 4px;
-  height: auto; min-height: 138px;
-}
+   It used to live INSIDE the figure frame, which is why there is no
+   `.hero-figure` override here any more: the frame is a plinth the
+   character stands on now, and a text box does not stand on the ground
+   with them. It is a sibling under it instead. */
 .hero-name {
   display: block;
-  width: 96px;
+  width: 132px;
   margin: 0;
   padding: 3px 4px;
   background: none;
@@ -2127,8 +2087,8 @@ body {
 /* ---- every panel becomes a slab ---- */
 
 .me-row, .home-card, .home-collect, .home-rank,
-.shop-tile, .picker-item, .foe-row, .theme-chip,
-.guide-box, .guide-note, .hero-set, .slot, .tip-card,
+.shop-tile, .foe-row, .theme-chip,
+.guide-box, .guide-note, .hero-set, .tip-card,
 .coin-pill, .lv-ribbon {
   border-width: 2px;
   border-radius: 12px;
@@ -2139,8 +2099,7 @@ body {
 
 /* Pressing something should move it, not fade it. */
 .me-row:active, .home-card:active, .home-collect:active,
-.shop-tile:active, .picker-item:active, .foe-row:active,
-.theme-chip:active, .slot:active {
+.shop-tile:active, .foe-row:active, .theme-chip:active {
   transform: translateY(3px);
   box-shadow: 0 0 0 var(--sink);
 }
@@ -2168,15 +2127,15 @@ body {
 
 /* A list should land a piece at a time. Six steps is enough to read as
    a cascade and short enough that nobody waits for it. */
-.shop-tile, .foe-row, .picker-item, .home-card, .lv-node {
+.shop-tile, .foe-row, .home-card, .lv-node {
   animation: tile-in .3s var(--snap) backwards;
 }
-.shop-tile:nth-child(1), .foe-row:nth-child(1), .picker-item:nth-child(1) { animation-delay: .02s; }
-.shop-tile:nth-child(2), .foe-row:nth-child(2), .picker-item:nth-child(2) { animation-delay: .05s; }
-.shop-tile:nth-child(3), .foe-row:nth-child(3), .picker-item:nth-child(3) { animation-delay: .08s; }
-.shop-tile:nth-child(4), .foe-row:nth-child(4), .picker-item:nth-child(4) { animation-delay: .11s; }
-.shop-tile:nth-child(5), .foe-row:nth-child(5), .picker-item:nth-child(5) { animation-delay: .14s; }
-.shop-tile:nth-child(n+6), .foe-row:nth-child(n+6), .picker-item:nth-child(n+6) { animation-delay: .17s; }
+.shop-tile:nth-child(1), .foe-row:nth-child(1) { animation-delay: .02s; }
+.shop-tile:nth-child(2), .foe-row:nth-child(2) { animation-delay: .05s; }
+.shop-tile:nth-child(3), .foe-row:nth-child(3) { animation-delay: .08s; }
+.shop-tile:nth-child(4), .foe-row:nth-child(4) { animation-delay: .11s; }
+.shop-tile:nth-child(5), .foe-row:nth-child(5) { animation-delay: .14s; }
+.shop-tile:nth-child(n+6), .foe-row:nth-child(n+6) { animation-delay: .17s; }
 @keyframes tile-in {
   from { opacity: 0; transform: translateY(10px) scale(.95); }
   to   { opacity: 1; transform: none; }
@@ -2212,7 +2171,7 @@ body {
 /* Anyone who asked for less motion gets the layout, not the show. */
 @media (prefers-reduced-motion: reduce) {
   .screen.is-on,
-  .shop-tile, .foe-row, .picker-item, .home-card, .lv-node,
+  .shop-tile, .foe-row, .home-card, .lv-node,
   .coin-pop { animation: none; }
 }
 
@@ -2223,7 +2182,6 @@ body {
 /* Group titles are shouted, not written. */
 .shop-head b { font-size: 16px; font-weight: 700; letter-spacing: .02em; }
 .shop-head small { font-size: 12px; }
-.slot-k { font-size: 10px; font-weight: 700; letter-spacing: .1em; }
 .home-card b, .collect-head b { font-size: 15px; font-weight: 700; }
 
 /* A tile is a picture, a name and a number. The description used to be
@@ -2645,7 +2603,14 @@ body {
 }
 
 /* The Gear page draws the same rig at its own size. */
-.hero-figure .rig { width: 63px; height: 84px; }
+/* The Gear screen draws the party at its largest. It is the one screen
+   whose whole job is looking at them, and it used to be the SMALLEST
+   figure in the game at 63x84 - a thumbnail in a box, next to a shop
+   full of items drawn bigger than the character who wears them. */
+.hero-figure .rig {
+  width: 105px; height: 140px;
+  position: relative; z-index: 1;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .rig, .rig-pet { animation: none; }

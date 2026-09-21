@@ -1,20 +1,27 @@
 /* ============================================================
-   hero.js  -  your character and the three gear slots
+   hero.js  -  your character, wearing what you chose
    ------------------------------------------------------------
-   Shows what you are wearing and lets you swap between anything
-   you already own. Buying happens in the Shop; choosing happens
-   here.
+   Builds the figure at the top of the Gear screen and the stat bars
+   underneath it, and remembers the name you gave them.
+
+   IT NO LONGER CHOOSES ANYTHING. There used to be three slot boxes
+   around the figure; tapping one opened a picker of everything you
+   owned of that kind. Every one of those taps had a shorter version
+   already sitting on the same screen - a shelf tile buys the item if
+   you do not own it and equips it either way, in ONE tap. So the boxes
+   were a second, longer road to the same place, and they made the only
+   screen in the game that should show you a character look like a form
+   with three empty fields on it.
+
+   What is here now is the character and a readout. Choosing happens
+   where the things are: on the shelves in js/shop.js.
    ============================================================ */
 
 var Hero = (function () {
 
-  var SLOTS = [
-    { kind: 'pet',    label: 'Pet' },
-    { kind: 'weapon', label: 'Weapon' },
-    { kind: 'armour', label: 'Armour' }
-  ];
-
-  var openSlot = null;   // which slot's picker is showing
+  /* The order the worn line reads in: what is in your hands first,
+     then who is walking with you. */
+  var WORN = ['armour', 'weapon', 'pet'];
 
   /** The best value any item of that kind can give, so the bars stay
       correct when new gear is added to the shop. */
@@ -55,12 +62,37 @@ var Hero = (function () {
   }
 
   function paint() {
-    paintFigure(UI.$('hero-art'), false);
-    paintSlots();
+    /* WITH THE PET. The Gear screen is where you go to look at what you
+       have got, so it shows the whole party - the home screen has done
+       that for a while and this one was still drawing the figure alone
+       with its pet boxed off to one side. */
+    paintFigure(UI.$('hero-art'), true, 62);
+    paintWorn();
     paintSet();
     paintStats();
-    paintPicker();
     Shop.paintCoins();
+  }
+
+  /** One line naming what the figure has on. A READOUT, not a control:
+      the picture already tells you what you are wearing, and this says
+      it in words for anything the picture cannot make obvious at that
+      size - which shield of the five, which of the two gold blades. */
+  function paintWorn() {
+    var el = UI.$('hero-worn');
+    if (!el) return;
+
+    var names = WORN.map(function (kind) {
+      var item = equippedItem(kind);
+      return item.cost === 0 ? null : item.name;
+    }).filter(Boolean);
+
+    if (!names.length) {
+      el.className = 'hero-worn is-empty';
+      el.textContent = 'Nothing on. Everything below is one tap away.';
+      return;
+    }
+    el.className = 'hero-worn';
+    el.textContent = names.join('  \u00b7  ');
   }
 
   /** The full-set banner: on when all three slots hold a real item. */
@@ -73,23 +105,6 @@ var Hero = (function () {
     el.innerHTML = full
       ? '<b>FULL SET</b><span><em>+' + pct + '% coins</em></span>'
       : '<b>FULL SET</b><span>Fill all three slots for <em>+' + pct + '% coins</em></span>';
-  }
-
-  /* ---------------- the three slots ---------------- */
-
-  function paintSlots() {
-    SLOTS.forEach(function (slot) {
-      var el = UI.$('slot-' + slot.kind);
-      var item = equippedItem(slot.kind);
-
-      el.classList.toggle('is-open', openSlot === slot.kind);
-
-      var art = el.querySelector(".slot-art");
-      Sprites.apply(art, item.sprite, 38);
-      art.style.filter = item.tint ? "hue-rotate(" + item.tint + "deg)" : "";
-      el.querySelector('.slot-name').textContent = item.name;
-      el.querySelector('.slot-desc').textContent = item.desc;
-    });
   }
 
   function equippedItem(kind) {
@@ -133,75 +148,6 @@ var Hero = (function () {
     });
   }
 
-  /* ---------------- choosing gear ---------------- */
-
-  function paintPicker() {
-    var host = UI.$('hero-picker');
-    host.innerHTML = '';
-
-    if (!openSlot) {
-      host.classList.remove('is-on');
-      return;
-    }
-    host.classList.add('is-on');
-
-    var group = SHOP[openSlot];
-
-    var title = document.createElement('p');
-    title.className = 'picker-title';
-    title.textContent = 'Choose your ' + group.label.toLowerCase().replace(/s$/, '');
-    host.appendChild(title);
-
-    var row = document.createElement('div');
-    row.className = 'picker-row';
-
-    var ownedAny = false;
-
-    group.items.forEach(function (item) {
-      var owned = item.cost === 0 || Progress.owns(item.id);
-      if (!owned) return;
-      ownedAny = true;
-
-      var worn = Progress.equipped()[openSlot] === item.id;
-      /* Same as the shop: the free item is the EMPTY slot, so it does
-         not get the green "this is what you are wearing" ring. Wearing
-         nothing is not wearing something. */
-      var blank = item.cost === 0;
-
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'picker-item'
-        + (worn && !blank ? ' is-worn' : '')
-        + (blank ? ' is-blank' : '');
-
-      var art = document.createElement("span");
-      art.className = "picker-art";
-      Sprites.apply(art, item.sprite, 32);
-      art.style.filter = item.tint ? "hue-rotate(" + item.tint + "deg)" : "";
-
-      var name = document.createElement('small');
-      name.textContent = item.name;
-
-      b.appendChild(art);
-      b.appendChild(name);
-      b.addEventListener('click', function () {
-        Progress.equip(openSlot, item.id);
-        UI.sound.tick();
-        paint();
-      });
-      row.appendChild(b);
-    });
-
-    host.appendChild(row);
-
-    if (!ownedAny) {
-      var none = document.createElement('p');
-      none.className = 'picker-empty';
-      none.textContent = 'Nothing bought yet. Visit the Shop.';
-      host.appendChild(none);
-    }
-  }
-
   /** Draws the character WEARING what you chose: the figure, with the
       shield on the off arm and the weapon in the near hand.
 
@@ -212,8 +158,15 @@ var Hero = (function () {
       separate hero for each of the thirty combinations of armour and
       weapon would be thirty sprites to keep in step.
 
-      An empty slot simply puts nothing there. */
-  function paintFigure(el, withPet) {
+      An empty slot simply puts nothing there.
+
+      `petBox` is how many pixels across to draw the pet, because a pet
+      is a sheet with a real frame size rather than something CSS can
+      scale by percent like the shield and the sword. It has to be
+      passed in: the Gear screen draws the rig a third bigger than the
+      home screen does, and a 46px creature next to a 140px character
+      reads as a different animal. */
+  function paintFigure(el, withPet, petBox) {
     if (!el) return;
     el.innerHTML = '';
     el.className = 'rig';
@@ -247,7 +200,7 @@ var Hero = (function () {
       if (pet.cost !== 0) {
         var p = document.createElement('span');
         p.className = 'rig-pet';
-        Sprites.apply(p, pet.sprite, 46);
+        Sprites.apply(p, pet.sprite, petBox || 46);
         el.appendChild(p);
       }
     }
@@ -279,14 +232,7 @@ var Hero = (function () {
 
   function init() {
     initName();
-    paintFigure(UI.$('hero-art'), false);
-    SLOTS.forEach(function (slot) {
-      UI.$('slot-' + slot.kind).addEventListener('click', function () {
-        openSlot = (openSlot === slot.kind) ? null : slot.kind;
-        UI.sound.tick();
-        paint();
-      });
-    });
+    paintFigure(UI.$('hero-art'), true, 62);
   }
 
   return {
@@ -294,6 +240,10 @@ var Hero = (function () {
     paint: paint,
     paintFigure: paintFigure,
     name: name,
-    close: function () { openSlot = null; }
+    /* Kept because the reset flow calls it. There is no longer a picker
+       left open to shut, but a reset SHOULD be able to say "put this
+       screen back to nothing" without knowing what this screen has on
+       it, so the door stays. */
+    close: function () {}
   };
 })();

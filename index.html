@@ -326,41 +326,32 @@
 
     <div class="hero-body">
 
-      <div class="hero-stage">
-        <button class="slot slot-left" id="slot-pet" type="button">
-          <span class="slot-k">Pet</span>
-          <span class="slot-art"></span>
-          <b class="slot-name">None</b>
-          <small class="slot-desc"></small>
-        </button>
+      <!-- YOUR CHARACTER, ASSEMBLED. This used to be three slot boxes
+           around a small figure - tap a box, a picker opens underneath,
+           choose from it. All three were doing a job the shop below
+           already does: tapping an item on a shelf buys it if you need
+           to and puts it on either way. So the boxes were a second way
+           to do the same thing, and they turned the one place in the
+           game that should show you a CHARACTER into a form.
 
+           What is left is the character, wearing what you chose, with
+           the pet walking beside them. The line under it is a readout,
+           not a control. -->
+      <div class="hero-stage">
         <div class="hero-figure">
           <span class="hero-art" id="hero-art"></span>
-          <!-- Tap to type. A plain text box rather than a popup, so
-               naming your character is one tap, not three. -->
-          <input class="hero-name" id="hero-name" type="text" maxlength="14"
-                 autocomplete="off" spellcheck="false"
-                 placeholder="Name me" aria-label="Your character's name">
         </div>
 
-        <button class="slot slot-right" id="slot-weapon" type="button">
-          <span class="slot-k">Weapon</span>
-          <span class="slot-art"></span>
-          <b class="slot-name">None</b>
-          <small class="slot-desc"></small>
-        </button>
+        <!-- Tap to type. A plain text box rather than a popup, so
+             naming your character is one tap, not three. -->
+        <input class="hero-name" id="hero-name" type="text" maxlength="14"
+               autocomplete="off" spellcheck="false"
+               placeholder="Name me" aria-label="Your character's name">
 
-        <button class="slot slot-bottom" id="slot-armour" type="button">
-          <span class="slot-k">Armour</span>
-          <span class="slot-art"></span>
-          <b class="slot-name">None</b>
-          <small class="slot-desc"></small>
-        </button>
+        <p class="hero-worn" id="hero-worn"></p>
       </div>
 
       <div class="hero-set" id="hero-set"></div>
-
-      <div class="hero-picker" id="hero-picker"></div>
 
       <!-- Everything you can buy, directly under the character who would
            be wearing it. It goes ABOVE the stat bars because it is what
