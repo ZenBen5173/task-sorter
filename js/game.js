@@ -320,15 +320,17 @@ var Game = (function () {
 
       The same card missed twice is one row with a "x2" on it, so five
       mistakes on one stubborn card do not push everything else off. */
-  /** `passed` decides how much of each answer is given away.
+  /** THE RIGHT CORNER IS NEVER SHOWN. Not on a fail, and not on a pass
+      either - it used to appear once you had passed.
 
-      PASS and you get everything: the right corner and the reason.
-      FAIL and you get the reason ONLY - the right corner is held back.
+      Being handed the answer teaches nothing: you read it, nod, and
+      forget it by the next round. The reason is the lesson, and made to
+      work for on its own it is the thing that sticks. You are told what
+      you chose, and why that was not it; working out what it should
+      have been is the part that is actually the game.
 
-      Being handed the answer the moment you fail teaches nothing; you
-      read it, nod, and forget it. Held back, the reason is a clue and
-      the retry is where the thinking happens. You have to work it out,
-      which is the entire point of the game. */
+      `passed` is still taken because the caller knows it and a future
+      version may want it; nothing here reads it any more. */
   function paintReview(passed) {
     var host = UI.$('review');
     var list = UI.$('review-list');
@@ -354,12 +356,12 @@ var Game = (function () {
       ? 'The one you missed'
       : 'What you missed (' + rows.length + ')';
 
-    /* Say the answers are being held back, and why. A missing answer
-       with no explanation just looks like the screen is broken. */
+    /* Say the corner is being withheld on purpose. A missing answer with
+       no explanation just looks like the screen is broken. */
     var note = UI.$('review-note');
-    note.hidden = passed;
-    note.textContent = 'Answers hidden until you pass. Read the reasons, '
-      + 'work out the corner yourself, and go again.';
+    note.hidden = false;
+    note.textContent = 'The corner is never given away. Read the reason, '
+      + 'work it out, and go again.';
 
     rows.forEach(function (r) {
       var li = document.createElement('li');
@@ -386,17 +388,10 @@ var Game = (function () {
       mine.textContent = 'You said ' + BOXES[r.chose].label;
       answers.appendChild(mine);
 
-      if (passed) {
-        var real = document.createElement('span');
-        real.className = 'review-chip is-right box-' + r.card.box;
-        real.textContent = BOXES[r.card.box].label;
-        answers.appendChild(real);
-      } else {
-        var hidden = document.createElement('span');
-        hidden.className = 'review-chip is-hidden';
-        hidden.textContent = 'so what was it?';
-        answers.appendChild(hidden);
-      }
+      var hidden = document.createElement('span');
+      hidden.className = 'review-chip is-hidden';
+      hidden.textContent = 'so what was it?';
+      answers.appendChild(hidden);
 
       var why = document.createElement('p');
       why.className = 'review-why';

@@ -239,9 +239,11 @@ stakes, so the player is judging, not guessing.
 - GOOD — `'Essay due in 2 weeks, 20% of grade'` — clearly Do Later
 
 The `why` is shown on the END SCREEN, in the "What you missed" list, not
-during the round. **If you FAILED, the reason is all you get** - the right
-corner is held back until you pass, so the retry is where the thinking
-happens instead of you being handed the answer and forgetting it. A banner mid-round is unreadable at speed and it covers
+during the round. **The right corner is never shown** - not on a fail, and not
+on a pass either. Being handed the answer teaches nothing: you read it, nod,
+and forget it by the next round. You are told what you chose and why that was
+not it; working out what it should have been is the part that is actually the
+game. A banner mid-round is unreadable at speed and it covers
 the card you are meant to be looking at. This is still the line that does
 the teaching, so write it properly. If you cannot write a
 `why` that convinces you, cut the card.
@@ -264,6 +266,13 @@ a coin flip.**
 
 When you add a card, keep it that way: a person in the text must never be a
 reliable signal for a corner.
+
+**But do not chase the number.** The first pass at this rewrote "Learn to cook
+one meal properly" into "Get someone to teach you one meal properly" - which
+moved the metric and pointed the card straight at Give Away. Three others went
+the same way: a card where the person named could plausibly do the task is a
+card with two answers, and the FAIR CARD RULE outranks the tell every time.
+Add the person; never hand them the job.
 Inside a theme the four corners are the same size as each other, or one
 corner starts repeating before the others do.
 
