@@ -162,10 +162,16 @@ var Hero = (function () {
       ownedAny = true;
 
       var worn = Progress.equipped()[openSlot] === item.id;
+      /* Same as the shop: the free item is the EMPTY slot, so it does
+         not get the green "this is what you are wearing" ring. Wearing
+         nothing is not wearing something. */
+      var blank = item.cost === 0;
 
       var b = document.createElement('button');
       b.type = 'button';
-      b.className = 'picker-item' + (worn ? ' is-worn' : '');
+      b.className = 'picker-item'
+        + (worn && !blank ? ' is-worn' : '')
+        + (blank ? ' is-blank' : '');
 
       var art = document.createElement("span");
       art.className = "picker-art";

@@ -239,10 +239,18 @@ var Shop = (function () {
     var afford = Progress.coins() >= item.cost;
     var open = isUnlocked(item);
 
+    /* The free item in a group is the EMPTY SLOT, not a thing you own:
+       "None", "Bare Hands". It was getting the same green border and the
+       same "Worn" badge as a pet you saved up for, which read as an
+       achievement for having no pet. Wearing nothing is not wearing
+       something, so it says what it is and what tapping it does. */
+    var blank = item.cost === 0;
+
     var el = document.createElement('button');
     el.type = 'button';
     el.className = 'shop-tile'
-      + (worn ? ' is-worn' : '')
+      + (worn && !blank ? ' is-worn' : '')
+      + (blank ? ' is-blank' : '')
       + (owned ? ' is-owned' : '')
       + (!open ? ' is-sealed' : '')
       + (open && !owned && !afford ? ' is-broke' : '');
@@ -263,6 +271,11 @@ var Shop = (function () {
     if (!open) {
       tag.textContent = lockReason(item);
       tag.classList.add('is-sealed');
+    } else if (blank) {
+      /* Currently empty, so there is nothing to do here - or something
+         is worn, and tapping this is how you take it off. */
+      tag.textContent = worn ? 'Empty' : 'Take off';
+      tag.classList.add('is-blank');
     } else if (worn) {
       tag.textContent = 'Worn';
       tag.classList.add('is-worn');

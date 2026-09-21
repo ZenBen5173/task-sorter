@@ -756,6 +756,13 @@ body {
   font-variant-numeric: tabular-nums;
 }
 .shop-tag.is-worn { background: var(--good); color: #06180a; }
+
+/* The empty slot. No green anywhere: having no pet is a state, not a
+   thing you achieved, and it should not sit on the shelf looking like
+   the prize next to it. */
+.shop-tile.is-blank { border-style: dashed; }
+.shop-tile.is-blank .shop-art { opacity: .55; }
+.shop-tag.is-blank { background: none; border-color: transparent; color: var(--tx-dim); }
 .shop-tag.is-use { background: var(--bg-3); color: var(--tx-hi); }
 .shop-coin {
   width: 14px; height: 14px;
@@ -884,6 +891,8 @@ body {
 }
 .picker-item:active { transform: scale(.95); }
 .picker-item.is-worn { border-color: var(--good); background: rgba(92,196,106,.12); }
+.picker-item.is-blank { border-style: dashed; }
+.picker-item.is-blank .picker-art { opacity: .55; }
 .picker-item small { font-size: 10.5px; line-height: 1.2; text-align: center; }
 .picker-art {
   width: 30px; height: 30px;
