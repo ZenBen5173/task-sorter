@@ -11,7 +11,19 @@ Four levels wind up a trail - the **Day to Day** pack. Each level is a
 
 ---
 
-## Running it
+## Playing it
+
+**In a browser:** <https://task-sorter-one.vercel.app>
+
+Note the `-one`. Plain `task-sorter.vercel.app` is a different project by
+somebody else and is not this game.
+
+**On an Android phone:** build the APK, or take it from the Build APK workflow
+in the Actions tab. See `android/README.md`.
+
+---
+
+## Running it locally
 
 **On the PC:** double-click `index.html`.
 
