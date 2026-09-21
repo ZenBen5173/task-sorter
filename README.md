@@ -62,11 +62,14 @@ you nothing.
 | `js/hero.js` | **The Character screen:** gear slots and stat bars |
 | `js/battle.js` | **The rivals** you duel in Battle |
 | `js/main.js` | Boots the game, draws the level map, wires the buttons |
+| `js/pets.js` | **The pet collection:** the thirteen sheets, and how they are played |
+| `js/cloud.js` | **Accounts** and saving your progress online |
 | `serve.ps1` | Local server for phone testing |
-| `archive/` | The old Focus Village build, kept for reference |
 
-No frameworks, no build step, no network calls. Sounds are generated in code,
-so there are no audio files at all.
+No frameworks and no build step. Sounds are generated in code, so there are no
+audio files at all. The only network calls the game ever makes are the account
+ones in `js/cloud.js`, and the game plays exactly the same with every one of
+them failing.
 
 ---
 
@@ -129,8 +132,10 @@ Three lists on each level control what turns up, and together they are the
 whole difficulty ramp:
 
 - `theme` - which place you are in, so Level 1 is nothing but house tasks
-- `boxes` - which corners exist yet. **Level 1 has no Give Away cards at all**,
-  so players learn three corners before the fourth shows up
+- `boxes` - which corners a level uses. **All four are live from Level 1**;
+  the easing-in comes from `tiers`, not from hiding a corner. Nothing uses a
+  short `boxes` list at the moment - it is there so a future level can, and
+  a corner left out is removed from the screen rather than greyed out
 - `tiers` - how hard the cards are to judge (see `js/cards.js`)
 
 That is the teaching built into the progression.
@@ -174,6 +179,11 @@ something.
 ### Losing
 
 There is only one way to fail a level: **finish below the accuracy bar**.
+
+**A failed run is not recorded.** No grade is saved and the marker on the map
+stays blank, because a best grade is the badge for beating a level - writing a
+failed one in there put a C on a level nobody had passed, and made it look
+finished from the map.
 
 There used to be a second - a desk meter that filled up behind you and buried
 you if you fell behind. It was removed. Everything it touched (card spawning,
@@ -253,13 +263,41 @@ Reached from the **bottom bar** (Map / Character / Battle / Shop). Three kinds o
 
 | Kind | What it does | Items |
 |---|---|---|
-| **Pets** | More coins, but a faster clock | Paper Crane, Ink Cat, Sleepy Sloth, Desk Dragon, Time Owl |
+| **Pets** | More coins, but a faster clock | Thirteen, from the Duck to the Phoenixling - see below |
 | **Armour** | Covers wrong answers so they do not count | Wood, Silver, Gold, Diamond, Diamond and Gold Shield |
-| **Weapons** | More points, and more battle damage | Red Pen, Stapler, Hole Punch, Paper Cutter, Golden Shredder |
+| **Weapons** | More points, and more battle damage | Dagger, Longsword, Gold Sword, Bronze Blade, Winged Blade |
 
 One of each can be worn at a time. Everything is defined in `js/shop.js`;
 `fast`, `coin`, `block` and `mult` are the only four things an item can do,
 so adding an item is one line.
+
+### The pet collection
+
+Thirteen pets, brought over whole from **MyTask** with their own art and their
+own rarity. They are animated sprite sheets an artist drew, not 16x16 grids
+typed into `js/sprites.js`, so they live in `js/pets.js` and are played their
+own way - see **Animated pets** below.
+
+| Rarity | Pets | Gate |
+|---|---|---|
+| Common | Duck, Kitten, Mushroom, Hatchling, Bunny | none - buyable from the start |
+| Rare | Adventurer, Teddy Bear, Penguin | reach level 2 or 3 |
+| Epic | Zombie, Flame Sprite | reach level 3 or 4 |
+| Legendary | Polar Bear, Dragon, Phoenixling | **beat a rival** |
+
+MyTask gave each pet an ability worth some percent of XP or coins. Task Sorter
+has no XP, so every ability lands on coins - and here a pet also shortens your
+clock. **The ladder runs both ways at once:** the further down you buy, the
+more you are paid and the less time you get to earn it in. The Phoenixling pays
++60% and cuts a 60 second level to 39. That is on purpose: the best pet in the
+game is not automatically the best pet to wear, which is the only thing keeping
+thirteen of them from being one of them and twelve trophies.
+
+All three legendaries sit behind a **battle** rather than a price, so the
+collection cannot be finished by grinding coins alone. That is what Battle mode
+is for.
+
+Art and licences: `assets/pets/CREDITS.md`.
 
 Each slot has a different job, and the jobs come from how you pass a level.
 Passing is decided by accuracy alone, so **armour protects your accuracy**,
@@ -307,7 +345,7 @@ Wear a pet **and** armour **and** a weapon at the same time and every coin
 payout goes up by **25%** — levels and battles both.
 
 It is deliberately about filling all three slots rather than owning expensive
-gear, so the cheapest full set (Paper Crane + Folder + Red Pen, 370 coins) earns
+gear, so the cheapest full set (Paper Crane + Wood Shield + Dagger, 370 coins) earns
 the bonus just as well as the priciest one. That gives a new player something
 reachable to aim for instead of grinding for one costly item.
 
@@ -319,14 +357,19 @@ greyed-out reminder when it is not. `setBonus` in `js/shop.js` controls it.
 You earn coins by finishing a level:
 
 ```
-coins = score / 200  +  grade bonus (S 60, A 40, B 25, C 10)
+coins = score / 500  +  grade bonus (S 50, A 35, B 20, C 8)
 ```
 
 Both numbers live in `COIN_REWARD` in `js/shop.js`. A typical good round pays
 roughly 100-150 coins, so the cheapest item is about one round away and the
-best is a proper grind. **Worth re-checking once real people play it** — the
-gap between a careless and an expert run is wide, so the payout may need
-tuning.
+best is a proper grind.
+
+The divisor was 200 until a full play-through test: a clean Level 1 paid 288
+coins, which bought the cheapest item in every slot at once and left the whole
+shop about two rounds away. Score climbs with your streak AND with how many
+cards you got through, so it runs away from you on the longer levels - the
+divisor is the thing holding the payout down. **Still worth re-checking once
+real people play it.**
 
 ---
 
@@ -349,6 +392,52 @@ matching line in `SPRITE_OVERRIDES`. That is the only change needed.
 
 Four sprites so far: `bang` (Do Now), `cal` (Do Later), `arrow` (Give Away),
 `bin` (Drop).
+
+---
+
+## Animated pets
+
+The thirteen pets are the one thing in the game that is not drawn in code. Each
+is a **sprite sheet**: one long strip of frames, played by sliding
+`background-position` one cell to the left on a timer. No canvas, no redraw per
+frame, and it costs nothing on a screen that already has cards flying about.
+
+**One timer for the whole game.** The shop shows fourteen pets at once, and
+fourteen separate intervals would be fourteen things to start, stop and leak.
+Every pet on screen goes into one list that a single ticker walks. It drops
+anything that has left the page, and **skips anything whose screen is not
+showing** - otherwise the shop's fourteen would keep running frame by frame
+behind a round you were in the middle of. It asks by CSS class rather than by
+measuring, because reading a position makes the browser lay the page out, and
+that is the one thing a 25-times-a-second timer must never do.
+
+**Adding a pet** is a sheet in `assets/pets/` and one entry in `PET_SHEETS`:
+
+```js
+kitten: {
+  name: 'Kitten', src: 'assets/pets/kitten.png',
+  cellW: 35, cellH: 48, width: 350, height: 48,
+  frames: 10, fps: 12, body: { w: 34, h: 48 }, offset: 0
+},
+```
+
+### Why `body` and `offset` exist
+
+**A cell is not a creature.** The Phoenixling is a 23x21 bird adrift in a 40x56
+cell, because the cell has to be tall enough for its rebirth animation. The
+Dragon fills 79x41 of its 83x48. Scale both to the same cell height and the
+bird comes out half the size of the dragon - because it is.
+
+So a pet is scaled off `body`, the part that is actually drawn, and `offset`
+lifts it off the floor of its cell into the middle of its box. There is a
+second cap on the **cell**: without it the Phoenixling's bird would match the
+others while its canvas grew to two and a half tiles tall, hanging over
+everything around it. The bird ends up a little smaller than a creature that
+fills its own cell, which is the honest answer - it is a smaller creature.
+
+The frame that hangs outside its box is transparent, so it never covers
+anything, and it is `pointer-events: none`, so a tap meant for the tile next
+door never buys a Phoenixling instead.
 
 ---
 

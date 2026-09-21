@@ -29,13 +29,50 @@ var SHOP = {
   pet: {
     label: 'Pets',
     blurb: 'Pays you more coins - and takes time off your clock for it.',
+
+    /* THE COLLECTION. Thirteen buddies, brought over from MyTask with
+       their own art and their own rarity, cheapest to dearest.
+
+       MyTask gave each one an ability worth some percent of XP or
+       coins. Task Sorter has no XP, so every ability lands on coins -
+       and the deal here is that a pet ALSO shortens your clock. So the
+       ladder runs both ways at once: the further down you buy, the more
+       you are paid and the less time you get to earn it in. The best
+       pet in the game is not simply the best pet to wear.
+
+       The rarity a pet had in MyTask sets its place in the ladder:
+         common      Duck, Kitten, Mushroom, Hatchling, Bunny
+         rare        Adventurer, Teddy Bear, Penguin
+         epic        Zombie, Flame Sprite
+         legendary   Polar Bear, Dragon, Phoenixling
+
+       Gating follows the same line. The commons are buyable from the
+       start, the rares and epics want progress on the map, and all
+       three legendaries are behind a BATTLE - which is what stops the
+       collection being a pure coin grind. */
     items: [
-      { id: 'pet0', name: 'None',        cost: 0,    tint: 0, fast: 1,    coin: 0,    desc: 'No pet.' },
-      { id: 'pet1', name: 'Paper Crane', cost: 150,  tint: 0, fast: 1.12, coin: 0.15, desc: '+15% coins. Clock runs 12% faster.', sprite: 'crane' },
-      { id: 'pet2', name: 'Ink Cat',     cost: 400,  tint: 0, fast: 1.25, coin: 0.30, desc: '+30% coins. Clock runs 25% faster.', needsLevel: 2, sprite: 'tabby' },
-      { id: 'pet3', name: 'Sleepy Sloth',cost: 650,  tint: 0, fast: 1.32, coin: 0.40, desc: '+40% coins. Clock runs 32% faster.', needsLevel: 3, sprite: 'sloth' },
-      { id: 'pet4', name: 'Desk Dragon', cost: 900,  tint: 0, fast: 1.40, coin: 0.50, desc: '+50% coins. Clock runs 40% faster.', needsLevel: 4, sprite: 'dragon' },
-      { id: 'pet5', name: 'Time Owl',    cost: 1400, tint: 0, fast: 1.50, coin: 0.60, desc: '+60% coins. Clock runs 50% faster.', needsRival: 2, sprite: 'owl' }
+      { id: 'pet0',  name: 'None',         cost: 0,    tint: 0, fast: 1,    coin: 0,    desc: 'No pet.' },
+
+      /* --- common --- */
+      { id: 'pet1',  name: 'Duck',         cost: 120,  tint: 0, fast: 1.06, coin: 0.08, desc: '+8% coins. Clock runs 6% faster.',   sprite: 'duck' },
+      { id: 'pet2',  name: 'Kitten',       cost: 170,  tint: 0, fast: 1.08, coin: 0.10, desc: '+10% coins. Clock runs 8% faster.',  sprite: 'kitten' },
+      { id: 'pet3',  name: 'Mushroom',     cost: 230,  tint: 0, fast: 1.10, coin: 0.12, desc: '+12% coins. Clock runs 10% faster.', sprite: 'mushroom' },
+      { id: 'pet4',  name: 'Hatchling',    cost: 300,  tint: 0, fast: 1.12, coin: 0.15, desc: '+15% coins. Clock runs 12% faster.', sprite: 'hatchling' },
+      { id: 'pet5',  name: 'Bunny',        cost: 390,  tint: 0, fast: 1.16, coin: 0.20, desc: '+20% coins. Clock runs 16% faster.', sprite: 'bunny' },
+
+      /* --- rare --- */
+      { id: 'pet6',  name: 'Adventurer',   cost: 480,  tint: 0, fast: 1.18, coin: 0.22, desc: '+22% coins. Clock runs 18% faster.', needsLevel: 2, sprite: 'slime' },
+      { id: 'pet7',  name: 'Teddy Bear',   cost: 580,  tint: 0, fast: 1.22, coin: 0.25, desc: '+25% coins. Clock runs 22% faster.', needsLevel: 2, sprite: 'teddy_bear' },
+      { id: 'pet8',  name: 'Penguin',      cost: 700,  tint: 0, fast: 1.26, coin: 0.30, desc: '+30% coins. Clock runs 26% faster.', needsLevel: 3, sprite: 'penguin' },
+
+      /* --- epic --- */
+      { id: 'pet9',  name: 'Zombie',       cost: 850,  tint: 0, fast: 1.32, coin: 0.38, desc: '+38% coins. Clock runs 32% faster.', needsLevel: 3, sprite: 'zombie' },
+      { id: 'pet10', name: 'Flame Sprite', cost: 1000, tint: 0, fast: 1.36, coin: 0.42, desc: '+42% coins. Clock runs 36% faster.', needsLevel: 4, sprite: 'flame_sprite' },
+
+      /* --- legendary: every one of these is behind a rival --- */
+      { id: 'pet11', name: 'Polar Bear',   cost: 1200, tint: 0, fast: 1.42, coin: 0.48, desc: '+48% coins. Clock runs 42% faster.', needsRival: 1, sprite: 'polar_bear' },
+      { id: 'pet12', name: 'Dragon',       cost: 1500, tint: 0, fast: 1.48, coin: 0.54, desc: '+54% coins. Clock runs 48% faster.', needsRival: 2, sprite: 'dragon' },
+      { id: 'pet13', name: 'Phoenixling',  cost: 2000, tint: 0, fast: 1.55, coin: 0.60, desc: '+60% coins. Clock runs 55% faster.', needsRival: 3, sprite: 'phoenix' }
     ]
   },
   armour: {
@@ -77,10 +114,17 @@ var SHOP = {
   }
 })();
 
-/** Coins paid out at the end of a level. */
+/** Coins paid out at the end of a level.
+
+    TUNED AGAINST A REAL ROUND. At 1 coin per 200 score a clean Level 1
+    paid 288, which bought the cheapest item in each slot outright and
+    left the whole shop about two rounds away - there was nothing to
+    save up for. A round scores what it scores because score climbs with
+    the streak AND with how many cards you got through, so the divisor
+    is what keeps the payout sane. A good round now lands near 140. */
 var COIN_REWARD = {
-  perScore: 200,                         // 1 coin per this much score
-  grade: { S: 60, A: 40, B: 25, C: 10 }, // plus a bonus for the grade
+  perScore: 500,                         // 1 coin per this much score
+  grade: { S: 50, A: 35, B: 20, C: 8 },  // plus a bonus for the grade
 
   /* Wear a pet AND armour AND a weapon at the same time and every coin
      payout goes up by this much. Gives you a reason to fill all three
@@ -202,7 +246,7 @@ var Shop = (function () {
 
     var art = document.createElement('span');
     art.className = 'shop-art';
-    Sprites.apply(art, item.sprite);
+    Sprites.apply(art, item.sprite, 40);
     if (item.tint) art.style.filter = 'hue-rotate(' + item.tint + 'deg)';
 
     var name = document.createElement('b');

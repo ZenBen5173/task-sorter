@@ -179,10 +179,15 @@ var Progress = (function () {
     isOpen: function (n) { return n <= data.unlocked; },
     best: function (n) { return data.best[n] || null; },
 
-    /** Called at the end of a level. Unlocks the next one on a pass. */
+    /** Called at the end of a level. Unlocks the next one on a pass.
+
+        ONLY A PASS IS RECORDED. A best grade is a badge for beating the
+        level, and the map paints the marker as finished the moment one
+        exists - so writing a failed run in there put a C on a level the
+        player never actually passed, and it looked done from the map. */
     record: function (n, passed, grade, score) {
       var prev = data.best[n];
-      if (!prev || score > prev.score) {
+      if (passed && (!prev || score > prev.score)) {
         data.best[n] = { grade: grade, score: score };
       }
       if (passed && n === data.unlocked && n < LEVELS.length) {
