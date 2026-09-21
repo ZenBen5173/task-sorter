@@ -324,23 +324,19 @@ body {
    the height, for a 60 degree tree). Any narrower and the neighbours
    overlap so much that their lower halves fuse into one flat strip, and
    the forest turns into a hedge with teeth on top. */
+/* The last of the gradient trees have gone from here too. This was the
+   far treeline, and being pale and small did not save it - a tiled
+   triangle is a tiled triangle, and having real drawn pines in front of
+   a row of flat teeth made the teeth MORE obvious, not less.
+
+   What is left is the mist, which is the one thing a gradient does
+   better than a shape: it has no edge to get wrong. */
 .lv-scene::before {
   background:
-    /* mist drifting over the foot of the far trees, so they fade into
-       the forest instead of stopping on a ruler-straight line */
-    linear-gradient(180deg, transparent 23%, rgba(150,190,150,.95) 31%, transparent 41%),
-    conic-gradient(from 150deg at 50% 0, #739e73 0 60deg, transparent 0)
-      0 15% / 54px 46px repeat-x,
-    conic-gradient(from 150deg at 50% 0, #5f8b62 0 60deg, transparent 0)
-      27px 20% / 68px 58px repeat-x,
-    conic-gradient(from 150deg at 50% 0, #527d57 0 60deg, transparent 0)
-      11px 24% / 50px 42px repeat-x;
-  opacity: .7;
+    linear-gradient(180deg, transparent 23%, rgba(150,190,150,.55) 31%, transparent 41%);
 }
 
-/* The gradient treelines are gone - see js/forest.js. The pseudo
-   element keeps only the far mist band, which is atmosphere rather than
-   a shape and is still better done with a gradient. */
+/* Every tree is drawn now - see js/forest.js. Nothing tiled is left. */
 .lv-scene::after { display: none; }
 
 /* The wood itself, drawn as silhouettes. It stretches with the box, so

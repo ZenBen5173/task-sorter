@@ -97,6 +97,11 @@ var Forest = (function () {
      closer together - because any one of them alone just looks like a
      mistake. */
   var RANKS = [
+    /* The two furthest ranks replace the pale gradient treeline that
+       used to sit up here. They are small, close together and washed
+       out almost to the colour of the mist, which is what distance
+       looks like - not a smaller triangle. */
+    { y: 24, h: 9,  n: 34, fill: '#8fb48c', jitter: 1.1, steps: [3, 4], spread: [11, 15] },
     { y: 30, h: 13, n: 26, fill: '#7aa47a', jitter: 1.6, steps: [3, 4], spread: [12, 16] },
     { y: 40, h: 17, n: 22, fill: '#5f8b62', jitter: 2.0, steps: [3, 4], spread: [13, 17] },
     { y: 54, h: 23, n: 18, fill: '#3d6b45', jitter: 2.6, steps: [4, 5], spread: [14, 18] },
