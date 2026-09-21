@@ -65,6 +65,7 @@ tasks.register('stageGame', Copy) {
   description = 'Copies the web game into the APK assets.'
   from(gameRoot) {
     include 'index.html'
+    include 'favicon.ico'
     include 'css/**'
     include 'js/**'
     include 'assets/**'

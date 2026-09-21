@@ -4,6 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#12161b">
+
+<!-- The four corners and a card. It is what the game IS, and it is the
+     only thing that still reads at 16px on a browser tab - a hero at
+     that size is four grey pixels.
+
+     Also the one request the game was still getting a 404 on: a browser
+     asks for /favicon.ico whether you declare one or not, and an error
+     in the console of a game being judged is an error in the console of
+     a game being judged. -->
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
 <meta name="description" content="Task Sorter - sort the pile before it buries you.">
 <title>Task Sorter</title>
 <!-- Two fonts, and the split is the whole point. Press Start 2P is a
@@ -463,7 +474,7 @@
       <div class="me-block">
         <h3 class="me-h">Sound</h3>
         <button class="me-row" id="btn-sound" type="button">
-          <span class="me-row-t"><b>Sound effects</b><small>Chimes when you sort and miss</small></span>
+          <span class="me-row-t"><b>Sound</b><small>Music, and the chimes when you sort</small></span>
           <span class="me-switch" id="sound-switch"><span class="me-knob"></span></span>
         </button>
       </div>

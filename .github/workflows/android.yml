@@ -33,10 +33,15 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # The runner already has the Android SDK. This only puts it on the
-      # path and accepts the licences.
-      - name: Set up the Android SDK
-        uses: android-actions/setup-android@v3
+      # NO setup-android ACTION. It was here and it failed on its first
+      # run: it tries to install a package called 'tools', which Google
+      # removed from the repository, and the action treats that as
+      # fatal. It was never needed either - the ubuntu-latest runner
+      # ships with the Android SDK already installed and ANDROID_HOME
+      # already set. All that is missing is the licence acceptance,
+      # which is one line.
+      - name: Accept the SDK licences
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
 
       - name: Build
         working-directory: android

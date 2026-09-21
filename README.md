@@ -64,7 +64,11 @@ you nothing.
 | `js/main.js` | Boots the game, draws the level map, wires the buttons |
 | `js/pets.js` | **The pet collection:** the thirteen sheets, and how they are played |
 | `js/weather.js` | **The falling petals, leaves and rain** behind a round |
+| `js/scenery.js` | **The hills, trees and waterfalls** a round is played in front of |
+| `js/forest.js` | The wood on the level map |
+| `js/music.js` | **The soundtrack**, played rather than loaded |
 | `js/cloud.js` | **Accounts** and saving your progress online |
+| `android/` | **The Android app.** One WebView around this same game |
 | `serve.ps1` | Local server for phone testing |
 
 No frameworks and no build step. Sounds are generated in code, so there are no
@@ -207,8 +211,15 @@ speed, which in a game about sorting cards against a clock is the same problem.
 So it keeps **three places nobody has to read under pressure** - the logo, the
 PLAY button, and the grade you are handed at the end. *Fredoka* carries
 everything else, and the in-round numbers get their weight from size and
-colour instead. Both come from Google Fonts; if they never arrive the game
-falls back to the system stack and plays exactly the same.
+colour instead.
+
+**Both fonts ship with the game**, in `assets/fonts`, and the game makes no
+outbound request at all on boot. They used to be two `<link>` tags to Google
+Fonts, which made the game's own typography conditional on the wifi in the
+room - and this is a mobile game, demonstrated on a stranger's network and
+packaged into an app that has no reason to need one. Latin subsets only, and
+Fredoka is a variable font so its four weights are one file: 52 KB for the
+pair. Both are Open Font Licence; see `assets/fonts/CREDITS.md`.
 
 **The dark is blue and lit from somewhere.** One radial gradient at the top of
 `#app` is the difference between a room and a page.
@@ -675,6 +686,11 @@ timer stays honest even if the app goes to the background.
 
 ## Not built yet
 
+- **Online Boss.** Shown on the Boss screen, clearly marked *Coming soon*, and
+  tapping it says so. Two real players need a server to pair them and pass
+  their moves; the game has no server. There is deliberately no pretend
+  "searching for players" screen, because faking a real opponent with a
+  computer one is lying to whoever is playing.
 - Give Away characters (pick a teammate to hand the task to)
 - Rush mode (3x)
 - HUAWEI Game Service leaderboard
@@ -685,13 +701,79 @@ timer stays honest even if the app goes to the background.
 ## Contest checklist
 
 - [ ] Register before **13 October**
-- [ ] Collect **20 HUAWEI GameCenter IDs** from 20 different devices
-- [ ] Ask the Category A WhatsApp group whether a web prototype is accepted, or
-      whether it must be an installable Android app
-- [ ] Presentation slides (ppt, max 40) — needs Issue Clarification and SDGs
+- [ ] **Collect 20 HUAWEI GameCenter IDs from 20 different devices.** This is
+      the one on the list that is not code and not a document: it is twenty
+      people with twenty phones. It is compulsory, it waives the RM20 fee, and
+      it is what teams run out of time on. Start it first.
+- [ ] Confirm with the Category A group that the APK satisfies the "Mobile
+      Game App Product / Prototype" requirement
+- [ ] Presentation slides (ppt, max 40) — needs Issue Clarification and SDGs.
+      The SDG answer is in the game as well as on the slide: see **Why this
+      game exists** in the Guide Book
 - [ ] Video, max 3 minutes, max 60 MB, English subtitles if not in English
-- [ ] Keep the game under **100 MB** (currently well under 1 MB)
+- [x] An installable Android app — `android/`, about 3.4 MB
+- [x] Under **100 MB** — the APK is 3.4 MB, the game itself under 1 MB
+- [ ] **Install the APK on a real phone.** It has been built and its contents
+      verified, but it has never been run on hardware
 - [ ] Final submission **1 November**, 11:59pm
+
+---
+
+## The soundtrack
+
+**There is no music file.** Every note in `js/music.js` is an oscillator, the
+same bargain as the rest of the game - the sprites are colour grids, the
+forest is drawn maths, the weather is CSS keyframes.
+
+That matters here more than it is clever. A borrowed loop in a public
+repository is a borrowed loop's licence to honour. A minute of even middling
+MP3 is bigger than everything else in the game put together. And a soundtrack
+that has to arrive over the network is not there for the first round, which is
+the round somebody judges you on.
+
+**It keeps time against the audio clock, not `setTimeout`.** A coarse timer
+wakes every 25ms and books whatever falls inside the next 120ms directly with
+the hardware clock, so the timer running a frame late changes nothing.
+Scheduling each note with its own `setTimeout` drifts audibly inside two bars.
+
+**Four chords - C, G, Am, F - and a melody built only from the C major
+pentatonic**, five notes that cannot land wrong on any of them. Chosen because
+this loops for as long as somebody is on the screen, and music that repeats
+must have nothing in it that grates on the ninth time round. Two arrangements
+of the same phrase: thin and slow for screens you read, faster with a hat for
+a round on a clock, so moving between them sounds like one game.
+
+It follows the screen (`UI.showScreen` tells it), stops on the Me screen's
+sound switch along with the effects, and pauses on a hidden tab - on a phone
+that is battery spent behind a locked screen.
+
+---
+
+## The Android app
+
+`android/` wraps the game into an APK. About 3.4 MB.
+
+**There is no second copy of the game in there.** The obvious approach is to
+copy `index.html`, `css`, `js` and `assets` into the Android assets folder and
+commit them, and from that moment there are two games in one repository and
+one of them is always the stale one. `android/app/build.gradle` stages the
+repository root at build time instead, so the app and the website are built
+from the same files and cannot drift.
+
+Nothing in `js/` changed for the app to exist, and nothing in it knows it is
+inside one. One Activity, one WebView, no bridge - so there is still only one
+game to test.
+
+**It is served over https, not loaded from `file://`.** The usual way is
+`loadUrl("file:///android_asset/index.html")` and it mostly works, which is
+the trap: a `file://` page is an opaque origin, where local storage is
+unreliable and every request is cross-origin from `null`. This game keeps
+every scrap of progress in `localStorage`. `WebViewAssetLoader` serves the
+same files from a real secure origin that never leaves the phone, so the app
+behaves exactly like the browser the game was tested in.
+
+Build it with `./gradlew assembleDebug`, or take the artifact from the Build
+APK workflow in the Actions tab. See `android/README.md`.
 
 ---
 
@@ -701,30 +783,53 @@ The round button in the top right of a level opens the background picker.
 Four choices, defined in `js/themes.js`, and your pick is remembered for
 every round after.
 
-| Theme | Falling | Optional picture | Fallback colour |
+| Theme | Falling | Scenery | Tint |
 |---|---|---|---|
-| Deep Space | nothing - a still screen, and the default | none | dark navy |
-| Sakura | cherry blossom petals | `assets/themes/sakura.jpg` | pale blossom pink |
-| Forest | leaves | `assets/themes/forest.jpg` | light leaf green |
-| Waterfalls | rain | `assets/themes/waterfalls.jpg` | pale aqua |
+| Deep Space | drifting stars, and the default | none - the stars are the whole of it | dark navy |
+| Sakura | cherry blossom petals | hills and blossom trees | pale blossom pink |
+| Forest | leaves | hills and a pine wood | light leaf green |
+| Waterfalls | rain | a gorge, three falls and a pool | pale aqua |
 
-**The photographs are optional and none of them exist.** Each theme is carried
-by its colour and by what falls through it - see **Animated backgrounds** below.
-Save a picture with the exact name above and it slots in behind the weather;
-until the file exists the browser quietly ignores it and you get the plain
-`tint` colour underneath, so a missing picture never breaks anything and never
-shows an error.
+**The scenery is drawn, not photographed.** Three of these once named a JPG -
+`sakura.jpg`, `forest.jpg`, `waterfalls.jpg` - and not one of them ever
+existed, so picking Sakura got you a flat pink page. `js/scenery.js` paints an
+SVG per theme instead, once, when the theme changes.
 
-Adding a fifth is one line in `THEMES`: an `id`, a `name`, a `file`, a
-`tint` close to the photo, and a `dim` between 0 and 1.
+Three reasons that is better than finding photographs. A photograph is
+somebody's copyright and this repository is public. One good enough to fill a
+phone screen is about a megabyte, which is more than the entire game. And a
+photograph of somewhere real behind art made of pixels is a join you can
+always see.
+
+Two of the scenes are crowds and use the level map's trick: a shape drawn once
+and then scattered, each with its own height, width, lean and shade from a
+seeded generator. The waterfalls needed the opposite - a waterfall is not a
+crowd, and scattering cliff shapes gives grey blocks with white stripes down
+them. It reads from the arrangement, so that one is composed.
+
+`file` is still in `THEMES` and is `null` everywhere. A photograph would still
+layer in correctly if one ever turned up.
+
+Adding a fifth is one line in `THEMES` - an `id`, a `name`, a `tint` and a
+`dim` between 0 and 1 - plus a scene in `js/scenery.js` if you want one.
 
 ### Why `dim` matters
 
-Cards and corner labels sit on top of the background. White text on a bright
-photograph is unreadable, so every picture theme darkens itself first. The
-corner boxes also gain a solid dark backing on any non-space theme - against
-the plain dark screen they can be nearly see-through, but over a photo they
-cannot.
+Cards and corner labels sit on top of the background, and the card has to win.
+Every theme with scenery darkens itself first. The corner boxes also gain a
+solid dark backing on any non-space theme - against the plain dark screen they
+can be nearly see-through, and over trees they cannot.
+
+**The dim is applied over the scenery, not under it.** `#screen-play` carries
+it on its own background, and an element's background paints under its
+children - so the drawn hills and trees sat on top of the very layer meant to
+hold them back, and a forest at full strength competed with the card. It is
+laid back over the top in CSS.
+
+The values are low - 0.26 to 0.30, down from 0.58 and 0.62. Those were set for
+photographs, which are full of contrast and detail and have to be held right
+back. Flat silhouettes in a narrow band of colour are already most of the way
+there, and at the old strength Sakura came out as dusk.
 
 ### Why opening it pauses the clock
 
@@ -739,9 +844,8 @@ frozen the same way, or a pause would be a free hit.
 
 The little swatch in the picker paints `tint` raw, with no `dim` over it.
 Dark tints made the swatches look like holes punched in the panel, so the
-three picture themes use pale colours instead. The round itself still lands
-dark, because `dim` sits on top of the tint as well as the photo - a 0.6 dim
-over pale pink comes out a muted mauve, not a white screen.
+three scenery themes use pale colours instead. The round itself still lands
+darker, because `dim` sits on top of the tint as well as the scenery.
 
 The Guide Book shows the same four swatches, read-only, built from this same
 list. Add a fifth theme and the Guide Book picks it up on its own.
