@@ -33,11 +33,12 @@ var SPRITE_OVERRIDES = {
 
 /* 16x16 grids. '.' is see-through, every other letter is a colour.
 
-   NO PETS IN HERE any more. The pets are animated sheets an artist drew
-   and they live in js/pets.js; the five hand-drawn stand-ins that used
-   to sit here (crane, tabby, sloth, dragon, owl) went when the real
-   collection arrived. `cat` stayed: it is the picture the shop falls
-   back to for a group, which is what the "None" pet shows. */
+   NO PETS IN HERE at all. The pets are animated sheets an artist drew
+   and they live in js/pets.js. The six hand-drawn stand-ins that used
+   to sit here - crane, tabby, sloth, dragon, owl and cat - are all
+   gone. `cat` outlasted the others because it was the picture the pet
+   group fell back to, which is what the "None" slot showed; an empty
+   slot is not a pet, so it gets `nopet` instead. */
 var SPRITE_DATA = {
 
   /* The Map tab - an old explorer's chart. Aged paper, a torn brown
@@ -704,24 +705,29 @@ var SPRITE_DATA = {
 
 
 
-  cat: {
-    pal: { k: '#6b5b8a', w: '#f2f2e8' },
+  /* The empty pet slot. Not a creature - the pets are all real sprite
+     sheets in js/pets.js now, and the shop's "None" was still showing a
+     hand-drawn cat that had stopped being one of them. A dashed outline
+     says "nothing here" without pretending to be an animal you could
+     own. */
+  nopet: {
+    pal: { d: '#5d6675' },
     px: [
       '................',
-      '..k..........k..',
-      '..kk........kk..',
-      '..kkk......kkk..',
-      '..kkkkkkkkkkkk..',
-      '..kwwkkkkkkwwk..',
-      '..kwwkkkkkkwwk..',
-      '..kkkkkkkkkkkk..',
-      '..kkkkwwwwkkkk..',
-      '..kkkkkkkkkkkk..',
-      '...kkkkkkkkkk...',
-      '....kkkkkkkk....',
-      '....kk....kk....',
-      '....kk....kk....',
-      '...kkk....kkk...',
+      '....dd..dd..dd..',
+      '................',
+      '..d..........d..',
+      '..d..........d..',
+      '................',
+      '..d..........d..',
+      '..d..........d..',
+      '................',
+      '..d..........d..',
+      '..d..........d..',
+      '................',
+      '..d..........d..',
+      '..d..........d..',
+      '....dd..dd..dd..',
       '................'
     ]
   },

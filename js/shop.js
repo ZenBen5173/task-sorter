@@ -104,7 +104,10 @@ var SHOP = {
 /* Every item in a group shares one picture; `tint` shifts its colour so the
    tiers are still telling apart. Swap in separate art later and drop the tint. */
 (function () {
-  var art = { pet: 'cat', armour: 'shield', weapon: 'sword' };
+  /* `pet` is an EMPTY SLOT, not a creature: every real pet brings its
+     own animated sheet, so the only thing left falling back to the
+     group picture is "None". */
+  var art = { pet: 'nopet', armour: 'shield', weapon: 'sword' };
   for (var kind in SHOP) {
     SHOP[kind].sprite = art[kind];
     for (var i = 0; i < SHOP[kind].items.length; i++) {
