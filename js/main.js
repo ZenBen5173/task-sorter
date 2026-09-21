@@ -100,7 +100,7 @@ function paintHome() {
      and the weapon you chose, with the pet walking beside them. It used
      to be the plain figure and a pet floating next to it, which proved
      you owned a pet and nothing else. */
-  Hero.paintFigure(UI.$('home-hero'), true);
+  Hero.paintFigure(UI.$('home-hero'), true, 64);
 
   /* PLAY says where it is going. "Level 3 - On Your Phone" is a reason
      to tap it; "Play" on its own is furniture. */

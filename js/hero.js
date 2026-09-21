@@ -66,7 +66,7 @@ var Hero = (function () {
        have got, so it shows the whole party - the home screen has done
        that for a while and this one was still drawing the figure alone
        with its pet boxed off to one side. */
-    paintFigure(UI.$('hero-art'), true, 62);
+    paintFigure(UI.$('hero-art'), true, 88);
     paintWorn();
     paintSet();
     paintStats();
@@ -232,7 +232,7 @@ var Hero = (function () {
 
   function init() {
     initName();
-    paintFigure(UI.$('hero-art'), true, 62);
+    paintFigure(UI.$('hero-art'), true, 88);
   }
 
   return {

@@ -889,7 +889,11 @@ body {
     radial-gradient(56% 30% at 50% 92%, rgba(0,0,0,.42), rgba(0,0,0,0) 70%),
     radial-gradient(60% 72% at 50% 78%, #33455a, rgba(28,36,46,0) 72%);
   border-radius: 18px;
-  overflow: hidden;
+  /* NO `overflow: hidden`. The tall pets - the Phoenixling most of all -
+     are drawn in a cell far taller than the creature in it, so the bird
+     sits high up in a mostly transparent box, and clipping the plinth
+     took the top of its head off. There is nothing here to clip anyway:
+     both gradients fade out before the edge rather than meeting it. */
 }
 
 /* Something to stand on, so the figure is not floating in a gradient. */
@@ -2593,7 +2597,11 @@ body {
    needs putting in the right place and nudging along. */
 .rig-pet {
   position: absolute;
-  left: -62%; bottom: 0;
+  /* Far enough out that a big pet clears the character's off arm AND
+     the shield hanging on it, which reaches further than the arm does.
+     A percentage of the RIG, so it holds at both sizes the figure is
+     drawn at. */
+  left: -96%; bottom: 0;
   display: flex; align-items: flex-end;
   animation: pet-pace 3.4s ease-in-out infinite;
 }
