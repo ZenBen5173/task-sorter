@@ -180,11 +180,17 @@ feel stamped out of plastic rather than floated in a browser. The PLAY button
 was already built that way and was the only thing on screen that read as a
 game, so everything else is now built the way PLAY is.
 
-**Two fonts, and the split is the point.** *Press Start 2P* is a real arcade
-face - eight pixels tall, no curves - and it matches the sprites. It is very
-wide and unreadable in a paragraph, so it is used **only** on the loud things:
-the logo, PLAY, a score, a heading, a tab label. *Fredoka* carries everything
-you actually read. Both come from Google Fonts; if they never arrive the game
+**Two fonts, and the arcade one is a spice.** *Press Start 2P* is a real arcade
+face - eight pixels tall, no curves - and it matches the sprites. It went on
+everything first, and the score odometer came out as overlapping garbage: a
+sliding strip of digits needs every cell to be exactly one line tall, and this
+face does not have the metrics for it. The rest was merely hard to read at
+speed, which in a game about sorting cards against a clock is the same problem.
+
+So it keeps **three places nobody has to read under pressure** - the logo, the
+PLAY button, and the grade you are handed at the end. *Fredoka* carries
+everything else, and the in-round numbers get their weight from size and
+colour instead. Both come from Google Fonts; if they never arrive the game
 falls back to the system stack and plays exactly the same.
 
 **The dark is blue and lit from somewhere.** One radial gradient at the top of

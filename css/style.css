@@ -2077,16 +2077,20 @@ body {
 
 /* ---- the loud things wear the arcade face ---- */
 
+/* The arcade face is a SPICE, not the body text.
+
+   It went on everything first - the score, the clock, every heading,
+   every tab - and the score odometer came out as overlapping garbage,
+   because a sliding strip of digits depends on every cell being exactly
+   one line tall and this face does not have the metrics for it. The
+   rest was merely hard to read at speed, which in a game about sorting
+   cards against a clock is the same problem.
+
+   So it keeps the three places nobody has to READ under pressure: the
+   logo, the PLAY button and the grade you are handed at the end. */
 .logo, .logo-sm,
 .play-words b,
-.lv-title,
-.me-h, .guide-h,
-.grade, .end-title,
-#odo, .streak, .hud-clock b, #fight-clock,
-.rank-line b,
-.tab span:last-child,
-.shop-tag, .foe-badge,
-.tip-title {
+.grade {
   font-family: var(--arcade);
   font-weight: 400;          /* the face has one weight; asking for bold fakes it badly */
   letter-spacing: 0;
@@ -2097,17 +2101,12 @@ body {
    line-height back. */
 .logo { font-size: 20px; line-height: 1.3; }
 .logo-sm { font-size: 15px; line-height: 1.3; }
-.lv-title { font-size: 13px; line-height: 1.4; }
-.me-h, .guide-h { font-size: 10px; line-height: 1.6; letter-spacing: 0; }
-.tab span:last-child { font-size: 7px; line-height: 1.5; }
-.shop-tag, .foe-badge { font-size: 8px; line-height: 1.6; }
-.rank-line b { font-size: 11px; }
 .play-words b { font-size: 16px; letter-spacing: 0; }
-.tip-title { font-size: 13px; line-height: 1.5; }
-.end-title { font-size: 15px; line-height: 1.5; }
-.grade { font-size: 40px; }
-.streak { font-size: 15px; }
-.hud-clock b, #fight-clock { font-size: 17px; }
+.grade { font-size: 38px; }
+
+/* Everything the player reads AT SPEED stays in Fredoka, and the
+   in-round numbers get their weight from size and colour instead. */
+#odo, .streak, .hud-clock b, #fight-clock { font-weight: 700; }
 
 /* ---- every panel becomes a slab ---- */
 
@@ -2206,13 +2205,13 @@ body {
 .wx-star { border-radius: 50%; box-shadow: 0 0 4px currentColor; }
 
 /* Group titles are shouted, not written. */
-.shop-head b { font-family: var(--arcade); font-size: 11px; line-height: 1.5; }
+.shop-head b { font-size: 16px; font-weight: 700; letter-spacing: .02em; }
 .shop-head small { font-size: 12px; }
-.slot-k { font-family: var(--arcade); font-size: 7px; line-height: 1.6; letter-spacing: 0; }
-.home-card b, .collect-head b { font-family: var(--arcade); font-size: 10px; line-height: 1.6; }
+.slot-k { font-size: 10px; font-weight: 700; letter-spacing: .1em; }
+.home-card b, .collect-head b { font-size: 15px; font-weight: 700; }
 
 /* A tile is a picture, a name and a number. The description used to be
    a sentence that wrapped to three lines and made every tile tall
    enough to push the next row off the screen. */
 .shop-tile small { min-height: 0; font-size: 12px; }
-.hero-set b { font-family: var(--arcade); font-size: 10px; line-height: 1.6; }
+.hero-set b { font-size: 13px; font-weight: 700; letter-spacing: .06em; }
