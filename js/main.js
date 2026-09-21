@@ -70,6 +70,7 @@ function paintLevels() {
 
 document.addEventListener('DOMContentLoaded', function () {
   Progress.load();
+  UI.sound.setOn(Progress.soundOn());
   Game.init();
   Shop.paintCoins();
   Hero.init();
@@ -151,8 +152,12 @@ document.addEventListener('DOMContentLoaded', function () {
         'good');
       paintLevels();
       Hero.paint();
+      Shop.paint();
       UI.$('hero-name').value = Progress.heroName();
+      UI.sound.setOn(Progress.soundOn());
+      paintSound();
       Themes.apply();
+      Themes.paintSettings();
     }).catch(function (e) {
       acctMsg(e.message || 'That did not work', null);
     }).then(function () {
@@ -173,10 +178,40 @@ document.addEventListener('DOMContentLoaded', function () {
     acctMsg('Signed out. Your progress is still here on this device.', 'good');
   });
 
-  UI.$('tab-guide').addEventListener('click', function () {
+  /* The Guide Book, from the ? on the map and from the Me screen.
+     `from` is where Back should return to, so the rulebook never
+     strands you on a screen with no way out. */
+  var guideBackTo = 'levels';
+
+  function openGuide(from) {
+    guideBackTo = from || 'levels';
     UI.sound.tick();
     UI.showScreen('guide');
+  }
+
+  UI.$('btn-help').addEventListener('click', function () { openGuide('levels'); });
+  UI.$('btn-guide').addEventListener('click', function () { openGuide('me'); });
+
+  UI.$('btn-guide-back').addEventListener('click', function () {
+    UI.sound.tick();
+    if (guideBackTo === 'me') { Hero.paint(); UI.showScreen('me'); }
+    else { paintLevels(); UI.showScreen('levels'); }
   });
+
+  /* ---- sound ---- */
+
+  function paintSound() {
+    UI.$('sound-switch').classList.toggle('is-on', Progress.soundOn());
+  }
+
+  UI.$('btn-sound').addEventListener('click', function () {
+    var on = !Progress.soundOn();
+    Progress.setSoundOn(on);
+    UI.sound.setOn(on);
+    paintSound();
+    UI.sound.tick();      // silent when you just turned it off, which is the point
+  });
+  paintSound();
 
   UI.$('btn-lv-back').addEventListener('click', function () {
     UI.showScreen('title');
@@ -198,16 +233,42 @@ document.addEventListener('DOMContentLoaded', function () {
     else { paintLevels(); UI.showScreen("levels"); }
   });
 
-  UI.$('btn-reset').addEventListener('click', function () {
+  /* Wiping the save asks first. It used to go on a single tap of a
+     button that sat directly under the gear picker, and it takes every
+     level, every coin, all thirteen pets and your name with it. The
+     popup names what is lost rather than saying "are you sure", because
+     "are you sure" tells nobody anything. */
+  function wipe() {
     Progress.reset();
     Hero.close();
     UI.$('hero-name').value = '';      // the name is wiped too
+    UI.sound.setOn(Progress.soundOn());
+    paintSound();
     paintLevels();
     Hero.paint();
+    Shop.paint();
     /* Reset wipes the saved background back to Deep Space, so the play
-       screen has to be repainted too. Without this the old picture stays
-       up until something else happens to redraw it. */
+       screen and the picker on this screen both have to be repainted.
+       Without this the old picture stays up until something else
+       happens to redraw it. */
     Themes.apply();
+    Themes.paintSettings();
+  }
+
+  UI.$('btn-reset').addEventListener('click', function () {
+    UI.sound.tick();
+    Tips.confirm({
+      icon: 'bin',
+      title: 'Delete everything?',
+      lines: [
+        'This wipes <b>every level you have passed</b>, all your coins, every pet and every piece of gear you have bought, and the name you gave your character.',
+        'If you are signed in, the empty save is uploaded to your account as well.',
+        '<b>There is no undo.</b>'
+      ],
+      okText: 'Delete everything',
+      danger: true,
+      onOk: wipe
+    });
   });
 
   /* Leaving a level part-way. Nothing is recorded: no grade, no coins,
@@ -228,28 +289,33 @@ document.addEventListener('DOMContentLoaded', function () {
     UI.showScreen('levels');
   });
 
-  UI.$('tab-hero').addEventListener('click', function () {
-    UI.sound.tick();
-    Hero.paint();
-    UI.showScreen('hero');
-  });
-
   UI.$("tab-battle").addEventListener("click", function () {
     UI.sound.tick();
     Battle.paint();
     UI.showScreen("battle");
   });
 
-  UI.$('tab-shop').addEventListener('click', function () {
+  /* One screen for gear, so both halves are painted together: the
+     character at the top and everything buyable underneath. */
+  UI.$('tab-gear').addEventListener('click', function () {
     UI.sound.tick();
+    Hero.paint();
     Shop.paint();
-    UI.showScreen('shop');
+    UI.showScreen('gear');
+  });
+
+  UI.$('tab-me').addEventListener('click', function () {
+    UI.sound.tick();
+    Shop.paintCoins();
+    Themes.paintSettings();
+    paintSound();
+    UI.showScreen('me');
   });
 
   // Stop the page bouncing under a swipe, but let the shop and hero
   // screens scroll normally.
   document.addEventListener('touchmove', function (e) {
-    var scrollable = e.target.closest && e.target.closest('.shop-body, .hero-body, .battle-list');
+    var scrollable = e.target.closest && e.target.closest('.hero-body, .me-body, .guide-body, .battle-list');
     if (e.cancelable && !scrollable) e.preventDefault();
   }, { passive: false });
 });

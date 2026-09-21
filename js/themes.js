@@ -116,11 +116,29 @@ var Themes = (function () {
     UI.$('btn-theme').classList.toggle('is-on', open);
 
     if (!open) return;
+    fill(host, true);
+  }
 
-    var title = document.createElement('p');
-    title.className = 'theme-title';
-    title.textContent = 'Background';
-    host.appendChild(title);
+  /** The same picker, built into the Me screen, where it is always
+      open and has no clock to pause. Choosing a background used to be
+      possible ONLY from inside a round, which meant starting a level
+      to change how the game looks. */
+  function paintSettings() {
+    var host = UI.$('theme-picker-me');
+    if (!host) return;
+    host.innerHTML = '';
+    fill(host, false);
+  }
+
+  /** Builds the chips into `host`. `titled` is off on the Me screen,
+      which has its own heading above it already. */
+  function fill(host, titled) {
+    if (titled) {
+      var title = document.createElement('p');
+      title.className = 'theme-title';
+      title.textContent = 'Background';
+      host.appendChild(title);
+    }
 
     var row = document.createElement('div');
     row.className = 'theme-row';
@@ -146,17 +164,22 @@ var Themes = (function () {
         Progress.setTheme(t.id);
         UI.sound.tick();
         apply();
-        paint();
+        /* Both pickers redraw, so whichever one you did not use is
+           still showing the right thing when you get to it. */
+        if (open) paint();
+        paintSettings();
       });
       row.appendChild(b);
     });
 
     host.appendChild(row);
 
-    var hint = document.createElement('p');
-    hint.className = 'theme-hint';
-    hint.textContent = 'The clock is paused while this is open.';
-    host.appendChild(hint);
+    if (titled) {
+      var hint = document.createElement('p');
+      hint.className = 'theme-hint';
+      hint.textContent = 'The clock is paused while this is open.';
+      host.appendChild(hint);
+    }
   }
 
   /** Opening the picker pauses the round. Changing the background is a
@@ -204,6 +227,7 @@ var Themes = (function () {
   function init() {
     UI.$('btn-theme').addEventListener('click', toggle);
     paintGuide();
+    paintSettings();
     apply();
   }
 
@@ -211,6 +235,7 @@ var Themes = (function () {
     init: init,
     apply: apply,
     close: close,
+    paintSettings: paintSettings,
     isOpen: function () { return open; }
   };
 })();

@@ -48,13 +48,23 @@ var TIPS = {
     ]
   },
 
-  hero: {
+  gear: {
     icon: 'hero',
-    title: 'Your Character',
+    title: 'Your Gear',
     lines: [
       'Tap <b>Pet</b>, <b>Weapon</b> or <b>Armour</b> to change what you are wearing.',
-      'The bars underneath show what your gear does to a round.',
-      'Wear all three at once for <b>+25% coins</b>. New gear comes from the Shop.'
+      'Everything you can buy is further down the same page. <b>Tapping a price buys it and puts it on.</b>',
+      'Wear all three at once for <b>+25% coins</b>.'
+    ]
+  },
+
+  me: {
+    icon: 'hero',
+    title: 'Me',
+    lines: [
+      '<b>Make an account and your progress is saved online</b>, so it follows you to any phone.',
+      'No email is ever asked for - just a name you make up.',
+      'The background, the sound and the rulebook are here too.'
     ]
   },
 
@@ -107,7 +117,43 @@ var Tips = (function () {
     render(tip);
   }
 
+  /* What to run if the player says yes to a question. */
+  var pending = null;
+
+  /** Asks something instead of saying something: two buttons, and
+      nothing happens unless the player picks the one that does it.
+
+      Used by "Reset all progress", which used to wipe a save - every
+      level, every coin, all thirteen pets and your name - on a single
+      tap of a button sitting under the gear picker.
+
+        tip.okText  what the doing button says. Say the ACTION
+                    ("Delete everything"), never "OK": a person tapping
+                    the loud button should already know what it does
+        tip.danger  paints that button red
+        tip.onOk    run when they confirm */
+  function confirm(tip) {
+    if (showing) return;
+    showing = '__ask';
+    pending = tip.onOk || null;
+    render(tip);
+
+    var ok = UI.$('tip-ok');
+    ok.textContent = tip.okText || 'Yes';
+    ok.classList.toggle('is-danger', !!tip.danger);
+    UI.$('tip-no').hidden = false;
+  }
+
   function render(tip) {
+    /* Every popup starts as a plain one-button notice. `confirm` turns
+       the second button on afterwards, so a question can never leave
+       its Cancel behind for the next popup that is only telling you
+       something. */
+    UI.$('tip-no').hidden = true;
+    var okBtn = UI.$('tip-ok');
+    okBtn.textContent = 'Got it';
+    okBtn.classList.remove('is-danger');
+
     Sprites.apply(UI.$('tip-ico'), tip.icon);
     UI.$('tip-title').textContent = tip.title;
 
@@ -125,11 +171,16 @@ var Tips = (function () {
     el.classList.add('is-on');
   }
 
+  /** Closes WITHOUT doing anything. This is Cancel, the X, and the tap
+      outside the card - so a question that is dismissed any other way
+      is always a no. */
   function close() {
     if (!showing) return;
-    if (showing !== '__info') Progress.markTipSeen(showing);
+    if (showing !== '__info' && showing !== '__ask') Progress.markTipSeen(showing);
     if (showing === 'play') Game.resume();
+    var wasAsk = (showing === '__ask');
     showing = null;
+    if (wasAsk) pending = null;
 
     var el = UI.$('tip');
     el.classList.remove('is-on');
@@ -137,8 +188,18 @@ var Tips = (function () {
     UI.sound.tick();
   }
 
+  /** The doing button. On a question it runs the action and then
+      closes; on an ordinary notice it is just Got it. */
+  function ok() {
+    var run = (showing === '__ask') ? pending : null;
+    pending = null;
+    close();
+    if (run) run();
+  }
+
   function init() {
-    UI.$('tip-ok').addEventListener('click', close);
+    UI.$('tip-ok').addEventListener('click', ok);
+    UI.$('tip-no').addEventListener('click', close);
     // tapping the dark area around the card closes it too
     UI.$('tip').addEventListener('click', function (e) {
       if (e.target === UI.$('tip')) close();
@@ -149,6 +210,7 @@ var Tips = (function () {
     init: init,
     maybeShow: maybeShow,
     showInfo: showInfo,
+    confirm: confirm,
     isOpen: function () { return !!showing; }
   };
 })();

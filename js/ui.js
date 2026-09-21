@@ -14,20 +14,24 @@ var UI = (function () {
     var el = $('screen-' + name);
     if (el) el.classList.add('is-on');
 
-    /* The bottom bar belongs to the five browsing screens. It stays off
-       during a round and on the title and end screens. Each tab lights
-       up on its own screen - one list, so adding a sixth tab later means
-       adding one line here and nothing else. */
+    /* Which tab lights up on which screen. Four tabs now: the Guide
+       Book gave its place up (it is a button on the map) and Shop and
+       Character became one screen, Gear. */
     var TABS = {
       levels: 'tab-map',
-      guide:  'tab-guide',
-      hero:   'tab-hero',
       battle: 'tab-battle',
-      shop:   'tab-shop'
+      gear:   'tab-gear',
+      me:     'tab-me'
     };
 
+    /* The bar is up on every browsing screen and down during a round
+       and on the title and end screens. The Guide Book is in this list
+       but not in TABS: you can still reach the other tabs from it, but
+       nothing lights up, because it is not one of them any more. */
+    var BAR = { levels: 1, battle: 1, gear: 1, me: 1, guide: 1 };
+
     var bar = $('tabbar');
-    if (bar) bar.hidden = !TABS[name];
+    if (bar) bar.hidden = !BAR[name];
 
     for (var screen in TABS) {
       var tab = $(TABS[screen]);
@@ -104,6 +108,7 @@ var UI = (function () {
   }
 
   function tone(freq, ms, type, vol) {
+    if (!soundOn) return;
     var a = audio();
     if (!a) return;
     try {
@@ -119,7 +124,15 @@ var UI = (function () {
     } catch (e) { /* sound is nice to have, never required */ }
   }
 
+  /* Sound can be turned off on the Me screen, and the choice is saved
+     with everything else. The check lives in `tone`, the one place every
+     noise in the game goes through, so nothing can slip past it. */
+  var soundOn = true;
+
   var SOUND = {
+    /** Called once at boot and whenever the switch is flipped. */
+    setOn: function (on) { soundOn = !!on; },
+    isOn: function () { return soundOn; },
     good:    function (streak) { tone(520 + Math.min(streak, 10) * 40, 90, 'square'); },
     perfect: function () { tone(880, 70, 'square'); setTimeout(function () { tone(1320, 90, 'square'); }, 70); },
     bad:     function () { tone(150, 180, 'sawtooth', 0.05); },

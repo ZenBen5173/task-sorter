@@ -39,6 +39,10 @@
         <h2 class="lv-title" id="lv-title">Day to Day</h2>
         <p class="lv-sub" id="lv-sub">Four places. Same four corners.</p>
       </div>
+      <!-- The rulebook is one tap from the map rather than a tab of its
+           own: it is read once and come back to now and then, which is a
+           button, not a fifth of the bottom bar. -->
+      <button class="btn-help" id="btn-help" type="button" aria-label="Open the Guide Book">?</button>
       <div class="coin-pill"><span class="tab-coin-ico" data-sprite="coin"></span><b class="coin-count">0</b></div>
     </header>
 
@@ -72,6 +76,7 @@
        words - the screen that does the actual teaching. -->
   <section id="screen-guide" class="screen">
     <header class="lv-head">
+      <button class="btn btn-ghost btn-back" id="btn-guide-back" type="button">&#8592; Back</button>
       <div>
         <h2 class="lv-title">Guide Book</h2>
         <p class="lv-sub">Everything you need to know</p>
@@ -219,11 +224,18 @@
     <div class="battle-list" id="battle-list"></div>
   </section>
   <!-- ==================== HERO ==================== -->
-  <section id="screen-hero" class="screen">
+  <!-- ==================== GEAR ====================
+       Your character and the whole shop, on ONE screen. They used to be
+       two tabs showing the same list of items: you bought on one and
+       equipped on the other, so choosing your gear meant hopping between
+       them. Tapping an item you own already equips it and tapping one you
+       can afford already buys AND equips it, so the split was never doing
+       any work. -->
+  <section id="screen-gear" class="screen">
     <header class="lv-head">
       <div>
-        <h2 class="lv-title">Character</h2>
-        <p class="lv-sub">Tap a slot to change what you carry</p>
+        <h2 class="lv-title">Gear</h2>
+        <p class="lv-sub">Tap anything to wear it. Tap a price to buy it.</p>
       </div>
       <div class="coin-pill">
         <span class="tab-coin-ico" data-sprite="coin"></span>
@@ -232,38 +244,6 @@
     </header>
 
     <div class="hero-body">
-
-      <!-- ==================== ACCOUNT ====================
-           A username and a password. No email is asked for, ever -
-           see the note at the top of js/cloud.js for why. -->
-      <div class="acct" id="acct">
-        <div class="acct-in" id="acct-in" hidden>
-          <span class="acct-dot"></span>
-          <span class="acct-who">Signed in as <b id="acct-name"></b></span>
-          <button class="btn btn-ghost btn-tiny" id="btn-signout" type="button">Sign out</button>
-        </div>
-
-        <div class="acct-out" id="acct-out">
-          <p class="acct-lead">
-            <b>Save your progress online.</b>
-            Make an account and your levels, coins and gear follow you to any
-            phone or computer.
-          </p>
-          <div class="acct-fields">
-            <input id="acct-user" type="text" maxlength="14" autocomplete="username"
-                   autocapitalize="none" spellcheck="false" placeholder="Username">
-            <input id="acct-pass" type="password" maxlength="64" autocomplete="current-password"
-                   placeholder="Password">
-          </div>
-          <div class="acct-buttons">
-            <button class="btn btn-primary" id="btn-signin" type="button">Sign in</button>
-            <button class="btn" id="btn-signup" type="button">Create account</button>
-          </div>
-          <p class="acct-privacy">No email needed. Just a name you make up.</p>
-        </div>
-
-        <p class="acct-msg" id="acct-msg" hidden></p>
-      </div>
 
       <div class="hero-stage">
         <button class="slot slot-left" id="slot-pet" type="button">
@@ -303,22 +283,98 @@
 
       <div class="hero-stats" id="hero-stats"></div>
 
-      <button class="btn btn-ghost btn-tiny" id="btn-reset" type="button">Reset all progress</button>
+      <!-- everything you can buy, right under the character wearing it -->
+      <div class="shop-body" id="shop-body"></div>
     </div>
-  </section>
-  <!-- ==================== SHOP ==================== -->
-  <section id="screen-shop" class="screen">
-    <header class="lv-head">
-      <div>
-        <h2 class="lv-title">Shop</h2>
-        <p class="lv-sub">Everything here changes how a round plays</p>
-      </div>
-      <div class="coin-pill"><span class="tab-coin-ico" data-sprite="coin"></span><b class="coin-count">0</b></div>
-    </header>
-
-    <div class="shop-body" id="shop-body"></div>
     <div class="shop-flash" id="shop-flash"></div>
   </section>
+
+  <!-- ==================== ME ====================
+       Everything ABOUT the player rather than about a round: the
+       account that keeps a save, the background, the sound, the
+       rulebook, and the one button that deletes it all.
+
+       Saving your progress used to live on the Character page, in among
+       the pets and the swords. Nobody looking for "keep my progress"
+       opens a page about gear. -->
+  <section id="screen-me" class="screen">
+    <header class="lv-head">
+      <div>
+        <h2 class="lv-title">Me</h2>
+        <p class="lv-sub">Your save, your settings</p>
+      </div>
+      <div class="coin-pill">
+        <span class="tab-coin-ico" data-sprite="coin"></span>
+        <b class="coin-count">0</b>
+      </div>
+    </header>
+
+    <div class="me-body">
+
+      <!-- ==================== ACCOUNT ====================
+           A username and a password. No email is asked for, ever -
+           see the note at the top of js/cloud.js for why. -->
+      <div class="acct" id="acct">
+        <div class="acct-in" id="acct-in" hidden>
+          <span class="acct-dot"></span>
+          <span class="acct-who">Signed in as <b id="acct-name"></b></span>
+          <button class="btn btn-ghost btn-tiny" id="btn-signout" type="button">Sign out</button>
+        </div>
+
+        <div class="acct-out" id="acct-out">
+          <p class="acct-lead">
+            <b>Save your progress online.</b>
+            Make an account and your levels, coins and gear follow you to any
+            phone or computer.
+          </p>
+          <div class="acct-fields">
+            <input id="acct-user" type="text" maxlength="14" autocomplete="username"
+                   autocapitalize="none" spellcheck="false" placeholder="Username">
+            <input id="acct-pass" type="password" maxlength="64" autocomplete="current-password"
+                   placeholder="Password">
+          </div>
+          <div class="acct-buttons">
+            <button class="btn btn-primary" id="btn-signin" type="button">Sign in</button>
+            <button class="btn" id="btn-signup" type="button">Create account</button>
+          </div>
+          <p class="acct-privacy">No email needed. Just a name you make up.</p>
+        </div>
+
+        <p class="acct-msg" id="acct-msg" hidden></p>
+      </div>
+
+      <!-- The background, choosable OUTSIDE a round. It used to be
+           reachable only from the button inside a level, which meant you
+           had to start playing something to change how the game looked. -->
+      <div class="me-block">
+        <h3 class="me-h">Background</h3>
+        <div class="theme-picker is-inline is-on" id="theme-picker-me"></div>
+      </div>
+
+      <div class="me-block">
+        <h3 class="me-h">Sound</h3>
+        <button class="me-row" id="btn-sound" type="button">
+          <span class="me-row-t"><b>Sound effects</b><small>Chimes when you sort, and when you miss</small></span>
+          <span class="me-switch" id="sound-switch"><span class="me-knob"></span></span>
+        </button>
+      </div>
+
+      <div class="me-block">
+        <h3 class="me-h">The rules</h3>
+        <button class="me-row" id="btn-guide" type="button">
+          <span class="me-row-t"><b>Guide Book</b><small>What the four corners mean, and how to pass</small></span>
+          <span class="me-go">&#8594;</span>
+        </button>
+      </div>
+
+      <!-- Last, alone, and it asks first. -->
+      <div class="me-block is-danger">
+        <h3 class="me-h">Danger</h3>
+        <button class="btn btn-ghost btn-tiny" id="btn-reset" type="button">Reset all progress</button>
+      </div>
+    </div>
+  </section>
+
   <!-- ==================== PLAY ==================== -->
   <section id="screen-play" class="screen">
 
@@ -419,7 +475,7 @@
 
       <button class="btn btn-primary btn-lg" id="btn-next" type="button" hidden>Next level</button>
       <button class="btn btn-lg" id="btn-again" type="button">Play again</button>
-      <button class="btn btn-ghost" id="btn-home" type="button">Dashboard</button>
+      <button class="btn btn-ghost" id="btn-home" type="button">Back to the map</button>
 
       <!-- Every card you got wrong, with the right answer and the reason.
            During a round the explanation flashes past in under two seconds,
@@ -449,7 +505,12 @@
     <span class="tip-ico" id="tip-ico"></span>
     <h3 class="tip-title" id="tip-title"></h3>
     <ul class="tip-lines" id="tip-lines"></ul>
-    <button class="btn btn-primary tip-ok" id="tip-ok" type="button">Got it</button>
+    <div class="tip-buttons">
+      <!-- Only shown when the popup is ASKING something rather than
+           telling you something. See Tips.confirm(). -->
+      <button class="btn tip-no" id="tip-no" type="button" hidden>Cancel</button>
+      <button class="btn btn-primary tip-ok" id="tip-ok" type="button">Got it</button>
+    </div>
   </div>
 </div>
 
@@ -458,21 +519,20 @@
     <span class="tab-ico tab-pic" data-sprite="map"></span>
     <span>Map</span>
   </button>
-  <button class="tab" id="tab-guide" type="button">
-    <span class="tab-ico tab-pic" data-sprite="book"></span>
-    <span>Guide<br>Book</span>
-  </button>
-  <button class="tab" id="tab-hero" type="button">
-    <span class="tab-ico tab-pic" data-sprite="hero"></span>
-    <span>Character</span>
-  </button>
   <button class="tab" id="tab-battle" type="button">
     <span class="tab-ico tab-pic" data-sprite="battle"></span>
     <span>Battle</span>
   </button>
-  <button class="tab" id="tab-shop" type="button">
-    <span class="tab-ico tab-pic" data-sprite="shop"></span>
-    <span>Shop</span>
+  <!-- Gear wears a shield and Me wears the character, not the other way
+       round: the book belongs to the Guide Book, which is not a tab any
+       more, and "Me" is the person, not the kit. -->
+  <button class="tab" id="tab-gear" type="button">
+    <span class="tab-ico tab-pic" data-sprite="shield"></span>
+    <span>Gear</span>
+  </button>
+  <button class="tab" id="tab-me" type="button">
+    <span class="tab-ico tab-pic" data-sprite="hero"></span>
+    <span>Me</span>
   </button>
 </nav>
 <script src="js/cards.js"></script>

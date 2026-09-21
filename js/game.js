@@ -800,6 +800,9 @@ var Game = (function () {
     UI.$("btn-next").hidden = !hasNext;
     UI.$("btn-next").textContent = "Next level";
     UI.$('btn-again').textContent = passed ? 'Play again' : 'Try again';
+    /* It used to say "Dashboard", which is not the name of anything in
+       this game. Say where it goes. */
+    UI.$('btn-home').textContent = 'Back to the map';
 
     /* Spell out what just happened to the map. Without this, a player who
        finishes a round but misses the accuracy bar has no idea why the next
@@ -877,6 +880,7 @@ var Game = (function () {
     UI.$("btn-next").hidden = !(won && nextFoe);
     UI.$('btn-next').textContent = 'Next rival';
     UI.$('btn-again').textContent = won ? 'Fight again' : 'Try again';
+    UI.$('btn-home').textContent = 'Back to the rivals';
 
     paintReview(won);
     UI.showScreen('end');

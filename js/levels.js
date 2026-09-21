@@ -121,6 +121,9 @@ var Progress = (function () {
       /* which background you play against. See js/themes.js. */
       theme: 'space',
 
+      /* whether the game makes any noise. Flipped on the Me screen. */
+      sound: true,
+
       /* what the player called their character. Empty means they have
          not named it, and the game just says "You". */
       heroName: '',
@@ -226,6 +229,13 @@ var Progress = (function () {
     /* ---- the background theme ---- */
     theme: function () { return data.theme || 'space'; },
     setTheme: function (id) { data.theme = id; save(); },
+
+    /* ---- sound ----
+       Read with `!== false` so a save written before this setting
+       existed comes back with the sound ON, which is how that player
+       left the game. */
+    soundOn: function () { return data.sound !== false; },
+    setSoundOn: function (on) { data.sound = !!on; save(); },
 
     /* ---- first-time popups ---- */
     hasSeenTip: function (name) { return !!(data.tipsSeen && data.tipsSeen[name]); },

@@ -49,7 +49,7 @@ you nothing.
 
 | File | What it does |
 |---|---|
-| `index.html` | The four screens (title, levels, play, end) |
+| `index.html` | Every screen (title, map, guide, gear, me, play, end) |
 | `css/style.css` | Everything visual, including all the animation |
 | `js/cards.js` | **The task cards.** This is the file you will edit most |
 | `js/sprites.js` | **The pixel art.** Placeholders you will replace |
@@ -71,6 +71,51 @@ No frameworks and no build step. Sounds are generated in code, so there are no
 audio files at all. The only network calls the game ever makes are the account
 ones in `js/cloud.js`, and the game plays exactly the same with every one of
 them failing.
+
+---
+
+## How you get around
+
+Four tabs along the bottom, and every one of them is a place you go back to:
+
+| Tab | What is on it |
+|---|---|
+| **Map** | The four levels. The **?** in the corner opens the Guide Book |
+| **Battle** | The four rivals, and Online Battle marked coming soon |
+| **Gear** | Your character, the three slots, your stats - and the whole shop underneath |
+| **Me** | Your account, the background, the sound, the rulebook, and Reset |
+
+It used to be five tabs, and three things were in the wrong place:
+
+- **Saving your progress was on the Character page**, in among the pets and
+  the swords. Nobody looking for "keep my progress" opens a page about gear.
+  It has its own screen now, and that screen says what it is for.
+- **The Shop and the Character were two tabs doing one job.** They rendered
+  the same list; you bought on one and equipped on the other.
+- **The Guide Book was a tab for ever.** It is read once and come back to now
+  and then, which is a button, not a fifth of the bottom bar. It kept its
+  place in the first-run flow and gained a **?** on the map, so it is still
+  one tap away.
+
+Two things gained a home they never had. The **background** could only be
+changed from inside a round - you had to start playing something to change
+how the game looks - and the **sound** had no switch at all.
+
+### Reset asks first
+
+**Reset all progress** used to wipe the save on a single tap, from a button
+sitting directly under the gear picker. It takes every level, every coin, all
+thirteen pets and your character's name with it, and if you are signed in it
+uploads the empty save to your account.
+
+It now opens a popup that **names what is lost** rather than asking "are you
+sure", which tells nobody anything. The button that does it is red and says
+**Delete everything**, never "OK": a person tapping the loud button should
+already know what it does. Cancel, the tap outside, and every other way of
+dismissing it are all a no.
+
+`Tips.confirm()` in `js/tips.js` is the general version of that, if anything
+else ever needs to ask.
 
 ---
 
@@ -237,9 +282,9 @@ an `accuracy`.
 
 ---
 
-## The Character screen
+## The Gear screen
 
-The second tab. Your character stands in the centre with three gear slots
+The third tab, and it holds **both halves of choosing what you carry**. Your character stands in the centre with three gear slots
 around them — **Pet**, **Weapon** and **Armour** — and three stat bars
 underneath showing what you are currently carrying:
 
@@ -251,15 +296,21 @@ underneath showing what you are currently carrying:
 Tap a slot and a picker opens showing everything you own of that kind. Pick
 one and the stat bars update straight away.
 
-Buying happens in the Shop, choosing happens here. `js/hero.js` holds this
-screen; it reads the same item list as the shop, so adding an item to
-`js/shop.js` makes it appear in both places automatically.
+Everything you can buy is **on the same page**, straight underneath. It used
+to be two tabs - a Shop to buy on and a Character to equip on - showing the
+same list of items, so choosing your gear meant hopping between them. Tapping
+something you own already equips it and tapping a price already buys AND
+equips it, so the split was never doing any work.
+
+`js/hero.js` draws the character and the slots, `js/shop.js` draws what is for
+sale, and both read the same item list - so adding an item to `js/shop.js`
+makes it appear in every part of the screen at once.
 
 ---
 
 ## The shop
 
-Reached from the **bottom bar** (Map / Character / Battle / Shop). Three kinds of gear, and
+On the **Gear** tab, under your character. Three kinds of gear, and
 **every item changes how a round actually plays** — nothing is decoration.
 
 | Kind | What it does | Items |

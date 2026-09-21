@@ -1753,3 +1753,110 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .weather { display: none; }
 }
+
+/* ==================== THE ME SCREEN ====================
+   Your save and your settings. All of this used to be scattered: the
+   account sat on the Character page among the pets and swords, the
+   background could only be changed from inside a round, the sound had
+   no switch at all, and "Reset all progress" was a single tap under
+   the gear picker. */
+
+.me-body {
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 16px calc(90px + var(--safe-b));
+}
+
+.me-block { margin-top: 20px; }
+
+.me-h {
+  margin: 0 0 9px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: var(--tx-dim);
+}
+
+/* One tappable setting: words on the left, the control on the right. */
+.me-row {
+  width: 100%;
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.me-row:active { transform: scale(.99); }
+.me-row-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.me-row-t b { font-size: 14px; color: var(--tx-hi); }
+.me-row-t small { font-size: 11.5px; color: var(--tx-dim); line-height: 1.3; }
+.me-go { flex: 0 0 auto; font-size: 17px; color: var(--tx-dim); }
+
+/* The sound switch. */
+.me-switch {
+  flex: 0 0 auto;
+  width: 44px; height: 26px;
+  padding: 3px;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  transition: background .16s, border-color .16s;
+}
+.me-knob {
+  display: block;
+  width: 18px; height: 18px;
+  background: var(--tx-dim);
+  border-radius: 50%;
+  transition: transform .16s var(--spring), background .16s;
+}
+.me-switch.is-on { background: rgba(92,196,106,.25); border-color: var(--good); }
+.me-switch.is-on .me-knob { transform: translateX(18px); background: var(--good); }
+
+/* Reset lives alone at the bottom, behind a question. */
+.me-block.is-danger { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); }
+.me-block.is-danger .me-h { color: var(--now); }
+
+/* The background picker, reused here. On the Me screen it is part of
+   the page rather than a panel that drops out of a button, so it loses
+   the absolute position, the shadow and the fade. */
+.theme-picker.is-inline {
+  position: static;
+  z-index: auto;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  opacity: 1;
+  transform: none;
+}
+
+/* The ? on the map, which is where the Guide Book went when it stopped
+   being a tab. Same size and shape as the background button in a round,
+   so the two read as the same kind of thing. */
+.btn-help {
+  flex: 0 0 auto;
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--tx-dim);
+  font-size: 15px; font-weight: 800;
+  cursor: pointer;
+}
+.btn-help:active { transform: scale(.94); }
+
+/* ---- a popup that asks instead of tells ---- */
+
+.tip-buttons { display: flex; gap: 8px; }
+.tip-buttons .btn { flex: 1; }
+.tip-no { background: var(--bg-3); }
+
+/* The button that does the irreversible thing. Red, and it says the
+   action rather than "OK", so nobody confirms something they have not
+   read. */
+.btn.is-danger { background: var(--now); border-color: var(--now); color: #fff; }
