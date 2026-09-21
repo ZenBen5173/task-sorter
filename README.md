@@ -241,6 +241,23 @@ the teaching, so write it properly. If you cannot write a
 `why` that convinces you, cut the card.
 
 There are **116 cards**: 32 house, and 28 each for school, phone and out.
+
+### Give Away must not be spottable
+
+The corner people find hardest was also the most guessable. Every Give Away
+card named somebody - a brother, a friend, "anyone can" - and almost nothing
+else did, so **a player who swiped bottom-left whenever a human appeared in
+the text scored 60% without reading the card**. That is pattern matching, not
+judgement, and it is the one corner the game most needs to teach.
+
+Fixed from both ends: a dozen Do Now, Do Later and Drop cards now mention
+somebody without being anyone else's job ("Everyone else revised, your test is
+tomorrow"), and four Give Away cards name nobody at all ("A reply is needed
+today and it is not your thread"). **The tell is down to 42%, against 25% for
+a coin flip.**
+
+When you add a card, keep it that way: a person in the text must never be a
+reliable signal for a corner.
 Inside a theme the four corners are the same size as each other, or one
 corner starts repeating before the others do.
 
