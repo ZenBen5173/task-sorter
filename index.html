@@ -235,6 +235,36 @@
         </p>
       </div>
 
+      <!-- WHY THIS IS IN THE GAME AND NOT ONLY IN THE SLIDES.
+
+           A competition entry is asked what it does for the Sustainable
+           Development Goals, and the honest failure mode is to answer
+           that on a slide and nowhere else - a claim made to judges
+           about a game that never makes it to the person playing.
+
+           It is also the only place the game says what it is FOR. Every
+           other page teaches the method; none of them said why anybody
+           should want it. It is kept to three sentences and no logos,
+           because a player came here to learn how to play. -->
+      <div class="guide-note guide-why">
+        <b>Why this game exists</b>
+        <p>
+          The four corners are the <b>Eisenhower Matrix</b>, and it is taught
+          in management courses to adults who pay for them. There is nothing
+          in it a twelve year old cannot do - the only reason most people
+          meet it at thirty is that nobody showed them at twelve.
+        </p>
+        <p>
+          That is the gap this is aimed at, and it is why the game is free,
+          runs on any phone, and needs no account to play: <b>UN Goal 4,
+          Quality Education</b> - a life skill, for anyone, at no cost.
+        </p>
+        <p>
+          The skill itself is the point. Knowing which things actually matter
+          is how people stop drowning in the ones that do not.
+        </p>
+      </div>
+
       <h3 class="guide-h">How to play</h3>
       <ul class="guide-ul">
         <li>A card appears. <b>Swipe it into a corner.</b> On a laptop: <b>Q W A S</b>.</li>
@@ -457,6 +487,12 @@
   <!-- ==================== PLAY ==================== -->
   <section id="screen-play" class="screen">
 
+    <!-- What you are playing in front of, drawn by js/scenery.js. It
+         sits behind the HUD and the arena and takes no taps. Three of
+         the four themes used to name a photograph that never existed,
+         so picking Sakura got you a flat pink page. -->
+    <div class="play-scene" id="play-scene" aria-hidden="true"></div>
+
     <header class="hud">
       <button class="btn-exit" id="btn-exit" type="button" aria-label="Leave this level">&#8592;</button>
       <div class="hud-score">
@@ -630,6 +666,7 @@
 <script src="js/tips.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/music.js"></script>
+<script src="js/scenery.js"></script>
 <script src="js/game.js"></script>
 <script src="js/main.js"></script>
 </body>

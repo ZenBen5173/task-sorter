@@ -51,21 +51,24 @@ var THEMES = [
     fall: { kind: 'star', count: 22,
             colors: ['#ffffff', '#cddcff', '#9db7ff', '#fff0c4'] } },
 
-  /* Louis's cherry blossom photo: white blossom, blue sky, a purple and
-     magenta carpet underneath. It is a BRIGHT picture, so it needs a
-     heavier dim than the others or the corner labels wash out. */
-  { id: 'sakura', name: 'Sakura',      file: 'assets/themes/sakura.jpg',
-    tint: '#f6d3e2', dim: 0.62,
+  /* THE DIMS ARE LOW NOW. They were 0.58 and 0.62, set for photographs
+     that never arrived - a photograph is full of contrast and detail
+     and has to be held right back before a card will read over it. What
+     is behind the game now is drawn (js/scenery.js): flat silhouettes
+     in a narrow band of colour, which is already most of the way there.
+     At the old strength Sakura came out as dusk. */
+  { id: 'sakura', name: 'Sakura',      file: null,
+    tint: '#f6d3e2', dim: 0.30,
     fall: { kind: 'petal', count: 18,
             colors: ['#ffd7e6', '#ffc0d8', '#ff9ec4', '#fff0f6'] } },
 
-  { id: 'forest', name: 'Forest',      file: 'assets/themes/forest.jpg',
-    tint: '#cfe6bd', dim: 0.58,
+  { id: 'forest', name: 'Forest',      file: null,
+    tint: '#cfe6bd', dim: 0.30,
     fall: { kind: 'leaf', count: 14,
             colors: ['#a8d98a', '#7fbf63', '#d8e89a', '#5fa34d'] } },
 
-  { id: 'falls',  name: 'Waterfalls',  file: 'assets/themes/waterfalls.jpg',
-    tint: '#cbe6f0', dim: 0.58,
+  { id: 'falls',  name: 'Waterfalls',  file: null,
+    tint: '#cbe6f0', dim: 0.26,
     fall: { kind: 'drop', count: 26,
             colors: ['#cfeaf6', '#9fd4ea', '#eaf7fd'] } }
 ];
@@ -108,6 +111,20 @@ var Themes = (function () {
 
     el.style.background = layers.join(', ');
     el.setAttribute('data-theme', t.id);
+
+    /* The still half: hills, trees, cliffs. Drawn rather than
+       photographed - see js/scenery.js for why. `file` is kept above
+       and is null on every theme now, because a photograph would still
+       layer in here correctly if one ever turned up. */
+    if (window.Scenery) Scenery.paint(t.id);
+
+    /* The dim has to be re-applied OVER the scenery. It is set on
+       #screen-play's own background above, and an element's background
+       paints under its children - so the drawn hills and trees were
+       sitting on top of the very layer that is supposed to hold them
+       back, and a forest at full strength competes with the card you
+       are meant to be reading. The card has to win. */
+    el.style.setProperty('--scene-dim', t.dim || 0);
 
     /* The moving half of the background. A theme with a `fall` gets
        petals, leaves or rain over the top of its colour; one without
