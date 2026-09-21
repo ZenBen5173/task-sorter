@@ -399,9 +399,12 @@
       <div class="grade" id="grade">A</div>
       <p class="end-unlock" id="end-unlock"></p>
 
+      <!-- The first two rows are relabelled in a battle: a duel has no
+           score and no pass mark, it has health left and a rival. The
+           ids on the labels are what js/game.js rewrites. -->
       <ul class="end-stats">
-        <li><span>Score</span><b id="end-score">0</b></li>
-        <li><span>Needed to pass</span><b id="end-target">0</b></li>
+        <li><span id="end-score-k">Score</span><b id="end-score">0</b></li>
+        <li><span id="end-target-k">Needed to pass</span><b id="end-target">0</b></li>
         <li><span>Accuracy</span><b id="end-acc">0%</b></li>
         <li><span>Best streak</span><b id="end-streak">x1</b></li>
         <li><span>Cards sorted</span><b id="end-sorted">0</b></li>

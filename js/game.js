@@ -787,6 +787,8 @@ var Game = (function () {
 
     UI.$('grade').textContent = grade;
     UI.$('grade').className = 'grade grade-' + grade + (passed ? '' : ' is-dim');
+    UI.$('end-score-k').textContent = 'Score';
+    UI.$('end-target-k').textContent = 'Needed to pass';
     UI.$('end-score').textContent = score.toLocaleString();
     UI.$('end-target').textContent = Math.round(level.minAcc * 100) + '%';
     UI.$('end-acc').textContent = Math.round(acc * 100) + '%';
@@ -860,7 +862,12 @@ var Game = (function () {
       unlock.className = 'end-unlock is-bad';
     }
 
-    UI.$('end-score').textContent = Math.max(0, hpYou) + ' HP left';
+    /* A duel has no score and no pass mark, so those two rows say what
+       they are actually showing: the health you finished on, and who
+       you were fighting. */
+    UI.$('end-score-k').textContent = 'Health left';
+    UI.$('end-target-k').textContent = 'Rival';
+    UI.$('end-score').textContent = Math.max(0, hpYou) + ' HP';
     UI.$('end-target').textContent = foe.name;
     UI.$('end-acc').textContent = Math.round(acc * 100) + '%';
     UI.$('end-streak').textContent = 'x' + Math.min(bestStreak, TUNING.MAX_MULTIPLIER);

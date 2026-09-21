@@ -62,11 +62,13 @@ you nothing.
 | `js/hero.js` | **The Character screen:** gear slots and stat bars |
 | `js/battle.js` | **The rivals** you duel in Battle |
 | `js/main.js` | Boots the game, draws the level map, wires the buttons |
+| `js/cloud.js` | **Accounts** and saving your progress online |
 | `serve.ps1` | Local server for phone testing |
-| `archive/` | The old Focus Village build, kept for reference |
 
-No frameworks, no build step, no network calls. Sounds are generated in code,
-so there are no audio files at all.
+No frameworks and no build step. Sounds are generated in code, so there are no
+audio files at all. The only network calls the game ever makes are the account
+ones in `js/cloud.js`, and the game plays exactly the same with every one of
+them failing.
 
 ---
 
@@ -129,8 +131,10 @@ Three lists on each level control what turns up, and together they are the
 whole difficulty ramp:
 
 - `theme` - which place you are in, so Level 1 is nothing but house tasks
-- `boxes` - which corners exist yet. **Level 1 has no Give Away cards at all**,
-  so players learn three corners before the fourth shows up
+- `boxes` - which corners a level uses. **All four are live from Level 1**;
+  the easing-in comes from `tiers`, not from hiding a corner. Nothing uses a
+  short `boxes` list at the moment - it is there so a future level can, and
+  a corner left out is removed from the screen rather than greyed out
 - `tiers` - how hard the cards are to judge (see `js/cards.js`)
 
 That is the teaching built into the progression.
@@ -174,6 +178,11 @@ something.
 ### Losing
 
 There is only one way to fail a level: **finish below the accuracy bar**.
+
+**A failed run is not recorded.** No grade is saved and the marker on the map
+stays blank, because a best grade is the badge for beating a level - writing a
+failed one in there put a C on a level nobody had passed, and made it look
+finished from the map.
 
 There used to be a second - a desk meter that filled up behind you and buried
 you if you fell behind. It was removed. Everything it touched (card spawning,
@@ -255,7 +264,7 @@ Reached from the **bottom bar** (Map / Character / Battle / Shop). Three kinds o
 |---|---|---|
 | **Pets** | More coins, but a faster clock | Paper Crane, Ink Cat, Sleepy Sloth, Desk Dragon, Time Owl |
 | **Armour** | Covers wrong answers so they do not count | Wood, Silver, Gold, Diamond, Diamond and Gold Shield |
-| **Weapons** | More points, and more battle damage | Red Pen, Stapler, Hole Punch, Paper Cutter, Golden Shredder |
+| **Weapons** | More points, and more battle damage | Dagger, Longsword, Gold Sword, Bronze Blade, Winged Blade |
 
 One of each can be worn at a time. Everything is defined in `js/shop.js`;
 `fast`, `coin`, `block` and `mult` are the only four things an item can do,
@@ -307,7 +316,7 @@ Wear a pet **and** armour **and** a weapon at the same time and every coin
 payout goes up by **25%** — levels and battles both.
 
 It is deliberately about filling all three slots rather than owning expensive
-gear, so the cheapest full set (Paper Crane + Folder + Red Pen, 370 coins) earns
+gear, so the cheapest full set (Paper Crane + Wood Shield + Dagger, 370 coins) earns
 the bonus just as well as the priciest one. That gives a new player something
 reachable to aim for instead of grinding for one costly item.
 
@@ -319,14 +328,19 @@ greyed-out reminder when it is not. `setBonus` in `js/shop.js` controls it.
 You earn coins by finishing a level:
 
 ```
-coins = score / 200  +  grade bonus (S 60, A 40, B 25, C 10)
+coins = score / 500  +  grade bonus (S 50, A 35, B 20, C 8)
 ```
 
 Both numbers live in `COIN_REWARD` in `js/shop.js`. A typical good round pays
 roughly 100-150 coins, so the cheapest item is about one round away and the
-best is a proper grind. **Worth re-checking once real people play it** — the
-gap between a careless and an expert run is wide, so the payout may need
-tuning.
+best is a proper grind.
+
+The divisor was 200 until a full play-through test: a clean Level 1 paid 288
+coins, which bought the cheapest item in every slot at once and left the whole
+shop about two rounds away. Score climbs with your streak AND with how many
+cards you got through, so it runs away from you on the longer levels - the
+divisor is the thing holding the payout down. **Still worth re-checking once
+real people play it.**
 
 ---
 

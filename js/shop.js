@@ -77,10 +77,17 @@ var SHOP = {
   }
 })();
 
-/** Coins paid out at the end of a level. */
+/** Coins paid out at the end of a level.
+
+    TUNED AGAINST A REAL ROUND. At 1 coin per 200 score a clean Level 1
+    paid 288, which bought the cheapest item in each slot outright and
+    left the whole shop about two rounds away - there was nothing to
+    save up for. A round scores what it scores because score climbs with
+    the streak AND with how many cards you got through, so the divisor
+    is what keeps the payout sane. A good round now lands near 140. */
 var COIN_REWARD = {
-  perScore: 200,                         // 1 coin per this much score
-  grade: { S: 60, A: 40, B: 25, C: 10 }, // plus a bonus for the grade
+  perScore: 500,                         // 1 coin per this much score
+  grade: { S: 50, A: 35, B: 20, C: 8 },  // plus a bonus for the grade
 
   /* Wear a pet AND armour AND a weapon at the same time and every coin
      payout goes up by this much. Gives you a reason to fill all three
