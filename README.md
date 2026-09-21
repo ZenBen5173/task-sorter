@@ -102,6 +102,13 @@ in the near hand - with the pet you bought pacing beside them, and around
 that: your rank, your stars, the pets you have caught, and what the next level
 is called.
 
+The hero is drawn at **24x32**. It was 16x16, and at 16x16 a person is a blob
+with two dots on it - fine for a tab icon, hopeless blown up to 104px on the
+home screen, where it stands next to pets drawn on real 48px sheets. Chibi
+proportions on purpose: a big head and a short body, which is what the pets
+are, so the party looks like it came from one game. `Sprites` reads a grid's
+size off its own rows now rather than assuming 16.
+
 The figure is a composite, not thirty drawings. The hero is a 16x16 sprite and
 so is every piece of gear, so `Hero.paintFigure` lays the shield and the
 weapon over the figure at the points its hands are, placed in **percent** so

@@ -2582,7 +2582,12 @@ body {
 .rig {
   position: relative;
   display: block;
-  width: 104px; height: 104px;
+  /* The box is the CHARACTER's shape, 24x32, not a square. It was
+     square while the sprite was 16x16; now that the hero is taller than
+     it is wide, a square box would letterbox him inside it and every
+     percentage below - which is how the gear is placed - would be
+     measured against empty air rather than against him. */
+  width: 78px; height: 104px;
   filter: drop-shadow(0 6px 10px rgba(0,0,0,.5));
   animation: hero-bob 3s ease-in-out infinite;
 }
@@ -2604,8 +2609,8 @@ body {
   /* Nudged down and out so it does not sit on the four-colour sash,
      which is the one part of the figure that says which game they are
      from. */
-  left: -4%; top: 58%;
-  width: 29%; height: 29%;
+  left: -14%; top: 56%;
+  width: 40%; height: 30%;
   transform: rotate(-8deg);
   filter: drop-shadow(1px 1px 0 rgba(0,0,0,.5));
 }
@@ -2614,8 +2619,8 @@ body {
    is carried rather than pointed at the floor. Same sizing rule as the
    shield: it belongs to the hand, so it is scaled to the hand. */
 .rig-weapon {
-  right: -2%; top: 40%;
-  width: 36%; height: 36%;
+  right: -14%; top: 38%;
+  width: 46%; height: 34%;
   transform: rotate(28deg);
   filter: drop-shadow(1px 1px 0 rgba(0,0,0,.5));
 }
@@ -2624,7 +2629,7 @@ body {
    needs putting in the right place and nudging along. */
 .rig-pet {
   position: absolute;
-  left: -42%; bottom: 0;
+  left: -62%; bottom: 0;
   display: flex; align-items: flex-end;
   animation: pet-pace 3.4s ease-in-out infinite;
 }
@@ -2634,7 +2639,7 @@ body {
 }
 
 /* The Gear page draws the same rig at its own size. */
-.hero-figure .rig { width: 84px; height: 84px; }
+.hero-figure .rig { width: 63px; height: 84px; }
 
 @media (prefers-reduced-motion: reduce) {
   .rig, .rig-pet { animation: none; }

@@ -419,45 +419,63 @@ var SPRITE_DATA = {
     ]
   },
 
-  /* The player character - an original design made for this game, not
-     copied from anyone else's art.
+  /* The player character - an original design made for this game.
      Override: hero   (assets/sprites/hero.png)
 
-     A kid in a navy jacket with a teal headband, holding a task card.
+     REDRAWN AT 24x32. It was 16x16, and at 16x16 a person is a blob
+     with two dots on it - fine for a tab icon, hopeless blown up to
+     104px on the home screen, where it stands next to pets drawn on
+     real 48px sheets. Chibi proportions on purpose: a big head and a
+     short body, which is what the pets are, so the party looks like it
+     came from one game.
+
      Across the chest is a sash in FOUR COLOURS - red, blue, orange and
      grey - the exact colours of Do Now, Do Later, Give Away and Drop.
-     The character wears the four corners. That stripe is the whole
-     idea of the design: you can tell what game this person is from at
-     a glance, even at 20px in the tab bar, where everything else about
-     the figure is a blur.
+     The character wears the four corners. That stripe is the whole idea
+     of the design, and it is why the shield is placed to sit below it
+     rather than across it.
 
-     Used in two places at once - the big figure on the Character screen
-     and the little icon on the Character tab - so they are always the
-     same person. Change this one grid and both update. */
+     Used at every size, from the 20px Me tab to the home screen, so it
+     has to read as a person at both. */
   hero: {
     pal: { H: '#3b2a20', h: '#5e4331', B: '#2fb3a8',
-           s: '#f2cfa8', W: '#1c1a24',
+           s: '#f2cfa8', W: '#1c1a24', m: '#c4746a',
            J: '#2b3a55',
            R: '#e0524a', L: '#4a86c4', O: '#f2a03d', G: '#8a929e',
-           C: '#f4ecd8',
            P: '#3a3a46', K: '#6b4a2e' },
     px: [
-      '................',
-      '.....HHHHHH.....',
-      '....HHhHHhHH....',
-      '....BBBBBBBB....',
-      '....HssssssH....',
-      '....sWssssWs....',
-      '....ssssssss....',
-      '.....ssssss.....',
-      '...JJJJJJJJJJ...',
-      '..JJRRLLOOGGJJ..',
-      '..JJJJJJJJJJJJCC',
-      '..sJJJJJJJJJJsCC',
-      '....PPPPPPPP....',
-      '....PPP..PPP....',
-      '....PPP..PPP....',
-      '...KKKK..KKKK...'
+      '........................',
+      '........HHHHHHHH........',
+      '.......HHHHHHHHHH.......',
+      '......HHhHHHHHHhHH......',
+      '......HHHHHHHHHHHH......',
+      '......BBBBBBBBBBBB......',
+      '......BBBBBBBBBBBB......',
+      '......HssssssssssH......',
+      '......ssssssssssss......',
+      '......ssWWssssWWss......',
+      '......ssWWssssWWss......',
+      '......ssssssssssss......',
+      '......sssssmmsssss......',
+      '.......ssssssssss.......',
+      '........ssssssss........',
+      '.........ssssss.........',
+      '.....JJJJJJJJJJJJJJ.....',
+      '....JJJJJJJJJJJJJJJJ....',
+      '....JJJJJJJJJJJJJJJJ....',
+      '....JRRRLLLOOOGGGGJJ....',
+      '....JRRRLLLOOOGGGGJJ....',
+      '...sJJJJJJJJJJJJJJJJs...',
+      '...sJJJJJJJJJJJJJJJJs...',
+      '....JJJJJJJJJJJJJJJJ....',
+      '.....PPPPPPPPPPPPPP.....',
+      '.....PPPPPPPPPPPPPP.....',
+      '.....PPPPPP..PPPPPP.....',
+      '.....PPPPPP..PPPPPP.....',
+      '.....PPPPPP..PPPPPP.....',
+      '....KKKKKKK..KKKKKKK....',
+      '....KKKKKKK..KKKKKKK....',
+      '........................'
     ]
   },
 
@@ -835,17 +853,23 @@ var Sprites = (function () {
     var def = SPRITE_DATA[name];
     if (!def) { console.warn('[sprites] unknown sprite: ' + name); return ''; }
 
-    var size = 16;
+    /* A grid reads its own size off its rows rather than assuming 16x16.
+       Sixteen pixels is fine for an icon, and far too few for a person:
+       the hero is drawn at 104px on the home screen, which was six and a
+       half screen pixels per art pixel. */
+    var h = def.px.length;
+    var w = def.px[0].length;
+
     var cv = document.createElement('canvas');
-    cv.width = size; cv.height = size;
+    cv.width = w; cv.height = h;
     var ctx = cv.getContext('2d');
 
-    for (var y = 0; y < size; y++) {
+    for (var y = 0; y < h; y++) {
       var row = def.px[y] || '';
-      if (row.length !== size) {
-        console.warn('[sprites] ' + name + ' row ' + y + ' is ' + row.length + ' px, expected ' + size);
+      if (row.length !== w) {
+        console.warn('[sprites] ' + name + ' row ' + y + ' is ' + row.length + ' px, expected ' + w);
       }
-      for (var x = 0; x < size; x++) {
+      for (var x = 0; x < w; x++) {
         var col = def.pal[row.charAt(x)];
         if (!col) continue;
         ctx.fillStyle = col;
