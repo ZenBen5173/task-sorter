@@ -147,10 +147,45 @@ function paintCollection() {
   });
 }
 
+/* ============================================================
+   TEMPORARY - PREVIEW MODE. DELETE THIS BEFORE THE ENTRY GOES IN.
+   ------------------------------------------------------------
+   Opening the game with ?preview=gear fills the wallet and marks every
+   level and boss as beaten, so the whole shop can be looked at without
+   playing through to it. It exists because the only other way to see
+   the gear is a browser console, and a console is not always available.
+
+   IT IS A CHEAT AND IT IS IN A PUBLIC REPOSITORY. Anyone who reads this
+   file or guesses the parameter can unlock the game with it, so it does
+   not stay. Ripping it out is this one function and the one line below
+   that calls it - nothing else in the game knows it is here.
+
+   ?preview=off puts the save back to a fresh one.
+   ============================================================ */
+function previewMode() {
+  var want = (location.search.match(/[?&]preview=([^&]*)/) || [])[1];
+  if (!want) return;
+
+  if (want === 'off') {
+    Progress.reset();
+  } else {
+    Progress.addCoins(99999);
+    for (var n = 1; n <= LEVELS.length; n++) Progress.record(n, true, 'S', 900);
+    Progress.beatRival(4);
+  }
+
+  /* Take the parameter back out of the address bar, so a reload does not
+     silently do it again and a shared link does not carry it. */
+  try {
+    history.replaceState(null, '', location.pathname + location.hash);
+  } catch (e) { /* file:// has no history API - harmless */ }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   var guideBackTo = 'levels';
 
   Progress.load();
+  previewMode();          // TEMPORARY - see above
   UI.sound.setOn(Progress.soundOn());
   Game.init();
   Shop.paintCoins();
