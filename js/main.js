@@ -165,6 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
   Shop.paintCoins();
   Hero.init();
   Themes.init();
+  Forest.paint();
   Tips.init();
   Cloud.init();
   paintHome();

@@ -121,6 +121,14 @@
     </header>
 
     <div class="lv-scene" id="lv-scene">
+      <!-- The wood. Every tree is a drawn silhouette placed by
+           js/forest.js - a jagged, stepped pine outline rather than a
+           triangle, and no two the same height, width or lean. It used
+           to be a repeat-x gradient, which can only ever draw one tree
+           over and over at a fixed spacing. -->
+      <svg class="lv-trees" id="lv-trees" viewBox="0 0 100 100"
+           preserveAspectRatio="none" aria-hidden="true"></svg>
+
       <!-- the winding trail. Drawn in percent so it stretches to any phone. -->
       <svg class="lv-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <path class="trail-base" vector-effect="non-scaling-stroke"
@@ -616,6 +624,7 @@
 </nav>
 <script src="js/cards.js"></script>
 <script src="js/levels.js"></script>
+<script src="js/forest.js"></script>
 <script src="js/shop.js"></script>
 <script src="js/hero.js"></script>
 <script src="js/battle.js"></script>
