@@ -4,6 +4,19 @@
    SWAPPING IN REAL ART LATER (Louis):
    Drop a PNG into assets/sprites/ and uncomment its line below.
    That is the only change needed.
+
+   THE GEAR IS REAL ART NOW. The ten shields and swords used to be
+   hand-drawn 16x16 grids further down this file, and next to pets an
+   artist drew they looked exactly like what they were. They are now
+   sprites from Kenney's Roguelike Characters pack (CC0 - public
+   domain, no attribution required, commercial use fine). See
+   assets/sprites/CREDITS.md.
+
+   WHY OVERRIDE FILES RATHER THAN NEW GRIDS. This hook was already
+   here waiting for exactly this. A PNG needs no palette, no row-length
+   check and no canvas; build() hands the path straight to CSS. The old
+   grids stay in SPRITE_DATA below as the fallback if a file ever goes
+   missing, and cost nothing while a file is present.
    ============================================================ */
 
 var SPRITE_OVERRIDES = {
@@ -18,17 +31,27 @@ var SPRITE_OVERRIDES = {
   // cal:   'assets/sprites/cal.png',
   // arrow: 'assets/sprites/arrow.png',
   // bin:   'assets/sprites/bin.png',
-  // woodshield: 'assets/sprites/wood-shield.png',
-  // silvershield: 'assets/sprites/silver-shield.png',
-  // goldshield: 'assets/sprites/gold-shield.png',
-  // diamondshield: 'assets/sprites/diamond-shield.png',
-  // diamondgoldshield: 'assets/sprites/diamond-gold-shield.png',
   // hero:  'assets/sprites/hero.png',
-  // dagger: 'assets/sprites/red-pen.png',
-  // longsword: 'assets/sprites/stapler.png',
-  // goldsword: 'assets/sprites/hole-punch.png',
-  // bronzeblade: 'assets/sprites/paper-cutter.png',
-  // wingedblade: 'assets/sprites/golden-shredder.png'
+
+  /* Shields, cheapest to dearest. The ladder is carried by colour and
+     then by decoration - plain wood, plain silver, plain gold, then a
+     crest, then a crest with a metal rim - so the row of them on the
+     shelf reads as a ladder even before you look at the prices. */
+  woodshield:        'assets/sprites/wood-shield.png',
+  silvershield:      'assets/sprites/silver-shield.png',
+  goldshield:        'assets/sprites/gold-shield.png',
+  diamondshield:     'assets/sprites/diamond-shield.png',
+  diamondgoldshield: 'assets/sprites/diamond-gold-shield.png',
+
+  /* Weapons. Same idea, but the SHAPE climbs as well as the colour:
+     a stubby blade, then two full swords, then a broad cleaver, then a
+     greatsword. A row of five identical outlines in five colours is a
+     palette swap, and a palette swap does not feel like an upgrade. */
+  dagger:      'assets/sprites/dagger.png',
+  longsword:   'assets/sprites/longsword.png',
+  goldsword:   'assets/sprites/gold-sword.png',
+  bronzeblade: 'assets/sprites/bronze-blade.png',
+  wingedblade: 'assets/sprites/winged-blade.png'
 };
 
 /* 16x16 grids. '.' is see-through, every other letter is a colour.
@@ -754,6 +777,58 @@ var SPRITE_DATA = {
      hand-drawn cat that had stopped being one of them. A dashed outline
      says "nothing here" without pretending to be an animal you could
      own. */
+  /* The empty ARMOUR and WEAPON slots. Same dashed frame as `nopet`:
+     an empty slot is a gap in your kit, and drawing it as a greyed-out
+     shield or a greyed-out sword says the opposite - it says you are
+     wearing something dull. The frame says there is nothing here yet.
+
+     These two used to fall back to the `shield` and `sword` group
+     pictures. That read as a hand-drawn blade parked in the row next to
+     five real ones, which made the real ones look worse than they are. */
+  noarm: {
+    pal: { d: '#5d6675' },
+    px: [
+      '................',
+      '....dd..dd..dd..',
+      '................',
+      '..d..........d..',
+      '..d..........d..',
+      '................',
+      '..d..........d..',
+      '..d..........d..',
+      '................',
+      '..d..........d..',
+      '..d..........d..',
+      '................',
+      '..d..........d..',
+      '..d..........d..',
+      '....dd..dd..dd..',
+      '................'
+    ]
+  },
+
+  nowep: {
+    pal: { d: '#5d6675' },
+    px: [
+      '................',
+      '....dd..dd..dd..',
+      '................',
+      '..d..........d..',
+      '..d..........d..',
+      '................',
+      '..d..........d..',
+      '..d..........d..',
+      '................',
+      '..d..........d..',
+      '..d..........d..',
+      '................',
+      '..d..........d..',
+      '..d..........d..',
+      '....dd..dd..dd..',
+      '................'
+    ]
+  },
+
   nopet: {
     pal: { d: '#5d6675' },
     px: [

@@ -2606,11 +2606,14 @@ body {
    not its body: at half the rig it covered the character completely,
    which is a person hiding behind a shield rather than carrying one. */
 .rig-armour {
-  /* Nudged down and out so it does not sit on the four-colour sash,
-     which is the one part of the figure that says which game they are
-     from. */
-  left: -14%; top: 56%;
-  width: 40%; height: 30%;
+  /* Nudged up and further out than it used to be. The shield art is a
+     PNG trimmed to its own edges now, with none of the transparent
+     margin the old hand-drawn 16x16 grid carried, so the SAME box draws
+     a noticeably bigger shield. Left as it was it sat on the hip and
+     covered the four-colour sash, which is the one part of the figure
+     that says which game they are from. */
+  left: -17%; top: 49%;
+  width: 34%; height: 26%;
   transform: rotate(-8deg);
   filter: drop-shadow(1px 1px 0 rgba(0,0,0,.5));
 }
@@ -2619,8 +2622,11 @@ body {
    is carried rather than pointed at the floor. Same sizing rule as the
    shield: it belongs to the hand, so it is scaled to the hand. */
 .rig-weapon {
-  right: -14%; top: 38%;
-  width: 46%; height: 34%;
+  /* A blade is tall and narrow, so this box is sized by its HEIGHT and
+     `contain` works the width out. Widening it would do nothing but
+     move the sword further from the hand. */
+  right: -13%; top: 33%;
+  width: 40%; height: 40%;
   transform: rotate(28deg);
   filter: drop-shadow(1px 1px 0 rgba(0,0,0,.5));
 }

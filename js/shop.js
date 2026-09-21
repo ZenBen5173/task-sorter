@@ -101,13 +101,15 @@ var SHOP = {
   }
 };
 
-/* Every item in a group shares one picture; `tint` shifts its colour so the
-   tiers are still telling apart. Swap in separate art later and drop the tint. */
+/* Every item now has its own picture, so `tint` is dead weight kept only
+   so an older save that mentions it still loads. The fallbacks below are
+   empty-slot marks, one per group. */
 (function () {
-  /* `pet` is an EMPTY SLOT, not a creature: every real pet brings its
-     own animated sheet, so the only thing left falling back to the
-     group picture is "None". */
-  var art = { pet: 'nopet', armour: 'shield', weapon: 'sword' };
+  /* These are all EMPTY-SLOT MARKS now, not group pictures. Every pet
+     brings its own animated sheet and every shield and sword its own
+     PNG (see SPRITE_OVERRIDES in js/sprites.js), so the only thing that
+     ever falls back to one of these is the "None" row. */
+  var art = { pet: 'nopet', armour: 'noarm', weapon: 'nowep' };
   for (var kind in SHOP) {
     SHOP[kind].sprite = art[kind];
     for (var i = 0; i < SHOP[kind].items.length; i++) {
