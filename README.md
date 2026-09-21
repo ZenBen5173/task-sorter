@@ -216,6 +216,22 @@ thing making it read like documentation.
 Anyone who has asked their phone for less motion gets the layout and none of
 the show.
 
+### Two materials, not a panel per screen
+
+The shop was the first screen that read as a game, and the reason is plain:
+**warm wood instead of grey-blue, parchment instead of a flat chip, thick
+borders, a hard edge underneath, and colour with some heat in it.**
+
+So those surfaces are named once - `--wood`, `--parch` and the shades around
+them - and the rest of the game is built out of them. The boss screen is
+parchment and wood, the result screen puts the grade on a wooden disc and the
+numbers on paper, and the home panels are the same boards as the shop shelves,
+which also puts them in the same family as the gold PLAY button sitting
+between them. The home screen used to be a warm button marooned in a cold
+page.
+
+Adding a screen means reaching for one of those, not inventing a new panel.
+
 ---
 
 ## Writing cards (the important part)

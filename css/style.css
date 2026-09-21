@@ -2357,3 +2357,214 @@ body {
 }
 .shop-head b { color: #ffeec4; }
 .shop-head small { color: #d8bf92; }
+
+/* ==================== MATERIALS ====================
+   The shop reads as a game because of how it LOOKS: warm wood instead
+   of grey-blue, parchment instead of a flat chip, thick borders, a
+   hard edge underneath, and colour with some heat in it. Not because a
+   shelf is a clever metaphor.
+
+   So the surfaces are named here and the rest of the game is built out
+   of the same few, instead of every screen inventing its own panel.
+
+   Four materials, and each one has a job:
+     wood        something built - shelves, signs, boards
+     parchment   something written - a price, a result, a notice
+     iron        something fixed to a wall - a plaque, a badge
+     rope        what a thing hangs from
+
+   Every one of them is lit from above and has a hard edge below, the
+   same rule the whole arcade pass runs on: depth is a solid block, not
+   a blur. */
+
+:root {
+  --wood:      #8a6128;
+  --wood-hi:   #a3752f;
+  --wood-lo:   #5e3f18;
+  --wood-edge: #3a2712;
+  --parch:     #e8dcc0;
+  --parch-lo:  #cbbb96;
+  --ink:       #3a2a12;
+}
+
+/* A plank of wood: grain along its length, lit on top, dark underneath. */
+.mat-wood {
+  background:
+    linear-gradient(180deg, rgba(255,225,165,.22), transparent 40%),
+    repeating-linear-gradient(90deg, var(--wood) 0 9px, #7d5724 9px 10px);
+  border: 2px solid var(--wood-edge);
+  box-shadow: 0 3px 0 rgba(0,0,0,.45), inset 0 1px 0 rgba(255,220,150,.3);
+  color: #ffeec4;
+}
+
+/* Parchment: a written thing. Pinned flat, never glossy. */
+.mat-parch {
+  background: linear-gradient(180deg, var(--parch), var(--parch-lo));
+  border: 2px solid var(--wood);
+  box-shadow: 0 3px 0 rgba(0,0,0,.4);
+  color: var(--ink);
+}
+
+/* ==================== THE BOSS SCREEN ====================
+   Four rivals in grey-blue rounded cards looked like a settings list
+   with faces on it. The same rows in parchment and wood look like
+   somewhere you pick a fight - and it is purely the colour, the border
+   weight and the hard bottom edge doing that work. */
+
+.battle-list {
+  padding: 0 14px calc(90px + var(--safe-b));
+  gap: 14px;
+}
+
+.foe-row {
+  position: relative;
+  align-items: flex-start;
+  padding: 14px 14px 12px;
+  border-radius: 4px;              /* paper does not have soft corners */
+  background: linear-gradient(180deg, var(--parch), var(--parch-lo));
+  border: 2px solid #9a7436;
+  box-shadow: 0 4px 0 rgba(0,0,0,.45);
+  color: var(--ink);
+}
+.foe-row:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.45); }
+
+/* The nail holding it up. */
+.foe-row::before {
+  content: '';
+  position: absolute; top: 5px; left: 50%;
+  width: 7px; height: 7px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle at 35% 30%, #d8d2c4, #6b6154 60%, #3a3428);
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0,0,0,.5);
+}
+
+.foe-row .foe-art {
+  flex: 0 0 54px; width: 54px; height: 54px;
+  padding: 3px;
+  background-color: rgba(58,42,18,.1);
+  border: 2px solid rgba(58,42,18,.35);
+  border-radius: 3px;
+}
+.foe-txt b { color: #2a1d08; }
+.foe-txt small { color: #6b5630; }
+.foe-stats { color: #a03b22; }
+
+.foe-badge {
+  align-self: center;
+  border-radius: 4px;
+  background: #5e3f18;
+  border: 2px solid var(--wood-edge);
+  color: #ffeec4;
+  box-shadow: 0 2px 0 rgba(0,0,0,.4);
+}
+.foe-badge.is-beaten { background: #2e7a38; border-color: #14421b; color: #eaffea; }
+
+/* A beaten boss gets a stamp across the corner of the poster. A line
+   drawn through the middle went straight through the words - and a
+   poster you have finished with should look FRANKED, not crossed out. */
+.foe-row.is-beaten { border-color: #2e7a38; }
+.foe-row.is-beaten::after {
+  content: 'BEATEN';
+  position: absolute; right: 6px; bottom: 4px;
+  padding: 1px 6px;
+  border: 2px solid rgba(46,122,56,.75);
+  border-radius: 3px;
+  color: rgba(46,122,56,.85);
+  font-size: 9px; font-weight: 700; letter-spacing: .12em;
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+
+/* Locked ones are still face-down on the board. */
+.foe-row.is-locked { opacity: .5; filter: grayscale(.6); }
+
+/* Online Boss is a note, not a poster - it is not a fight yet. */
+.foe-row.is-online {
+  background: rgba(74,134,196,.1);
+  border: 2px dashed rgba(120,170,220,.6);
+  color: var(--tx);
+  box-shadow: none;
+  transform: none;
+}
+.foe-row.is-online::before { display: none; }
+.foe-row.is-online .foe-txt b { color: var(--tx-hi); }
+.foe-row.is-online .foe-txt small { color: var(--tx-dim); }
+.foe-row.is-online .foe-art { background: none; border-color: rgba(120,170,220,.4); }
+.foe-badge.is-soon { background: rgba(74,134,196,.2); border-color: rgba(120,170,220,.5); color: #a8cff0; }
+
+/* ==================== THE RESULT ====================
+   A letter outlined in a rounded rectangle, over rows separated by
+   grey hairlines, is a receipt. The grade on a wooden disc and the
+   numbers on parchment is a result screen - same layout, same numbers,
+   warm instead of grey. */
+
+.end-wrap { max-width: 330px; }
+
+/* The grade, stamped onto a wooden disc rather than outlined in a
+   rounded rectangle. */
+.grade {
+  width: 92px; height: 92px;
+  margin-bottom: 18px;
+  border: 4px solid var(--wood-edge);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,230,170,.35), transparent 55%),
+    repeating-linear-gradient(48deg, var(--wood) 0 7px, #7d5724 7px 8px);
+  box-shadow: 0 4px 0 rgba(0,0,0,.5), inset 0 0 18px rgba(0,0,0,.35);
+  text-shadow: 0 2px 0 rgba(0,0,0,.45);
+}
+.grade.is-dim { filter: saturate(.35) brightness(.8); }
+
+/* The numbers, on a sheet of paper. */
+.end-stats {
+  margin: 0 0 20px;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, var(--parch), var(--parch-lo));
+  border: 2px solid var(--wood);
+  border-radius: 4px;
+  box-shadow: 0 4px 0 rgba(0,0,0,.45);
+}
+.end-stats li {
+  padding: 7px 0;
+  /* a ruled line, the way a form is ruled */
+  border-bottom: 1px dashed rgba(58,42,18,.3);
+  color: #6b5630;
+  font-size: 13.5px;
+}
+.end-stats b { color: var(--ink); }
+
+.end-unlock { border-radius: 4px; }
+
+/* ==================== THE HOME PANELS ====================
+   The last grey-blue panels in the game. They are the shop's wood now,
+   which also puts them in the same family as the gold PLAY button
+   sitting between them - the home screen had a warm button marooned in
+   a cold page. */
+
+.home-rank, .home-card, .home-collect {
+  border-radius: 6px;
+  border: 2px solid var(--wood-edge);
+  background:
+    linear-gradient(180deg, rgba(255,225,165,.16), transparent 45%),
+    repeating-linear-gradient(90deg, #6d4d20 0 11px, #63461d 11px 12px);
+  box-shadow: 0 4px 0 rgba(0,0,0,.45), inset 0 1px 0 rgba(255,220,150,.22);
+}
+.home-card b, .home-collect b, .rank-line b { color: #ffeec4; }
+.home-card small, .collect-head small, .rank-line span { color: #d8bf92; }
+
+/* The rank bar is a strip of metal let into the sign. */
+.rank-track {
+  background: #2a1d0c;
+  border: 1px solid #1a1107;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.6);
+}
+
+/* The collection is a case of trophies, so its pets stand on a shelf
+   of their own rather than floating in a row. */
+.collect-row {
+  padding: 6px 4px 0;
+  border-top: 2px solid rgba(58,42,18,.55);
+  box-shadow: inset 0 2px 0 rgba(255,220,150,.12);
+}
+.collect-none { color: #c0a87c; }
