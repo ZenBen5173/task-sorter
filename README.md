@@ -313,9 +313,9 @@ out, whoever has more health wins.
 | Inbox Ivan | buried under his own paperwork | one every 1.5s | 82% | 11 |
 | Deadline Dan | an alarm clock, not a person | one every 1.1s | 92% | 13 |
 
-Each rival has its own drawing, named by `sprite` on the opponent. They are
+Each boss has its own drawing, named by `sprite` on the opponent. They are
 all named after the thing that buries people, so each one IS that thing - you
-can tell them apart by silhouette before reading a name. A rival added without
+can tell them apart by silhouette before reading a name. A boss added without
 a `sprite` falls back to the plain stand-in figure.
 
 They unlock one at a time. Winning pays 120 coins plus 60 per boss; losing
@@ -388,7 +388,7 @@ own way - see **Animated pets** below.
 | Common | Duck, Kitten, Mushroom, Hatchling, Bunny | none - buyable from the start |
 | Rare | Adventurer, Teddy Bear, Penguin | reach level 2 or 3 |
 | Epic | Zombie, Flame Sprite | reach level 3 or 4 |
-| Legendary | Polar Bear, Dragon, Phoenixling | **beat a rival** |
+| Legendary | Polar Bear, Dragon, Phoenixling | **beat a boss** |
 
 MyTask gave each pet an ability worth some percent of XP or coins. Task Sorter
 has no XP, so every ability lands on coins - and here a pet also shortens your
@@ -614,7 +614,7 @@ Changing the background is decoration. If the clock kept running you would
 pay real seconds for using it, so `Themes.toggle()` calls `Game.pause()` and
 swiping is blocked until it closes. The clock is a wall clock reading
 `Date.now()` against `endsAt`, so pausing is just remembering how much was
-left and setting a fresh `endsAt` on the way out. The rival in a duel is
+left and setting a fresh `endsAt` on the way out. The boss in a duel is
 frozen the same way, or a pause would be a free hit.
 
 ### Why the tints are light
@@ -686,7 +686,7 @@ never shows again for that screen. The words are in `js/tips.js`.
 | Map | Each circle is a level and a place in your day; tap to play |
 | A round | Swipe into the right corner; the four corners in their colours |
 | Character | Tap a slot to change gear; +25% for a full set |
-| Battle | Same cards as your rival; right hits them, wrong hits you |
+| Boss | Same cards as your boss; right hits them, wrong hits you |
 | Shop | What each kind of gear does; some unlock by level |
 
 **The round popup pauses the clock.** It opens on top of a round that has
