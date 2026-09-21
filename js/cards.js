@@ -231,8 +231,13 @@ var CARDS = [
     why: 'You do not know yet, so find out. Now.' },
   { text: 'Mum has called four times, no message', theme: 'phone', box: 'now', tier: 2,
     why: 'Four calls is not a chat. Something is wrong.' },
-  { text: 'Your phone is full, photos will not save', theme: 'phone', box: 'now', tier: 2,
-    why: 'Nothing saves at all until you clear some. It only gets worse.' },
+  /* This card was wrong, not just badly worded. "Phone full, photos
+     will not save" has no deadline and nothing at stake - clear it
+     tomorrow and you have lost nothing, which by the matrix makes it a
+     Do Later. It is only a Do Now if something is disappearing RIGHT
+     NOW that the full phone stops you keeping. */
+  { text: 'Phone full, board gets wiped in a minute', theme: 'phone', box: 'now', tier: 2,
+    why: 'The notes go when the board does, and you cannot save a thing.' },
   { text: 'Online form closes at midnight tonight', theme: 'phone', box: 'now', tier: 3,
     why: 'It says tonight, so it is today. No second chance.' },
   { text: 'Backup code shown once, save it now', theme: 'phone', box: 'now', tier: 3,
