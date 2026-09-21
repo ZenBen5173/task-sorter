@@ -53,8 +53,38 @@ html, body {
   margin: 0; padding: 0;
   height: 100%;
   overflow: hidden;
+  /* Stops the whole page rubber-banding when a screen inside it reaches
+     the end of its scroll. This is the part that was worth having. */
   overscroll-behavior: none;
-  touch-action: none;
+}
+
+/* WHY THERE IS NO `touch-action: none` UP THERE ANY MORE.
+
+   There was, and it meant the game could not be scrolled by touch AT
+   ALL - only with a mouse wheel, which is to say only on a computer. It
+   was put there to stop the page sliding about under a card swipe, and
+   it did, by switching off every touch gesture the browser handles on
+   its own.
+
+   `touch-action` is not inherited, but it does not have to be: a pan is
+   allowed only if EVERY element from the one you touched up to the one
+   that would scroll permits it. So `none` on <body> vetoed panning for
+   everything inside it, including the screens that set `overflow-y:
+   auto` and plainly meant to scroll. A mouse wheel is not a touch
+   gesture and was never affected, which is exactly why it looked like
+   it worked on a laptop and was broken on a phone.
+
+   It is now declared only where it is actually wanted: `none` on the
+   play screen, where a swipe is the game rather than a scroll, and
+   `pan-y` on each screen that scrolls. `pan-y` rather than `auto`
+   because these screens only ever scroll up and down, and saying so
+   lets the browser start the scroll on the first frame instead of
+   waiting to see whether the finger is going sideways. */
+#screen-play { touch-action: none; }
+
+.home-body, .hero-body, .shop-body, .me-body,
+.guide-body, .battle-list, #screen-end {
+  touch-action: pan-y;
 }
 
 body {
@@ -1509,6 +1539,14 @@ body {
 
 .tip-card {
   width: 100%; max-width: 330px;
+  /* A popup that is taller than the screen has to scroll, or the button
+     at the bottom of it cannot be reached. Turn a phone on its side and
+     the reset confirmation - three paragraphs and a Delete button - ran
+     off both ends of a 375px-tall window with no way to move it. */
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   padding: 22px 20px 18px;
   background: var(--bg-2);
   border: 1px solid var(--line);

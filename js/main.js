@@ -147,45 +147,10 @@ function paintCollection() {
   });
 }
 
-/* ============================================================
-   TEMPORARY - PREVIEW MODE. DELETE THIS BEFORE THE ENTRY GOES IN.
-   ------------------------------------------------------------
-   Opening the game with ?preview=gear fills the wallet and marks every
-   level and boss as beaten, so the whole shop can be looked at without
-   playing through to it. It exists because the only other way to see
-   the gear is a browser console, and a console is not always available.
-
-   IT IS A CHEAT AND IT IS IN A PUBLIC REPOSITORY. Anyone who reads this
-   file or guesses the parameter can unlock the game with it, so it does
-   not stay. Ripping it out is this one function and the one line below
-   that calls it - nothing else in the game knows it is here.
-
-   ?preview=off puts the save back to a fresh one.
-   ============================================================ */
-function previewMode() {
-  var want = (location.search.match(/[?&]preview=([^&]*)/) || [])[1];
-  if (!want) return;
-
-  if (want === 'off') {
-    Progress.reset();
-  } else {
-    Progress.addCoins(99999);
-    for (var n = 1; n <= LEVELS.length; n++) Progress.record(n, true, 'S', 900);
-    Progress.beatRival(4);
-  }
-
-  /* Take the parameter back out of the address bar, so a reload does not
-     silently do it again and a shared link does not carry it. */
-  try {
-    history.replaceState(null, '', location.pathname + location.hash);
-  } catch (e) { /* file:// has no history API - harmless */ }
-}
-
 document.addEventListener('DOMContentLoaded', function () {
   var guideBackTo = 'levels';
 
   Progress.load();
-  previewMode();          // TEMPORARY - see above
   UI.sound.setOn(Progress.soundOn());
   Game.init();
   Shop.paintCoins();
@@ -456,10 +421,20 @@ document.addEventListener('DOMContentLoaded', function () {
     UI.showScreen('me');
   });
 
-  // Stop the page bouncing under a swipe, but let the shop and hero
-  // screens scroll normally.
+  /* Stop the page bouncing under a card swipe.
+
+     THIS USED TO BE A LIST OF EVERYTHING ALLOWED TO SCROLL, and it
+     cancelled the touch anywhere else. Two screens that scroll were
+     missing from it - the home screen and the end-of-round screen - so
+     on a phone neither could be scrolled, and adding a scrolling screen
+     later meant remembering to come back here, which nobody would.
+
+     The rule is the other way round now: a swipe is only the game's
+     business on the play screen, so that is the only place the browser
+     is told to keep its hands off. Everywhere else scrolls the way the
+     browser thinks it should, which on a page of shelves is right. */
   document.addEventListener('touchmove', function (e) {
-    var scrollable = e.target.closest && e.target.closest('.hero-body, .me-body, .guide-body, .battle-list');
-    if (e.cancelable && !scrollable) e.preventDefault();
+    if (!e.cancelable) return;
+    if (e.target.closest && e.target.closest('#screen-play')) e.preventDefault();
   }, { passive: false });
 });
