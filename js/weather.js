@@ -21,7 +21,7 @@
    of petals moving like one sheet.
 
    ADDING WEATHER TO A THEME: give it a `fall` in js/themes.js.
-     kind    'petal', 'leaf' or 'drop' - the shape, drawn in CSS
+     kind    'petal', 'leaf', 'drop' or 'star' - the shape, in CSS
      count   how many are on screen at once. Keep it low
      colors  the shades to pick from
 
@@ -70,7 +70,10 @@ var Weather = (function () {
     bit.className = 'wx-bit wx-' + spec.kind;
     bit.style.width = size + 'px';
     bit.style.height = size * (spec.kind === 'drop' ? 3.2 : 1) + 'px';
-    bit.style.background = pick(spec.colors);
+    var shade = pick(spec.colors);
+    bit.style.background = shade;
+    /* the star's halo is drawn with `currentColor`, so give it one */
+    if (spec.kind === 'star') bit.style.color = shade;
     bit.style.opacity = rand(0.45, 0.9);
 
     drift.appendChild(bit);
@@ -88,7 +91,12 @@ var Weather = (function () {
        like a petal put raindrops on screen lying flat on their sides,
        which reads as a glitch rather than as weather. It keeps one
        fixed lean, set in CSS on the drop itself. */
-    drop:  { size: [2, 3.5], speed: [1.1, 2.4], sway: [-5, 5], spin: [0, 0] }
+    drop:  { size: [2, 3.5], speed: [1.1, 2.4], sway: [-5, 5], spin: [0, 0] },
+    /* Deep Space: slow, tiny, barely there. A star that hurries reads
+       as a bug, and one you can pick out individually reads as dust on
+       the screen - the whole job is a field that moves without ever
+       asking to be looked at. */
+    star:  { size: [1.5, 3], speed: [18, 34], sway: [-8, 8], spin: [0, 0] }
   };
 
   /** Clears whatever was falling and starts this theme's weather.

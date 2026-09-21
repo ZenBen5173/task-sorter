@@ -5,15 +5,30 @@
    ============================================================ */
 
 :root {
-  --bg-0: #0e1218;
-  --bg-1: #12161b;
-  --bg-2: #1a212a;
-  --bg-3: #232c37;
-  --line: #2e3945;
+  /* Warmer and more saturated than they were. The old set was a
+     desaturated navy-grey - correct for a dashboard, and the reason a
+     game full of pixel art read as one. A game's dark is BLUE, not
+     grey, and it is lit from somewhere. */
+  --bg-0: #0a0e1a;
+  --bg-1: #121a2e;
+  --bg-2: #1c2742;
+  --bg-3: #293755;
+  --line: #3a4a6d;
 
-  --tx-hi: #eef2f6;
-  --tx: #c3ccd6;
-  --tx-dim: #8794a1;
+  /* The hard edge under every panel and button. Depth in a game is a
+     solid block of shadow, not a soft blur: one flat colour two or
+     three pixels below the thing, so it looks stamped out of plastic
+     rather than floated in a browser. */
+  --sink: #0a1020;
+
+  --tx-hi: #ffffff;
+  --tx: #cdd8ec;
+  --tx-dim: #8a9ac0;
+
+  /* Set on the loud things only - a logo, PLAY, a score, a heading.
+     Eight pixels tall and no curves, so it matches the sprites; far too
+     wide to read a sentence in, so it never gets one. */
+  --arcade: 'Press Start 2P', 'Courier New', monospace;
 
   /* the four boxes */
   --now:   #e0524a;
@@ -43,10 +58,14 @@ html, body {
 }
 
 body {
-  background: var(--bg-1);
+  background: var(--bg-0);
   color: var(--tx);
-  font-family: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Fredoka is round and heavy - a children's game face. The system
+     stack behind it is what you get if the fonts never load, and the
+     game plays the same either way. */
+  font-family: 'Fredoka', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 15px;
+  font-weight: 500;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   user-select: none;
@@ -57,7 +76,11 @@ body {
   width: 100%; height: 100%;
   max-width: 520px;
   margin: 0 auto;
-  background: var(--bg-1);
+  /* Lit from above rather than flat. One gradient is the difference
+     between a room and a page. */
+  background:
+    radial-gradient(120% 60% at 50% -10%, #24345c 0%, transparent 60%),
+    var(--bg-0);
   overflow: hidden;
 }
 
@@ -2038,3 +2061,158 @@ body {
 }
 .collect-pet { display: flex; align-items: flex-end; }
 .collect-none { font-size: 11.5px; color: var(--tx-dim); }
+
+/* ==================== ARCADE PASS ====================
+   What was wrong: every picture in this game is pixel art and every
+   surface around it was a flat 1px-bordered card in a muted navy, set
+   in a UI sans. That is a settings screen. The one thing that already
+   read as a game was the PLAY button, because it has a hard shadow, a
+   bevel and no blur - so everything else is built the way PLAY is.
+
+   THE RULE: depth is a SOLID BLOCK, never a blur. A panel sits on a
+   flat slab of --sink two or three pixels below it, with a one-pixel
+   light line along its top edge. Press it and it drops onto the slab.
+   That is what makes a surface feel stamped out of plastic instead of
+   floated in a browser. */
+
+/* ---- the loud things wear the arcade face ---- */
+
+.logo, .logo-sm,
+.play-words b,
+.lv-title,
+.me-h, .guide-h,
+.grade, .end-title,
+#odo, .streak, .hud-clock b, #fight-clock,
+.rank-line b,
+.tab span:last-child,
+.shop-tag, .foe-badge,
+.tip-title {
+  font-family: var(--arcade);
+  font-weight: 400;          /* the face has one weight; asking for bold fakes it badly */
+  letter-spacing: 0;
+}
+
+/* Press Start 2P runs large for its point size and has no descender
+   room, so anything set in it needs to come down a step and get its
+   line-height back. */
+.logo { font-size: 20px; line-height: 1.3; }
+.logo-sm { font-size: 15px; line-height: 1.3; }
+.lv-title { font-size: 13px; line-height: 1.4; }
+.me-h, .guide-h { font-size: 10px; line-height: 1.6; letter-spacing: 0; }
+.tab span:last-child { font-size: 7px; line-height: 1.5; }
+.shop-tag, .foe-badge { font-size: 8px; line-height: 1.6; }
+.rank-line b { font-size: 11px; }
+.play-words b { font-size: 16px; letter-spacing: 0; }
+.tip-title { font-size: 13px; line-height: 1.5; }
+.end-title { font-size: 15px; line-height: 1.5; }
+.grade { font-size: 40px; }
+.streak { font-size: 15px; }
+.hud-clock b, #fight-clock { font-size: 17px; }
+
+/* ---- every panel becomes a slab ---- */
+
+.me-row, .home-card, .home-collect, .home-rank,
+.shop-tile, .picker-item, .foe-row, .theme-chip,
+.guide-box, .guide-note, .hero-set, .slot, .tip-card,
+.coin-pill, .lv-ribbon {
+  border-width: 2px;
+  border-radius: 12px;
+  box-shadow: 0 3px 0 var(--sink);
+  /* the light line along the top edge, which is what sells the bevel */
+  background-image: linear-gradient(rgba(255,255,255,.06), rgba(255,255,255,0) 42%);
+}
+
+/* Pressing something should move it, not fade it. */
+.me-row:active, .home-card:active, .home-collect:active,
+.shop-tile:active, .picker-item:active, .foe-row:active,
+.theme-chip:active, .slot:active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 var(--sink);
+}
+
+.btn {
+  border-width: 2px;
+  border-radius: 12px;
+  box-shadow: 0 3px 0 var(--sink);
+  font-weight: 600;
+}
+.btn:active { transform: translateY(3px); box-shadow: 0 0 0 var(--sink); }
+.btn-ghost { box-shadow: none; }
+.btn-ghost:active { transform: translateY(2px); }
+
+/* ---- juice ----
+   Things arrive. They do not fade politely in from nothing: they come
+   up past where they are going and settle, which is the difference
+   between a page loading and a game starting. */
+
+.screen.is-on { animation: screen-pop .26s var(--snap); }
+@keyframes screen-pop {
+  from { opacity: 0; transform: scale(.96); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* A list should land a piece at a time. Six steps is enough to read as
+   a cascade and short enough that nobody waits for it. */
+.shop-tile, .foe-row, .picker-item, .home-card, .lv-node {
+  animation: tile-in .3s var(--snap) backwards;
+}
+.shop-tile:nth-child(1), .foe-row:nth-child(1), .picker-item:nth-child(1) { animation-delay: .02s; }
+.shop-tile:nth-child(2), .foe-row:nth-child(2), .picker-item:nth-child(2) { animation-delay: .05s; }
+.shop-tile:nth-child(3), .foe-row:nth-child(3), .picker-item:nth-child(3) { animation-delay: .08s; }
+.shop-tile:nth-child(4), .foe-row:nth-child(4), .picker-item:nth-child(4) { animation-delay: .11s; }
+.shop-tile:nth-child(5), .foe-row:nth-child(5), .picker-item:nth-child(5) { animation-delay: .14s; }
+.shop-tile:nth-child(n+6), .foe-row:nth-child(n+6), .picker-item:nth-child(n+6) { animation-delay: .17s; }
+@keyframes tile-in {
+  from { opacity: 0; transform: translateY(10px) scale(.95); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* The level markers drop onto the trail one after another. */
+.lv-node:nth-child(1) { animation-delay: .06s; }
+.lv-node:nth-child(2) { animation-delay: .13s; }
+.lv-node:nth-child(3) { animation-delay: .2s; }
+.lv-node:nth-child(4) { animation-delay: .27s; }
+
+/* The weather now sits behind every screen, so it has to go under the
+   whole app rather than inside one section. */
+.weather { z-index: 0; }
+#app > .screen { position: absolute; z-index: 1; }
+
+/* A coin that bursts out of a reward and arcs away. See UI.coinBurst. */
+.coin-pop {
+  position: fixed;
+  width: 18px; height: 18px;
+  background-repeat: no-repeat; background-position: center;
+  background-size: contain; image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 200;
+  animation: coin-pop .9s var(--spring) forwards;
+}
+@keyframes coin-pop {
+  0%   { opacity: 0; transform: translate(0,0) scale(.4); }
+  15%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--cx, 0px), var(--cy, -90px)) scale(1.3); }
+}
+
+/* Anyone who asked for less motion gets the layout, not the show. */
+@media (prefers-reduced-motion: reduce) {
+  .screen.is-on,
+  .shop-tile, .foe-row, .picker-item, .home-card, .lv-node,
+  .coin-pop { animation: none; }
+}
+
+/* A star: a round speck with a faint halo, so a 2px dot still reads as
+   a light rather than a dead pixel. */
+.wx-star { border-radius: 50%; box-shadow: 0 0 4px currentColor; }
+
+/* Group titles are shouted, not written. */
+.shop-head b { font-family: var(--arcade); font-size: 11px; line-height: 1.5; }
+.shop-head small { font-size: 12px; }
+.slot-k { font-family: var(--arcade); font-size: 7px; line-height: 1.6; letter-spacing: 0; }
+.home-card b, .collect-head b { font-family: var(--arcade); font-size: 10px; line-height: 1.6; }
+
+/* A tile is a picture, a name and a number. The description used to be
+   a sentence that wrapped to three lines and made every tile tall
+   enough to push the next row off the screen. */
+.shop-tile small { min-height: 0; font-size: 12px; }
+.hero-set b { font-family: var(--arcade); font-size: 10px; line-height: 1.6; }

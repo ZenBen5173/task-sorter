@@ -774,8 +774,8 @@ var Game = (function () {
 
     var coins = Shop.coinsFor(score, grade);
     Progress.addCoins(coins);
-    UI.$("end-coins").textContent = "+" + coins + (Shop.hasFullSet() ? " (full set)" : "");
     Shop.paintCoins();
+    payOut(coins);
 
     UI.$('end-title').textContent = passed
       ? 'Level ' + level.n + ' complete!'
@@ -789,9 +789,9 @@ var Game = (function () {
     UI.$('grade').className = 'grade grade-' + grade + (passed ? '' : ' is-dim');
     UI.$('end-score-k').textContent = 'Score';
     UI.$('end-target-k').textContent = 'Needed to pass';
-    UI.$('end-score').textContent = score.toLocaleString();
+    UI.countTo(UI.$('end-score'), score, 900);
     UI.$('end-target').textContent = Math.round(level.minAcc * 100) + '%';
-    UI.$('end-acc').textContent = Math.round(acc * 100) + '%';
+    UI.countTo(UI.$('end-acc'), Math.round(acc * 100), 600, '', '%');
     UI.$('end-streak').textContent = 'x' + Math.min(bestStreak, TUNING.MAX_MULTIPLIER);
     UI.$('end-sorted').textContent = total;
 
@@ -872,10 +872,10 @@ var Game = (function () {
     UI.$('end-target-k').textContent = 'Boss';
     UI.$('end-score').textContent = Math.max(0, hpYou) + ' HP';
     UI.$('end-target').textContent = foe.name;
-    UI.$('end-acc').textContent = Math.round(acc * 100) + '%';
+    UI.countTo(UI.$('end-acc'), Math.round(acc * 100), 600, '', '%');
     UI.$('end-streak').textContent = 'x' + Math.min(bestStreak, TUNING.MAX_MULTIPLIER);
     UI.$('end-sorted').textContent = total;
-    UI.$("end-coins").textContent = "+" + coins + (Shop.hasFullSet() ? " (full set)" : "");
+    payOut(coins);
 
     UI.$("btn-next").hidden = !(won && nextFoe);
     UI.$('btn-next').textContent = 'Next boss';
@@ -884,6 +884,22 @@ var Game = (function () {
 
     paintReview(won);
     UI.showScreen('end');
+  }
+
+  /** The coins, counted up and thrown. A payout that just appears as a
+      number is a receipt; one that climbs while coins arc off the row
+      is the moment the round was for. */
+  function payOut(coins) {
+    var row = UI.$('end-coins');
+    UI.countTo(row, coins, 800, '+');
+
+    /* The count finishes, THEN the coins fly - otherwise they are gone
+       before the number they came from has finished moving. */
+    setTimeout(function () {
+      if (Shop.hasFullSet()) row.textContent = '+' + coins + ' (full set)';
+      var r = row.getBoundingClientRect();
+      UI.coinBurst(r.left + r.width / 2, r.top + r.height / 2, Math.max(4, Math.round(coins / 25)));
+    }, 820);
   }
 
   /** Grade comes from accuracy and streak, never from how many you sorted. */

@@ -41,8 +41,15 @@
    ============================================================ */
 
 var THEMES = [
+  /* Deep Space is the default, and it is the screen most people will
+     look at most of the time. With no `fall` it was a flat black page -
+     which, now that the weather runs behind the MENUS too, was the
+     single biggest thing making a game full of pixel art feel like a
+     website. Stars drift down it instead. */
   { id: 'space',  name: 'Deep Space',  file: null,
-    tint: '#0e1218', dim: 0 },
+    tint: '#0a0e1a', dim: 0,
+    fall: { kind: 'star', count: 22,
+            colors: ['#ffffff', '#cddcff', '#9db7ff', '#fff0c4'] } },
 
   /* Louis's cherry blossom photo: white blossom, blue sky, a purple and
      magenta carpet underneath. It is a BRIGHT picture, so it needs a
@@ -76,7 +83,9 @@ var Themes = (function () {
 
   function current() { return find(Progress.theme()); }
 
-  /** Paints the chosen background onto the play screen. */
+  /** Paints the chosen background onto the play screen, and starts the
+      weather - which now falls behind every screen in the game, not
+      just a round. */
   function apply() {
     var el = UI.$('screen-play');
     var t = current();

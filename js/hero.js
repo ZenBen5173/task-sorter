@@ -70,8 +70,8 @@ var Hero = (function () {
 
     el.className = 'hero-set' + (full ? ' is-on' : '');
     el.innerHTML = full
-      ? '<b>Full set!</b><span>All three slots filled &middot; <em>+' + pct + '% coins</em></span>'
-      : '<b>Full set bonus</b><span>Wear a pet, armour <em>and</em> a weapon for +' + pct + '% coins</span>';
+      ? '<b>FULL SET</b><span><em>+' + pct + '% coins</em></span>'
+      : '<b>FULL SET</b><span>Fill all three slots for <em>+' + pct + '% coins</em></span>';
   }
 
   /* ---------------- the three slots ---------------- */

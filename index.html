@@ -6,11 +6,33 @@
 <meta name="theme-color" content="#12161b">
 <meta name="description" content="Task Sorter - sort the pile before it buries you.">
 <title>Task Sorter</title>
+<!-- Two fonts, and the split is the whole point. Press Start 2P is a
+     real arcade face - eight pixels tall, no curves - and it is what
+     made the pixel sprites look like they were sitting in a dashboard
+     before: every picture in this game is pixel art and every word was
+     set in a UI sans. It is used ONLY for the loud things (the logo,
+     PLAY, the score, a heading) because it is very wide and unreadable
+     in a paragraph. Fredoka carries everything you actually read.
+
+     If the fonts never arrive the game falls back to the system stack
+     and plays exactly the same, which is why this is a plain link and
+     not something the game waits for. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <div id="app">
+
+  <!-- The moving background: petals, leaves or rain, built by
+       js/weather.js. It sits behind EVERY screen, not just a round.
+       Menus used to be flat dead black while the only place anything
+       moved was inside a level - which is exactly what made the rest of
+       the game feel like a website with a game buried in it. -->
+  <div class="weather" id="weather" hidden></div>
+
 
   <!-- ==================== HOME ====================
        The front door, and the only screen you land on. It used to be a
@@ -65,7 +87,7 @@
         <button class="home-card" id="home-gear" type="button">
           <span class="home-card-ico" data-sprite="shield"></span>
           <b>Gear</b>
-          <small id="home-gear-sub">Pets, armour, weapons</small>
+          <small id="home-gear-sub">Pets &middot; armour &middot; weapons</small>
         </button>
       </div>
 
@@ -131,7 +153,7 @@
       <button class="btn btn-ghost btn-back" id="btn-guide-back" type="button">&#8592; Back</button>
       <div>
         <h2 class="lv-title">Guide Book</h2>
-        <p class="lv-sub">Everything you need to know</p>
+        <p class="lv-sub">How to play</p>
       </div>
       <div class="coin-pill"><span class="tab-coin-ico" data-sprite="coin"></span><b class="coin-count">0</b></div>
     </header>
@@ -266,7 +288,7 @@
     <header class="lv-head">
       <div>
         <h2 class="lv-title">Boss</h2>
-        <p class="lv-sub">Out-sort a boss, one on one</p>
+        <p class="lv-sub">One on one</p>
       </div>
       <div class="coin-pill">
         <span class="tab-coin-ico" data-sprite="coin"></span>
@@ -287,7 +309,7 @@
     <header class="lv-head">
       <div>
         <h2 class="lv-title">Gear</h2>
-        <p class="lv-sub">Tap anything to wear it. Tap a price to buy it.</p>
+        <p class="lv-sub">Tap to wear or buy</p>
       </div>
       <div class="coin-pill">
         <span class="tab-coin-ico" data-sprite="coin"></span>
@@ -356,7 +378,7 @@
     <header class="lv-head">
       <div>
         <h2 class="lv-title">Me</h2>
-        <p class="lv-sub">Your save, your settings</p>
+        <p class="lv-sub">Save and settings</p>
       </div>
       <div class="coin-pill">
         <span class="tab-coin-ico" data-sprite="coin"></span>
@@ -409,7 +431,7 @@
       <div class="me-block">
         <h3 class="me-h">Sound</h3>
         <button class="me-row" id="btn-sound" type="button">
-          <span class="me-row-t"><b>Sound effects</b><small>Chimes when you sort, and when you miss</small></span>
+          <span class="me-row-t"><b>Sound effects</b><small>Chimes when you sort and miss</small></span>
           <span class="me-switch" id="sound-switch"><span class="me-knob"></span></span>
         </button>
       </div>
@@ -417,7 +439,7 @@
       <div class="me-block">
         <h3 class="me-h">The rules</h3>
         <button class="me-row" id="btn-guide" type="button">
-          <span class="me-row-t"><b>Guide Book</b><small>What the four corners mean, and how to pass</small></span>
+          <span class="me-row-t"><b>Guide Book</b><small>The four corners, and how to pass</small></span>
           <span class="me-go">&#8594;</span>
         </button>
       </div>
@@ -432,11 +454,6 @@
 
   <!-- ==================== PLAY ==================== -->
   <section id="screen-play" class="screen">
-
-    <!-- The moving background: petals, leaves or rain, filled in by
-         js/weather.js. First in the section so everything else paints
-         on top of it, and it never takes a tap. -->
-    <div class="weather" id="weather" hidden></div>
 
     <header class="hud">
       <button class="btn-exit" id="btn-exit" type="button" aria-label="Leave this level">&#8592;</button>

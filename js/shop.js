@@ -28,7 +28,7 @@ var SHOP = {
 
   pet: {
     label: 'Pets',
-    blurb: 'Pays you more coins - and takes time off your clock for it.',
+    blurb: 'More coins. Less time.',
 
     /* THE COLLECTION. Thirteen buddies, brought over from MyTask with
        their own art and their own rarity, cheapest to dearest.
@@ -51,52 +51,52 @@ var SHOP = {
        three legendaries are behind a BATTLE - which is what stops the
        collection being a pure coin grind. */
     items: [
-      { id: 'pet0',  name: 'None',         cost: 0,    tint: 0, fast: 1,    coin: 0,    desc: 'No pet.' },
+      { id: 'pet0',  name: 'None',         cost: 0,    tint: 0, fast: 1,    coin: 0,    desc: 'Empty slot' },
 
       /* --- common --- */
-      { id: 'pet1',  name: 'Duck',         cost: 120,  tint: 0, fast: 1.06, coin: 0.08, desc: '+8% coins. Clock runs 6% faster.',   sprite: 'duck' },
-      { id: 'pet2',  name: 'Kitten',       cost: 170,  tint: 0, fast: 1.08, coin: 0.10, desc: '+10% coins. Clock runs 8% faster.',  sprite: 'kitten' },
-      { id: 'pet3',  name: 'Mushroom',     cost: 230,  tint: 0, fast: 1.10, coin: 0.12, desc: '+12% coins. Clock runs 10% faster.', sprite: 'mushroom' },
-      { id: 'pet4',  name: 'Hatchling',    cost: 300,  tint: 0, fast: 1.12, coin: 0.15, desc: '+15% coins. Clock runs 12% faster.', sprite: 'hatchling' },
-      { id: 'pet5',  name: 'Bunny',        cost: 390,  tint: 0, fast: 1.16, coin: 0.20, desc: '+20% coins. Clock runs 16% faster.', sprite: 'bunny' },
+      { id: 'pet1',  name: 'Duck',         cost: 120,  tint: 0, fast: 1.06, coin: 0.08, desc: '+8% coins \u00b7 -6% time',   sprite: 'duck' },
+      { id: 'pet2',  name: 'Kitten',       cost: 170,  tint: 0, fast: 1.08, coin: 0.10, desc: '+10% coins \u00b7 -8% time',  sprite: 'kitten' },
+      { id: 'pet3',  name: 'Mushroom',     cost: 230,  tint: 0, fast: 1.10, coin: 0.12, desc: '+12% coins \u00b7 -10% time', sprite: 'mushroom' },
+      { id: 'pet4',  name: 'Hatchling',    cost: 300,  tint: 0, fast: 1.12, coin: 0.15, desc: '+15% coins \u00b7 -12% time', sprite: 'hatchling' },
+      { id: 'pet5',  name: 'Bunny',        cost: 390,  tint: 0, fast: 1.16, coin: 0.20, desc: '+20% coins \u00b7 -16% time', sprite: 'bunny' },
 
       /* --- rare --- */
-      { id: 'pet6',  name: 'Adventurer',   cost: 480,  tint: 0, fast: 1.18, coin: 0.22, desc: '+22% coins. Clock runs 18% faster.', needsLevel: 2, sprite: 'slime' },
-      { id: 'pet7',  name: 'Teddy Bear',   cost: 580,  tint: 0, fast: 1.22, coin: 0.25, desc: '+25% coins. Clock runs 22% faster.', needsLevel: 2, sprite: 'teddy_bear' },
-      { id: 'pet8',  name: 'Penguin',      cost: 700,  tint: 0, fast: 1.26, coin: 0.30, desc: '+30% coins. Clock runs 26% faster.', needsLevel: 3, sprite: 'penguin' },
+      { id: 'pet6',  name: 'Adventurer',   cost: 480,  tint: 0, fast: 1.18, coin: 0.22, desc: '+22% coins \u00b7 -18% time', needsLevel: 2, sprite: 'slime' },
+      { id: 'pet7',  name: 'Teddy Bear',   cost: 580,  tint: 0, fast: 1.22, coin: 0.25, desc: '+25% coins \u00b7 -22% time', needsLevel: 2, sprite: 'teddy_bear' },
+      { id: 'pet8',  name: 'Penguin',      cost: 700,  tint: 0, fast: 1.26, coin: 0.30, desc: '+30% coins \u00b7 -26% time', needsLevel: 3, sprite: 'penguin' },
 
       /* --- epic --- */
-      { id: 'pet9',  name: 'Zombie',       cost: 850,  tint: 0, fast: 1.32, coin: 0.38, desc: '+38% coins. Clock runs 32% faster.', needsLevel: 3, sprite: 'zombie' },
-      { id: 'pet10', name: 'Flame Sprite', cost: 1000, tint: 0, fast: 1.36, coin: 0.42, desc: '+42% coins. Clock runs 36% faster.', needsLevel: 4, sprite: 'flame_sprite' },
+      { id: 'pet9',  name: 'Zombie',       cost: 850,  tint: 0, fast: 1.32, coin: 0.38, desc: '+38% coins \u00b7 -32% time', needsLevel: 3, sprite: 'zombie' },
+      { id: 'pet10', name: 'Flame Sprite', cost: 1000, tint: 0, fast: 1.36, coin: 0.42, desc: '+42% coins \u00b7 -36% time', needsLevel: 4, sprite: 'flame_sprite' },
 
       /* --- legendary: every one of these is behind a rival --- */
-      { id: 'pet11', name: 'Polar Bear',   cost: 1200, tint: 0, fast: 1.42, coin: 0.48, desc: '+48% coins. Clock runs 42% faster.', needsRival: 1, sprite: 'polar_bear' },
-      { id: 'pet12', name: 'Dragon',       cost: 1500, tint: 0, fast: 1.48, coin: 0.54, desc: '+54% coins. Clock runs 48% faster.', needsRival: 2, sprite: 'dragon' },
-      { id: 'pet13', name: 'Phoenixling',  cost: 2000, tint: 0, fast: 1.55, coin: 0.60, desc: '+60% coins. Clock runs 55% faster.', needsRival: 3, sprite: 'phoenix' }
+      { id: 'pet11', name: 'Polar Bear',   cost: 1200, tint: 0, fast: 1.42, coin: 0.48, desc: '+48% coins \u00b7 -42% time', needsRival: 1, sprite: 'polar_bear' },
+      { id: 'pet12', name: 'Dragon',       cost: 1500, tint: 0, fast: 1.48, coin: 0.54, desc: '+54% coins \u00b7 -48% time', needsRival: 2, sprite: 'dragon' },
+      { id: 'pet13', name: 'Phoenixling',  cost: 2000, tint: 0, fast: 1.55, coin: 0.60, desc: '+60% coins \u00b7 -55% time', needsRival: 3, sprite: 'phoenix' }
     ]
   },
   armour: {
     label: 'Armour',
-    blurb: 'Wrong answers it covers do not count against you.',
+    blurb: 'Mistakes that do not count.',
     items: [
-      { id: 'arm0', name: 'None',            cost: 0,    tint: 0, block: 0, desc: 'No armour.' },
-      { id: 'arm1', name: 'Wood Shield',     cost: 120,  tint: 0, block: 1, desc: 'Covers 1 wrong answer.', sprite: 'woodshield' },
-      { id: 'arm2', name: 'Silver Shield',   cost: 350,  tint: 0, block: 2, desc: 'Covers 2 wrong answers.', needsLevel: 2, sprite: 'silvershield' },
-      { id: 'arm3', name: 'Gold Shield',     cost: 600,  tint: 0, block: 3, desc: 'Covers 3 wrong answers.', needsLevel: 3, sprite: 'goldshield' },
-      { id: 'arm4', name: 'Diamond Shield',  cost: 900,  tint: 0, block: 4, desc: 'Covers 4 wrong answers.', needsLevel: 4, sprite: 'diamondshield' },
-      { id: 'arm5', name: 'Diamond and Gold Shield', cost: 1500, tint: 0, block: 5, desc: 'Covers 5 wrong answers.', needsRival: 3, sprite: 'diamondgoldshield' }
+      { id: 'arm0', name: 'None',            cost: 0,    tint: 0, block: 0, desc: 'Empty slot' },
+      { id: 'arm1', name: 'Wood Shield',     cost: 120,  tint: 0, block: 1, desc: 'Covers 1', sprite: 'woodshield' },
+      { id: 'arm2', name: 'Silver Shield',   cost: 350,  tint: 0, block: 2, desc: 'Covers 2', needsLevel: 2, sprite: 'silvershield' },
+      { id: 'arm3', name: 'Gold Shield',     cost: 600,  tint: 0, block: 3, desc: 'Covers 3', needsLevel: 3, sprite: 'goldshield' },
+      { id: 'arm4', name: 'Diamond Shield',  cost: 900,  tint: 0, block: 4, desc: 'Covers 4', needsLevel: 4, sprite: 'diamondshield' },
+      { id: 'arm5', name: 'Diamond and Gold Shield', cost: 1500, tint: 0, block: 5, desc: 'Covers 5', needsRival: 3, sprite: 'diamondgoldshield' }
     ]
   },
   weapon: {
     label: 'Weapons',
-    blurb: 'Hit harder. More points, and more damage in a boss fight.',
+    blurb: 'More points. Harder hits.',
     items: [
-      { id: 'wep0', name: 'Bare Hands',      cost: 0,    tint: 0,   mult: 1,    desc: 'Normal points.' },
-      { id: 'wep1', name: 'Dagger',          cost: 100,  tint: 0,   mult: 1.10, desc: '+10% points.', sprite: 'dagger' },
-      { id: 'wep2', name: 'Longsword',       cost: 300,  tint: 0,   mult: 1.25, desc: '+25% points.', needsLevel: 2, sprite: 'longsword' },
-      { id: 'wep3', name: 'Gold Sword',      cost: 550,  tint: 0,   mult: 1.35, desc: '+35% points.', needsLevel: 3, sprite: 'goldsword' },
-      { id: 'wep4', name: 'Bronze Blade',    cost: 850,  tint: 0,   mult: 1.50, desc: '+50% points.', needsLevel: 4, sprite: 'bronzeblade' },
-      { id: 'wep5', name: 'Winged Blade',    cost: 1500, tint: 0,   mult: 1.75, desc: '+75% points.', needsRival: 4, sprite: 'wingedblade' }
+      { id: 'wep0', name: 'Bare Hands',      cost: 0,    tint: 0,   mult: 1,    desc: 'Empty slot' },
+      { id: 'wep1', name: 'Dagger',          cost: 100,  tint: 0,   mult: 1.10, desc: '+10% points', sprite: 'dagger' },
+      { id: 'wep2', name: 'Longsword',       cost: 300,  tint: 0,   mult: 1.25, desc: '+25% points', needsLevel: 2, sprite: 'longsword' },
+      { id: 'wep3', name: 'Gold Sword',      cost: 550,  tint: 0,   mult: 1.35, desc: '+35% points', needsLevel: 3, sprite: 'goldsword' },
+      { id: 'wep4', name: 'Bronze Blade',    cost: 850,  tint: 0,   mult: 1.50, desc: '+50% points', needsLevel: 4, sprite: 'bronzeblade' },
+      { id: 'wep5', name: 'Winged Blade',    cost: 1500, tint: 0,   mult: 1.75, desc: '+75% points', needsRival: 4, sprite: 'wingedblade' }
     ]
   }
 };

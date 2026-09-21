@@ -166,6 +166,52 @@ else ever needs to ask.
 
 ---
 
+## Why it looks like this
+
+The structure was a game and the skin was a dashboard. Every picture in
+Task Sorter is pixel art and every surface around it was a flat 1px-bordered
+card in a muted navy, set in a UI sans - so a game full of sprites read as a
+settings screen with sprites in it.
+
+**Depth is a solid block, never a blur.** A panel sits on a flat slab of
+`--sink` two or three pixels below it, with a one-pixel light line along its
+top edge, and pressing it drops it onto the slab. That is what makes a surface
+feel stamped out of plastic rather than floated in a browser. The PLAY button
+was already built that way and was the only thing on screen that read as a
+game, so everything else is now built the way PLAY is.
+
+**Two fonts, and the split is the point.** *Press Start 2P* is a real arcade
+face - eight pixels tall, no curves - and it matches the sprites. It is very
+wide and unreadable in a paragraph, so it is used **only** on the loud things:
+the logo, PLAY, a score, a heading, a tab label. *Fredoka* carries everything
+you actually read. Both come from Google Fonts; if they never arrive the game
+falls back to the system stack and plays exactly the same.
+
+**The dark is blue and lit from somewhere.** One radial gradient at the top of
+`#app` is the difference between a room and a page.
+
+**The weather runs behind every screen**, not just a round. Deep Space - the
+default, and the screen most people look at most - used to be flat black, and
+that was the single biggest thing making the menus feel like a website. It has
+a slow starfield now. Petals, leaves and rain fall behind the menus too.
+
+**Things arrive rather than appear.** Screens pop past where they are going and
+settle, lists land a tile at a time, buttons drop onto their shadow. At the end
+of a round the score, the accuracy and the coins **count up**, and when the
+count lands the coins burst out of the row and arc away. A payout that is
+simply there was never a moment; one that climbs while coins fly is what the
+round was for.
+
+**And far fewer words.** A shop tile is a picture, a name and a number:
+`+8% coins - 6% time`, not *"+8% coins. Clock runs 6% faster."* Every group
+blurb is now three words. The long sentences were mine and they were the last
+thing making it read like documentation.
+
+Anyone who has asked their phone for less motion gets the layout and none of
+the show.
+
+---
+
 ## Writing cards (the important part)
 
 Open `js/cards.js`. Copy a line and change it:

@@ -141,11 +141,70 @@ var UI = (function () {
     tick:    function () { tone(700, 40, 'square', 0.03); }
   };
 
+  /* ---------------- juice ---------------- */
+
+  /** Throws a handful of coins out of a point on screen. A reward that
+      just increments a number is a receipt; a reward that throws coins
+      at you is a reward. */
+  function coinBurst(x, y, many) {
+    if (still()) return;
+    many = Math.min(many || 8, 14);
+    for (var i = 0; i < many; i++) {
+      (function (i) {
+        setTimeout(function () {
+          var el = document.createElement('div');
+          el.className = 'coin-pop';
+          el.style.left = x + 'px';
+          el.style.top = y + 'px';
+          el.style.backgroundImage = 'url("' + Sprites.get('coin') + '")';
+          el.style.setProperty('--cx', Math.round((Math.random() - .5) * 190) + 'px');
+          el.style.setProperty('--cy', Math.round(-70 - Math.random() * 90) + 'px');
+          document.body.appendChild(el);
+          setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 950);
+        }, i * 45);
+      })(i);
+    }
+  }
+
+  /** Counts an element up to a number instead of printing it. Worth the
+      few lines: a total that climbs is the moment the round pays out,
+      and a total that is simply there was never a moment at all. */
+  function countTo(el, target, ms, prefix, suffix) {
+    if (!el) return;
+    target = Math.round(target || 0);
+    prefix = prefix || '';
+    /* The unit has to ride along on every frame. Counting a percentage
+       as a bare number and only adding the % at the end means the row
+       reads "85" for most of the animation and snaps to "100%" at the
+       last moment, which looks like a bug rather than a tally. */
+    suffix = suffix || '';
+    if (still()) { el.textContent = prefix + target.toLocaleString() + suffix; return; }
+
+    var from = 0, started = 0;
+    ms = ms || 700;
+    function frame(now) {
+      if (!started) started = now;
+      var t = Math.min(1, (now - started) / ms);
+      // ease out, so it sprints then lands
+      var v = Math.round(from + (target - from) * (1 - Math.pow(1 - t, 3)));
+      el.textContent = prefix + v.toLocaleString() + suffix;
+      if (t < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function still() {
+    try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+    catch (e) { return false; }
+  }
+
   return {
     $: $,
     showScreen: showScreen,
     setScore: setScore,
     floatText: floatText,
+    coinBurst: coinBurst,
+    countTo: countTo,
     sound: SOUND
   };
 })();
