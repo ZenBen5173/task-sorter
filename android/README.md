@@ -68,6 +68,13 @@ is explained where it happens:
 About 3.4 MB. The game itself is under 700 KB; the rest is the AndroidX
 libraries. The competition allows 100 MB.
 
+## Testing it
+
+See **TESTING.md** — how to run this on a laptop with no Android phone, and
+the specific list of things that have never been verified.
+
+---
+
 ## What is not done yet
 
 - Never run on real hardware. It was built and its packaged contents

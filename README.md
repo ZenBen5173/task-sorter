@@ -725,8 +725,11 @@ timer stays honest even if the app goes to the background.
 - [ ] Video, max 3 minutes, max 60 MB, English subtitles if not in English
 - [x] An installable Android app — `android/`, about 3.4 MB
 - [x] Under **100 MB** — the APK is 3.4 MB, the game itself under 1 MB
-- [ ] **Install the APK on a real phone.** It has been built and its contents
-      verified, but it has never been run on hardware
+- [ ] **Run the APK.** It has been built and its contents verified, but it has
+      never been run. No Android phone needed - `android/TESTING.md` sets up an
+      emulator on a laptop and lists exactly what to check. An emulator will
+      NOT do for the twenty IDs above; those say twenty different devices and
+      mean it
 - [ ] Final submission **1 November**, 11:59pm
 
 ---
