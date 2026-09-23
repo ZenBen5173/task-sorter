@@ -324,6 +324,17 @@ var Shop = (function () {
     return el;
   }
 
+  /* Repainting the shelf is only half the screen. The figure at the top
+     of Gear, the line naming what it has on, the full-set banner and the
+     stats panel are all Hero's, and tapping a tile changes every one of
+     them. Without redrawing Hero too, you buy a shield and the character
+     above keeps wearing the old one until you leave the screen and come
+     back - which looked exactly like the purchase had not registered. */
+  function repaint() {
+    paint();
+    Hero.paint();
+  }
+
   function tap(kind, item) {
     var owned = Progress.owns(item.id) || item.cost === 0;
 
@@ -336,7 +347,7 @@ var Shop = (function () {
     if (owned) {
       Progress.equip(kind, item.id);
       UI.sound.tick();
-      paint();
+      repaint();
       return;
     }
 
@@ -350,7 +361,7 @@ var Shop = (function () {
     Progress.equip(kind, item.id);
     UI.sound.perfect();
     flash(item.name + ' bought and equipped!');
-    paint();
+    repaint();
   }
 
   function paintCoins() {
