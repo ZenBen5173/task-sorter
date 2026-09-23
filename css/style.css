@@ -1464,9 +1464,12 @@ body {
 
 /* The panel floats over the arena rather than pushing it down, so
    opening it never reflows the corners you are aiming at. */
+/* Tucked in just under the HUD, and no higher: the button that opens
+   this panel lives up there, and a panel over the top of it would hide
+   the only way to shut it again. */
 .theme-picker {
   position: absolute;
-  top: 56px; right: 10px; left: 10px;
+  top: 84px; right: 10px; left: 10px;
   z-index: 30;
   padding: 12px 12px 10px;
   background: rgba(18, 23, 30, .97);
@@ -2739,12 +2742,20 @@ body {
   background: linear-gradient(rgba(6,9,14,.40), rgba(6,9,14,0) 40%);
 }
 
-/* Everything the game draws has to sit above it. */
+/* Everything the game draws has to sit above it.
+
+   The background picker is NOT in this list. It has to float over the
+   arena, and `position: relative` here was beating its own
+   `position: absolute` - so it dropped back into the layout, pushing
+   itself down the screen AND taking up space, which shoved it on top of
+   the Do Now and Do Later corners. It gets its own rule below, keeping
+   the absolute placement and lifting it well clear of the scenery. */
 #screen-play > .hud,
 #screen-play > .arena,
 #screen-play > .shieldbar,
-#screen-play > .theme-picker,
 #screen-play > .review { position: relative; z-index: 1; }
+
+#screen-play > .theme-picker { position: absolute; z-index: 30; }
 
 /* The one place the game says what it is for, rather than how to play
    it. Marked out from the other notes so it does not read as another
