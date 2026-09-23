@@ -212,7 +212,11 @@ var Music = (function () {
   function start(name) {
     if (!ready()) return;
     if (!window.UI || !UI.sound.isOn()) return;
-    if (actx.state === 'suspended') return;     // no gesture yet; wake() retries
+    /* No gesture yet; wake() retries. This asks UI.sound rather than
+       reading actx.state, because an Android WebView hands back a
+       context that is already running - see the note on `awake` in
+       ui.js. */
+    if (!UI.sound.isAwake || !UI.sound.isAwake()) return;
 
     var next = TUNES[name];
     if (!next) return;
@@ -287,15 +291,18 @@ var Music = (function () {
       if (wanted) start(wanted); else stop();
     },
 
-    /** Called on the first tap anywhere. A browser will not make a
+    /** Called on the first tap anywhere. Nothing is allowed to make a
         sound until the person has touched the page - quite rightly -
-        so the context starts suspended and the first tune start is
-        refused. This is what comes back for it. */
+        so the opening tune is refused and this is what comes back for
+        it. UI.sound owns the gate and the context; all this does is
+        wait for the resume, then play what should already have been
+        playing. */
     wake: function () {
       if (!ready()) return;
       if (!wanted) wanted = onScreenNow();
-      if (actx.state === 'suspended' && actx.resume) {
-        actx.resume().then(function () { if (wanted) start(wanted); });
+      var resuming = UI.sound.wake ? UI.sound.wake() : null;
+      if (resuming && resuming.then) {
+        resuming.then(function () { if (wanted) start(wanted); });
       } else if (wanted && !tune) {
         start(wanted);
       }
