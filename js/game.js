@@ -765,6 +765,11 @@ var Game = (function () {
     var passed = acc >= level.minAcc;
 
     if (passed) UI.sound.perfect(); else UI.sound.over();
+    /* Asked BEFORE the round is recorded, because recording it is what
+       does the unlocking - afterwards there is no way to tell a level
+       you just opened from one you opened last week. */
+    var nextWasOpen = Progress.isOpen(level.n + 1);
+
     Progress.record(level.n, passed, grade, score);
 
     var coins = Shop.coinsFor(score, grade);
@@ -804,16 +809,34 @@ var Game = (function () {
        level is still locked. */
     var unlock = UI.$('end-unlock');
     var nextLv = LEVELS[level.n];        // the one after this
-    var who = nextLv ? ('Level ' + nextLv.n + ' stays locked. ') : '';
+    var bar = Math.round(level.minAcc * 100);
 
-    if (passed && nextLv) {
+    if (passed && nextLv && !nextWasOpen) {
       unlock.textContent = 'Level ' + nextLv.n + ' unlocked - ' + nextLv.name;
+      unlock.className = 'end-unlock is-good';
+    } else if (passed && nextLv) {
+      /* A REPLAY IS NOT AN UNLOCK. Going back to an early level to farm
+         coins and being told you have just unlocked a level you opened
+         an hour ago reads like the game lost your progress. */
+      unlock.textContent = 'Level ' + nextLv.n + ' is already open - ' + nextLv.name;
       unlock.className = 'end-unlock is-good';
     } else if (passed) {
       unlock.textContent = 'You finished the whole trail!';
       unlock.className = 'end-unlock is-good';
+    } else if (nextLv && !nextWasOpen) {
+      unlock.textContent = 'Level ' + nextLv.n + ' stays locked. Get ' + bar + '% right to open it.';
+      unlock.className = 'end-unlock is-bad';
+    } else if (nextLv) {
+      /* And failing one you have already passed costs nothing. Saying
+         "stays locked" about a level sitting open on the map is simply
+         untrue, and it is the kind of untrue that makes somebody check
+         whether their save is broken. */
+      unlock.textContent = 'Nothing lost - Level ' + nextLv.n + ' is already open.';
+      unlock.className = 'end-unlock is-bad';
     } else {
-      unlock.textContent = who + 'Get ' + Math.round(level.minAcc * 100) + '% right to open it.';
+      /* The last level has nothing after it, so "open it" pointed at
+         nothing at all. */
+      unlock.textContent = 'Get ' + bar + '% right to pass.';
       unlock.className = 'end-unlock is-bad';
     }
 
@@ -834,6 +857,8 @@ var Game = (function () {
     // losing still pays a little, so a hard rival is not a total waste
     var coins = won ? Battle.coinsFor(foe) : Math.round(Battle.coinsFor(foe) * 0.2);
     Progress.addCoins(coins);
+    /* Asked before beatRival, for the same reason as the levels. */
+    var nextFoeWasOpen = Progress.rivalsBeaten() >= foe.n;
     if (won) Progress.beatRival(foe.n);
     Shop.paintCoins();
 
@@ -849,8 +874,13 @@ var Game = (function () {
 
     var nextFoe = OPPONENTS[foe.n];
     var unlock = UI.$('end-unlock');
-    if (won && nextFoe) {
+    if (won && nextFoe && !nextFoeWasOpen) {
       unlock.textContent = nextFoe.name + ' unlocked';
+      unlock.className = 'end-unlock is-good';
+    } else if (won && nextFoe) {
+      /* Same as the levels: beating a boss you have already beaten does
+         not unlock the next one again. */
+      unlock.textContent = nextFoe.name + ' is already waiting for you';
       unlock.className = 'end-unlock is-good';
     } else if (won) {
       unlock.textContent = 'You beat every boss!';
