@@ -104,10 +104,29 @@ var UI = (function () {
 
   var actx = null;
 
+  /* HAS THE PAGE BEEN TOUCHED YET? The game used to let the browser
+     answer that. A browser tab hands back a context that is already
+     suspended until somebody has tapped, which is exactly the gate the
+     sound code wants: Music.start() refuses while it is suspended, and
+     the first tap resumes it.
+
+     An Android WebView does not play along. The context comes back
+     already 'running', the opening tune is allowed, and the game starts
+     singing on the launcher animation - before a finger has landed on
+     it. Measured on a Pixel 7, API 35.
+
+     So the game keeps the answer itself rather than reading it off the
+     context, and suspends the context on the way out to match. A flag
+     also closes a race the state check could not: suspend() resolves
+     asynchronously, so for a moment after asking, state is still
+     'running'. */
+  var awake = false;
+
   function audio() {
     if (actx === null) {
       try {
         actx = new (window.AudioContext || window.webkitAudioContext)();
+        if (actx.state === 'running' && actx.suspend) actx.suspend();
       } catch (e) { actx = false; }
     }
     return actx;
@@ -141,6 +160,22 @@ var UI = (function () {
         handful, they each cost a thread, and two of them would have to
         be unlocked separately by the first tap. */
     ctx: audio,
+
+    /** True once a real gesture has unlocked the sound. The soundtrack
+        asks this before it starts a tune. */
+    isAwake: function () { return awake; },
+
+    /** The first tap, arriving through Music.wake. Returns the resume
+        promise when there is one, so the caller can start the tune only
+        once the context is actually running. */
+    wake: function () {
+      awake = true;
+      var a = audio();
+      if (a && a.state === 'suspended' && a.resume) {
+        try { return a.resume(); } catch (e) {}
+      }
+      return null;
+    },
 
     /** Called once at boot and whenever the switch is flipped. The
         soundtrack is told as well, because it is the same switch - a
