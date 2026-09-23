@@ -70,19 +70,22 @@ libraries. The competition allows 100 MB.
 
 ## Testing it
 
-See **TESTING.md** — how to run this on a laptop with no Android phone, and
-the specific list of things that have never been verified.
+See **TESTING.md** — how to run this on a laptop with no Android phone,
+what the emulator run found, and the list to repeat on the first real
+device it reaches.
 
 ---
 
 ## What is not done yet
 
-- Never run on real hardware. It was built and its packaged contents
-  were tested by serving the APK's own assets and running the game's
-  full browser test suite against them — every sprite resolves, the shop
-  works, touch scrolling works, a level plays end to end, and the fonts
-  load with the network blocked. That is not the same as a device.
-  **Install it on a phone before relying on it.**
+- Never run on real hardware. It **has** now been run: installed on an
+  Android 15 emulator (Pixel 7, API 35) and taken through the whole of
+  TESTING.md — the save survives a cold start, all four corners take a
+  real finger swipe, back behaves, it stays portrait, it clears a notch,
+  it runs at 60 fps and it works with the network off. Three bugs came
+  out of that run and are fixed. But an emulator is not a phone, and it
+  cannot tell you about a cheap chipset or how a swipe feels.
+  **Install it on a real one before the final submission.**
 - No release signing config. See above.
 - Portrait only. The arena is four corners around a card; on its side
   that is a very wide, very short board.
