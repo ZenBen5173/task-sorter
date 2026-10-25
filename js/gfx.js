@@ -363,6 +363,43 @@ var Gfx = (function () {
   };
 
   var FONT_ARCADE = '"Press Start 2P", "Courier New", monospace';
+
+  /* ---------------- baking ----------------
+     WHY: every canvas call is a draw call, and on a phone the cost of
+     a frame is mostly how many of those there are - not how many pixels
+     they cover. A tray was sixteen of them (a shadow, a gradient body, a
+     lip, an edge, an icon, two lines of text, the cards piled in it),
+     every frame, for a picture that barely changes. A line of outlined
+     arcade text is a stroke and a fill of every glyph in it.
+
+     So anything that does not change from one frame to the next is
+     drawn ONCE into a small off-screen canvas and stamped down after
+     that as a single image. Measured on the emulator: text alone was
+     half the frame. */
+  var baked = {}, bakedKeys = [], BAKE_MAX = 260;
+  var renderScale = 2;
+
+  function bake(key, w, h, draw) {
+    var hit = baked[key];
+    if (hit) return hit;
+    var cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.ceil(w * renderScale));
+    cv.height = Math.max(1, Math.ceil(h * renderScale));
+    var c = cv.getContext('2d');
+    c.setTransform(renderScale, 0, 0, renderScale, 0, 0);
+    draw(c, w, h);
+    hit = { cv: cv, w: w, h: h };
+    baked[key] = hit;
+    bakedKeys.push(key);
+    if (bakedKeys.length > BAKE_MAX) delete baked[bakedKeys.shift()];
+    return hit;
+  }
+  function stamp(ctx, b, x, y) { ctx.drawImage(b.cv, x, y, b.w, b.h); }
+  function setScale(k) {
+    if (k === renderScale) return;
+    renderScale = k;
+    baked = {}; bakedKeys = [];
+  }
   var FONT_ROUND = 'Fredoka, "Trebuchet MS", system-ui, sans-serif';
 
   /* ---------------- maths ---------------- */
@@ -684,14 +721,22 @@ var Gfx = (function () {
       screen feel lit from somewhere. */
   function glow(ctx, x, y, r, color, a) {
     if (r <= 0) return;
-    var g = ctx.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, rgba(color, a === undefined ? 0.6 : a));
-    g.addColorStop(1, rgba(color, 0));
-    ctx.save();
+    /* A radial gradient built every call was the second-dearest thing in
+       a frame. One soft dot per colour, baked once, stretched to size. */
+    var b = bake('glow|' + color, 64, 64, function (c) {
+      var g = c.createRadialGradient(32, 32, 0, 32, 32, 32);
+      g.addColorStop(0, rgba(color, 1));
+      g.addColorStop(0.45, rgba(color, 0.42));
+      g.addColorStop(1, rgba(color, 0));
+      c.fillStyle = g;
+      c.fillRect(0, 0, 64, 64);
+    });
+    var prevA = ctx.globalAlpha, prevOp = ctx.globalCompositeOperation;
     ctx.globalCompositeOperation = 'lighter';
-    ctx.fillStyle = g;
-    ctx.fillRect(x - r, y - r, r * 2, r * 2);
-    ctx.restore();
+    ctx.globalAlpha = prevA * (a === undefined ? 0.6 : a);
+    ctx.drawImage(b.cv, x - r, y - r, r * 2, r * 2);
+    ctx.globalAlpha = prevA;
+    ctx.globalCompositeOperation = prevOp;
   }
 
   /** Darkens the edges of the screen. A red one is how a miss feels. */
@@ -719,7 +764,43 @@ var Gfx = (function () {
         shadow, shadowY   a hard drop shadow, the panel look again
         maxW              shrinks the text until it fits
         alpha, tracking   letter spacing for the arcade face */
+  /** Text, baked. The words are drawn once into a bitmap the first time
+      they are needed, outline and shadow and all, and every frame after
+      that is one image. Only the 'middle' baseline is baked - it is the
+      only one the game uses; anything else is drawn directly. */
   function text(ctx, s, x, y, o) {
+    o = o || {};
+    s = String(s);
+    if (o.nocache || (o.base && o.base !== 'middle')) return textNow(ctx, s, x, y, o);
+    var size = o.size || 16;
+    var f = font(o);
+    if (o.maxW) {
+      var mw = measure(ctx, s, o);
+      if (mw > o.maxW) size = Math.max(6, size * o.maxW / mw);
+      f = font({ font: o.font, size: size, weight: o.weight });
+    }
+    var sw = o.stroke ? (o.strokeW || Math.max(2, size * 0.18)) : 0;
+    var sy = o.shadow ? (o.shadowY || Math.max(2, size * 0.12)) : 0;
+    var key = 't|' + s + '|' + f + '|' + (o.color || '#fff') + '|' + (o.stroke || '') + '|' + sw + '|' + (o.shadow || '') + '|' + sy;
+    var w = measure(ctx, s, { font: o.font, size: size, weight: o.weight });
+    var pad = Math.ceil(sw / 2) + 2;
+    var bw = Math.ceil(w) + pad * 2, bh = Math.ceil(size * 1.5) + pad * 2 + Math.ceil(sy);
+    var mid = pad + size * 0.75;
+    var b = bake(key, bw, bh, function (c) {
+      textNow(c, s, pad, mid, { font: o.font, size: size, weight: o.weight, color: o.color, align: 'left',
+                                stroke: o.stroke, strokeW: sw, shadow: o.shadow, shadowY: sy });
+    });
+    var ax = o.align === 'left' ? pad : o.align === 'right' ? pad + w : pad + w / 2;
+    if (o.alpha !== undefined) {
+      var pa = ctx.globalAlpha;
+      ctx.globalAlpha = pa * o.alpha;
+      ctx.drawImage(b.cv, x - ax, y - mid, b.w, b.h);
+      ctx.globalAlpha = pa;
+    } else ctx.drawImage(b.cv, x - ax, y - mid, b.w, b.h);
+    return size;
+  }
+
+  function textNow(ctx, s, x, y, o) {
     o = o || {};
     s = String(s);
     ctx.save();
@@ -751,11 +832,17 @@ var Gfx = (function () {
     return size;
   }
 
+  var measured = {}, measuredN = 0;
   function measure(ctx, s, o) {
+    var f = font(o || {});
+    var key = f + '|' + s;
+    if (measured[key] !== undefined) return measured[key];
     ctx.save();
-    ctx.font = font(o || {});
+    ctx.font = f;
     var w = ctx.measureText(String(s)).width;
     ctx.restore();
+    if (++measuredN > 2000) { measured = {}; measuredN = 0; }
+    measured[key] = w;
     return w;
   }
 
@@ -799,7 +886,8 @@ var Gfx = (function () {
     petImage: petImage, drawPet: drawPet, petScale: petScale,
     petFrames: petFrameCount, petFps: petFps,
     rr: rr, star: star, panel: panel, glow: glow, vignette: vignette,
-    text: text, measure: measure, wrap: wrap, fit: fit, font: font,
+    text: text, textNow: textNow, measure: measure, wrap: wrap, fit: fit, font: font,
+    bake: bake, stamp: stamp, setScale: setScale,
     FONT_ARCADE: FONT_ARCADE, FONT_ROUND: FONT_ROUND
   };
 })();

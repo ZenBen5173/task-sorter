@@ -847,7 +847,13 @@ var Arena = (function () {
     }
     for (i = 0; i < ghosts.length; i++) drawCard(c, ghosts[i], true);
     drawShots(c);
-    if (card) drawCard(c, card, false);
+    /* The card is hidden while paused. A pause is for the doorbell, not
+       for sitting and thinking about the card with the clock stopped. */
+    if (card && pauseA < 0.99) {
+      c.save(); c.globalAlpha = 1 - pauseA;
+      drawCard(c, card, false);
+      c.restore();
+    }
     if (coach && card) drawCoach(c);
     drawPops(c);
     drawHud(c);
@@ -879,32 +885,49 @@ var Arena = (function () {
     if (aim > 0.02) Gfx.glow(c, 0, 0, Math.max(tr.w, tr.h) * (0.7 + aim * 0.3), col, 0.45 * aim);
     if (rushA > 0.05) Gfx.glow(c, 0, 0, Math.max(tr.w, tr.h) * 0.7, '#ff8a3a', 0.18 * rushA);
 
-    Gfx.panel(c, x, y, tr.w, tr.h, {
-      fill: Gfx.shade(col, -0.18 + aim * 0.12), fill2: Gfx.shade(col, -0.45), sink: Gfx.shade(col, -0.72),
-      depth: 6, r: 18, edge: Gfx.rgba(Gfx.shade(col, 0.45), 0.6 + aim * 0.4), edgeW: 2 + aim * 2
-    });
-    /* The mouth: a darker well toward the middle of the screen, where the
-       cards go. A few cards already in it, so a busy tray LOOKS busy. */
-    var mw = tr.w - 22, mh = tr.h * 0.38;
-    var my = tr.y < L.rest.y ? y + tr.h - mh - 10 : y + 10;
-    c.fillStyle = 'rgba(0,0,0,.28)';
-    Gfx.rr(c, x + 11, my, mw, mh, 10); c.fill();
+    /* The tray itself - body, mouth, label, the cards piled in it - is
+       baked, one bitmap per number of cards in the pile. Only what moves
+       is drawn live: the icon (it bounces when you aim at it), the glow,
+       the flash. */
+    var top = tr.y < L.rest.y;
     var pile = Math.min(6, tr.hits);
-    for (var i = 0; i < pile; i++) {
-      c.fillStyle = i % 2 ? '#efe1bf' : '#fbf3e0';
-      var py = tr.y < L.rest.y ? my + mh - 6 - i * 3 : my + 4 + i * 3;
-      c.fillRect(x + 22 + (i % 3) * 3, py, mw - 22 - (i % 3) * 3, 3);
+    var key = 'tray|' + tr.key + '|' + tr.w + '|' + tr.h + '|' + (top ? 1 : 0) + '|' + pile;
+    var b = Gfx.bake(key, tr.w + 4, tr.h + 10, function (k) {
+      Gfx.panel(k, 2, 2, tr.w, tr.h, {
+        fill: Gfx.shade(col, -0.18), fill2: Gfx.shade(col, -0.45), sink: Gfx.shade(col, -0.72),
+        depth: 6, r: 18, edge: Gfx.rgba(Gfx.shade(col, 0.45), 0.6), edgeW: 2
+      });
+      var mw = tr.w - 22, mh = tr.h * 0.38;
+      var my = top ? 2 + tr.h - mh - 10 : 2 + 10;
+      k.fillStyle = 'rgba(0,0,0,.28)';
+      Gfx.rr(k, 2 + 11, my, mw, mh, 10); k.fill();
+      for (var i = 0; i < pile; i++) {
+        k.fillStyle = i % 2 ? '#efe1bf' : '#fbf3e0';
+        var py = top ? my + mh - 6 - i * 3 : my + 4 + i * 3;
+        k.fillRect(2 + 22 + (i % 3) * 3, py, mw - 22 - (i % 3) * 3, 3);
+      }
+      var iy0 = 2 + (top ? tr.h * 0.27 : tr.h * 0.7);
+      Gfx.textNow(k, BOXES[tr.key].label.toUpperCase(), 2 + 52, iy0 - 7, {
+        font: 'arcade', size: 11, color: '#ffffff', align: 'left', maxW: tr.w - 62, shadow: 'rgba(0,0,0,.4)', shadowY: 2
+      });
+      Gfx.textNow(k, BOXES[tr.key].hint, 2 + 52, iy0 + 10, {
+        size: 12, weight: 600, color: 'rgba(255,255,255,.78)', align: 'left', maxW: tr.w - 62
+      });
+    });
+    c.drawImage(b.cv, x - 2, y - 2, b.w, b.h);
+
+    if (aim > 0.02) {
+      /* aimed at: brighter, with a thicker edge */
+      c.fillStyle = Gfx.rgba('#ffffff', 0.1 * aim);
+      Gfx.rr(c, x, y, tr.w, tr.h, 18); c.fill();
+      c.lineWidth = 2 + aim * 3;
+      c.strokeStyle = Gfx.rgba(Gfx.shade(col, 0.55), 0.5 + aim * 0.5);
+      c.stroke();
     }
 
-    var iy = tr.y < L.rest.y ? y + tr.h * 0.27 : y + tr.h * 0.7;
+    var iy = top ? y + tr.h * 0.27 : y + tr.h * 0.7;
     var bounce = aim > 0.05 ? Math.sin(t / 90) * 3 * aim : 0;
     Gfx.drawSprite(c, BOXES[tr.key].sprite, x + 30, iy + bounce, 30, 30);
-    Gfx.text(c, BOXES[tr.key].label.toUpperCase(), x + 52, iy - 7, {
-      font: 'arcade', size: 11, color: '#ffffff', align: 'left', maxW: tr.w - 62, shadow: 'rgba(0,0,0,.4)', shadowY: 2
-    });
-    Gfx.text(c, BOXES[tr.key].hint, x + 52, iy + 10, {
-      size: 12, weight: 600, color: 'rgba(255,255,255,.78)', align: 'left', maxW: tr.w - 62
-    });
 
     if (tr.flash > 0) {
       c.globalAlpha = tr.flash * 0.55;
@@ -940,44 +963,52 @@ var Arena = (function () {
     Gfx.rr(c, -w / 2 + lift * 6, -h / 2 + 7 + lift * 12, w, h, 16); c.fill();
 
     if (showBack) {
-      Gfx.panel(c, -w / 2, -h / 2, w, h, { fill: '#2a3d6e', fill2: '#16224a', depth: 0, r: 16, edge: 'rgba(255,255,255,.25)', edgeW: 3 });
-      var q = Math.min(w, h) * 0.18;
-      c.fillStyle = Gfx.C.now; c.fillRect(-q - 3, -q - 3, q, q);
-      c.fillStyle = Gfx.C.later; c.fillRect(3, -q - 3, q, q);
-      c.fillStyle = Gfx.C.give; c.fillRect(-q - 3, 3, q, q);
-      c.fillStyle = Gfx.C.drop; c.fillRect(3, 3, q, q);
+      var back = Gfx.bake('cardback|' + w + '|' + h, w, h, function (k) {
+        Gfx.panel(k, 0, 0, w, h, { fill: '#2a3d6e', fill2: '#16224a', depth: 0, r: 16, edge: 'rgba(255,255,255,.25)', edgeW: 3 });
+        var q = Math.min(w, h) * 0.18, cx = w / 2, cy = h / 2;
+        k.fillStyle = Gfx.C.now; k.fillRect(cx - q - 3, cy - q - 3, q, q);
+        k.fillStyle = Gfx.C.later; k.fillRect(cx + 3, cy - q - 3, q, q);
+        k.fillStyle = Gfx.C.give; k.fillRect(cx - q - 3, cy + 3, q, q);
+        k.fillStyle = Gfx.C.drop; k.fillRect(cx + 3, cy + 3, q, q);
+      });
+      c.drawImage(back.cv, -w / 2, -h / 2, w, h);
       c.restore();
       return;
     }
 
-    Gfx.panel(c, -w / 2, -h / 2, w, h, {
-      fill: Gfx.C.paper, fill2: Gfx.C.paper2, depth: 0, r: 16, lip: false,
-      edge: aimCol ? Gfx.rgba(aimCol, 0.5 + cd.aim * 0.5) : 'rgba(120,90,40,.35)', edgeW: aimCol ? 3 + cd.aim * 3 : 2
-    });
-    /* the place strip */
+    /* The face is baked once per card - paper, the place strip, the
+       pips, the words - and stamped down as one image every frame after.
+       Only the coloured edge you aim with is drawn live on top. */
     var place = PLACE[cd.data && cd.data.theme] || 'TASK';
-    c.save();
-    Gfx.rr(c, -w / 2, -h / 2, w, h, 16); c.clip();
-    c.fillStyle = 'rgba(60,40,20,.08)';
-    c.fillRect(-w / 2, -h / 2, w, 26);
-    c.restore();
-    Gfx.text(c, place, 0, -h / 2 + 14, { font: 'arcade', size: 8, color: 'rgba(90,64,30,.6)' });
-    /* four pips, the four corners, like a playing card's suit */
-    var cols = [Gfx.C.now, Gfx.C.later, Gfx.C.give, Gfx.C.drop];
-    for (var i = 0; i < 4; i++) {
-      c.fillStyle = cols[i];
-      c.globalAlpha *= 0.55;
-      c.fillRect(-w / 2 + 12 + (i % 2) * 7, -h / 2 + 8 + (i > 1 ? 7 : 0), 5, 5);
-      c.fillRect(w / 2 - 24 + (i % 2) * 7, -h / 2 + 8 + (i > 1 ? 7 : 0), 5, 5);
-      c.globalAlpha /= 0.55;
-    }
-    if (!cd.lines) {
-      var f = Gfx.fit(c, cd.text, w - 36, h - 50, { size: Math.round(Gfx.clamp(w * 0.075, 17, 24)), weight: 700, maxLines: 4, lead: 1.18 });
-      cd.lines = f.lines; cd.size = f.size;
-    }
-    var lh = cd.size * 1.18, ty = 12 - (cd.lines.length - 1) * lh / 2;
-    for (i = 0; i < cd.lines.length; i++) {
-      Gfx.text(c, cd.lines[i], 0, ty + i * lh, { size: cd.size, weight: 700, color: '#2a1e10' });
+    var face = Gfx.bake('card|' + cd.text + '|' + w + '|' + h, w, h, function (k) {
+      Gfx.panel(k, 0, 0, w, h, { fill: Gfx.C.paper, fill2: Gfx.C.paper2, depth: 0, r: 16, lip: false,
+                                 edge: 'rgba(120,90,40,.35)', edgeW: 2 });
+      k.save();
+      Gfx.rr(k, 0, 0, w, h, 16); k.clip();
+      k.fillStyle = 'rgba(60,40,20,.08)';
+      k.fillRect(0, 0, w, 26);
+      k.restore();
+      Gfx.textNow(k, place, w / 2, 14, { font: 'arcade', size: 8, color: 'rgba(90,64,30,.6)' });
+      /* four pips, the four corners, like a playing card's suit */
+      var cols = [Gfx.C.now, Gfx.C.later, Gfx.C.give, Gfx.C.drop];
+      k.globalAlpha = 0.55;
+      for (var i = 0; i < 4; i++) {
+        k.fillStyle = cols[i];
+        k.fillRect(12 + (i % 2) * 7, 8 + (i > 1 ? 7 : 0), 5, 5);
+        k.fillRect(w - 24 + (i % 2) * 7, 8 + (i > 1 ? 7 : 0), 5, 5);
+      }
+      k.globalAlpha = 1;
+      var f = Gfx.fit(k, cd.text, w - 36, h - 50, { size: Math.round(Gfx.clamp(w * 0.075, 17, 24)), weight: 700, maxLines: 4, lead: 1.18 });
+      var lh = f.size * 1.18, ty = h / 2 + 12 - (f.lines.length - 1) * lh / 2;
+      for (i = 0; i < f.lines.length; i++) {
+        Gfx.textNow(k, f.lines[i], w / 2, ty + i * lh, { size: f.size, weight: 700, color: '#2a1e10' });
+      }
+    });
+    c.drawImage(face.cv, -w / 2, -h / 2, w, h);
+    if (aimCol) {
+      c.lineWidth = 3 + cd.aim * 3;
+      c.strokeStyle = Gfx.rgba(aimCol, 0.5 + cd.aim * 0.5);
+      Gfx.rr(c, -w / 2 + 1.5, -h / 2 + 1.5, w - 3, h - 3, 16); c.stroke();
     }
     if (cd.stamp) {
       /* the wrong-way stamp */

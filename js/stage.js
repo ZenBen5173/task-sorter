@@ -41,7 +41,28 @@
 var Stage = (function () {
 
   var cv = null, ctx = null, fx = null, fctx = null;
-  var W = 0, H = 0, dpr = 1;
+  /* W and H are the PLAY COLUMN, which is what every scene lays itself
+     out in. SW and SH are the whole screen. On a phone they are the same
+     thing. On a laptop they are not: a game built for a phone in your
+     hand, stretched across a 1280px window, put the four trays at the
+     far corners of the screen with a small card marooned between them.
+     So on a wide screen the game plays in a portrait column in the
+     middle, and the world it is set in stays full-bleed around it. */
+  var W = 0, H = 0, SW = 0, SH = 0, colX = 0, dpr = 1;
+  /* ADAPTIVE RESOLUTION. The pixel density the stage draws at starts at
+     the phone's own (capped at 2) and steps down a notch if the frame
+     rate cannot be held - a slightly softer picture at sixty frames is a
+     better game than a sharp one at twenty. It never steps back up by
+     itself, so it cannot see-saw. */
+  var dprCap = 2, slowFrames = 0, sampled = 0;
+
+  /* WHAT A FRAME COSTS. `work` is the time this game's own code spends
+     on a frame - updating and drawing - which is the part a cheap
+     phone's processor has to pay. `gap` is the time between frames,
+     which also includes the browser compositing the canvas. Both are
+     smoothed. Add ?fps to the address to see them on screen. */
+  var stats = { work: 0, gap: 16.7, fps: 60 };
+  var showStats = /[?&]fps\b/.test(location.search);
   var safe = { t: 0, b: 0, l: 0, r: 0 };
 
   var scenes = {};
@@ -108,17 +129,22 @@ var Stage = (function () {
        and flat shapes - the extra sharpness is invisible and the extra
        fill is the most likely thing to cost a cheap phone its sixty
        frames a second. */
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = Math.round(window.innerWidth);
-    H = Math.round(window.innerHeight);
+    dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+    SW = Math.round(window.innerWidth);
+    SH = Math.round(window.innerHeight);
+    var widest = Math.round(SH * 0.62);
+    W = SW > widest * 1.1 ? widest : SW;
+    H = SH;
+    colX = Math.round((SW - W) / 2);
     [cv, fx].forEach(function (c) {
-      c.width = Math.round(W * dpr);
-      c.height = Math.round(H * dpr);
-      c.style.width = W + 'px';
-      c.style.height = H + 'px';
+      c.width = Math.round(SW * dpr);
+      c.height = Math.round(SH * dpr);
+      c.style.width = SW + 'px';
+      c.style.height = SH + 'px';
     });
     readSafe();
-    if (window.World) World.resize(W, H);
+    Gfx.setScale(dpr);
+    if (window.World) { World.resize(SW, SH); World.offset(colX); }
     if (scene && scene.layout) scene.layout(W, H);
   }
 
@@ -130,9 +156,11 @@ var Stage = (function () {
     /* Clamped. Coming back to the app after a minute in the background
        hands rAF a minute-long frame, which would teleport every spring
        and tween to its end at once. */
-    var dtReal = Math.min(50, Math.max(0, ts - last));
+    var raw = ts - last;
+    var dtReal = Math.min(50, Math.max(0, raw));
     last = ts;
     real += dtReal;
+    watchSpeed(raw);
 
     var dt = dtReal;
     if (hitstopLeft > 0) { hitstopLeft -= dtReal; dt = 0; }
@@ -142,6 +170,7 @@ var Stage = (function () {
     if (shakeLeft > 0) shakeLeft = Math.max(0, shakeLeft - dtReal);
     Spring.step(zoom, 1, dtReal, 260, 18);
 
+    var t0 = performance.now();
     Tween.update(dt, dtReal);
     Particles.update(dt);
     if (window.World) World.update(dt);
@@ -149,13 +178,30 @@ var Stage = (function () {
     if (trans) stepTransition(dtReal);
 
     paint();
+    var spent = performance.now() - t0;
+    stats.work += (spent - stats.work) * 0.05;
+    if (raw > 0 && raw < 250) stats.gap += (raw - stats.gap) * 0.05;
+    stats.fps = 1000 / stats.gap;
+    if (showStats) drawStats();
+  }
+
+  function drawStats() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var txt = Math.round(stats.fps) + ' fps  ' + stats.work.toFixed(1) + 'ms  x' + dpr + '  ' + Particles.count() + 'p';
+    ctx.fillStyle = 'rgba(0,0,0,.6)';
+    ctx.fillRect(4, SH - safe.b - 22, 196, 18);
+    ctx.fillStyle = stats.fps > 55 ? '#7dff9a' : stats.fps > 40 ? '#ffd04a' : '#ff6a5a';
+    ctx.font = '600 12px monospace';
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    ctx.fillText(txt, 8, SH - safe.b - 13);
   }
 
   function paint() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, W, H);
+    ctx.clearRect(0, 0, SW, SH);
 
     ctx.save();
+    ctx.translate(colX, 0);
     if (shakeLeft > 0 && !still) {
       var k = shakeAmt * (shakeLeft / shakeDur);
       ctx.translate((Math.random() * 2 - 1) * k, (Math.random() * 2 - 1) * k);
@@ -168,6 +214,7 @@ var Stage = (function () {
     if (scene && scene.draw) scene.draw(ctx, W, H);
     Particles.draw(ctx, 'world');
     ctx.restore();
+    if (colX > 0) frameColumn(ctx);
 
     /* The top layer is cleared and drawn only when it has something on
        it. Most frames it has nothing, and an empty full-screen canvas
@@ -175,12 +222,30 @@ var Stage = (function () {
     var busy = !!trans || Particles.has('top') || (scene && scene.drawTop);
     if (busy || fx.dataset.dirty === '1') {
       fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      fctx.clearRect(0, 0, W, H);
+      fctx.clearRect(0, 0, SW, SH);
+      fctx.save();
+      fctx.translate(colX, 0);
       if (scene && scene.drawTop) scene.drawTop(fctx, W, H);
       Particles.draw(fctx, 'top');
+      fctx.restore();
       if (trans) drawTransition(fctx);
       fx.dataset.dirty = busy ? '1' : '0';
     }
+  }
+
+  /** Counts slow frames over a two-second window. If more than a third
+      of them were slow, and the page is actually visible, the stage
+      drops a step of resolution and starts counting again. */
+  function watchSpeed(raw) {
+    if (document.hidden || trans || raw > 250) return;
+    sampled++;
+    if (raw > 24) slowFrames++;
+    if (sampled < 120) return;
+    if (slowFrames > 40 && dprCap > 1) {
+      dprCap = Math.max(1, Math.round((Math.min(dprCap, window.devicePixelRatio || 1) - 0.25) * 4) / 4);
+      resize();
+    }
+    sampled = 0; slowFrames = 0;
   }
 
   /* ---------------- scenes ---------------- */
@@ -228,7 +293,7 @@ var Stage = (function () {
     trans = {
       kind: o.kind, phase: 'out', t: 0,
       ms: o.ms || (o.kind === 'iris' ? 420 : o.kind === 'cards' ? 440 : 260),
-      cx: o.x === undefined ? W / 2 : o.x,
+      cx: colX + (o.x === undefined ? W / 2 : o.x),
       cy: o.y === undefined ? H / 2 : o.y,
       name: name, params: params
     };
@@ -260,13 +325,13 @@ var Stage = (function () {
     var ink = Gfx.C.ink;
 
     if (trans.kind === 'iris') {
-      var far = Math.sqrt(Math.max(trans.cx, W - trans.cx) * Math.max(trans.cx, W - trans.cx) +
-                          Math.max(trans.cy, H - trans.cy) * Math.max(trans.cy, H - trans.cy));
+      var far = Math.sqrt(Math.max(trans.cx, SW - trans.cx) * Math.max(trans.cx, SW - trans.cx) +
+                          Math.max(trans.cy, SH - trans.cy) * Math.max(trans.cy, SH - trans.cy));
       var r = far * (1 - cover);
       c.save();
       c.fillStyle = ink;
       c.beginPath();
-      c.rect(0, 0, W, H);
+      c.rect(0, 0, SW, SH);
       c.arc(trans.cx, trans.cy, Math.max(0, r), 0, Math.PI * 2, true);
       c.fill('evenodd');
       /* A thin gold ring rides the edge of the circle, so the iris reads
@@ -288,10 +353,10 @@ var Stage = (function () {
          wipe reads as one sweep through rather than a curtain that
          closes and reopens. */
       var cols = [Gfx.C.now, Gfx.C.later, Gfx.C.give, Gfx.C.drop];
-      var full = Math.sqrt(W * W + H * H);
+      var full = Math.sqrt(SW * SW + SH * SH);
       var stripe = full / 4;
       c.save();
-      c.translate(W / 2, H / 2);
+      c.translate(SW / 2, SH / 2);
       c.rotate(-0.5);
       for (var i = 0; i < 4; i++) {
         /* Each stripe gets its own slice of the timeline. */
@@ -311,7 +376,24 @@ var Stage = (function () {
     }
 
     c.fillStyle = Gfx.rgba(ink, cover);
-    c.fillRect(0, 0, W, H);
+    c.fillRect(0, 0, SW, SH);
+  }
+
+  /** On a wide screen: the world either side of the play column, held
+      back a little, with a soft edge where the column starts - so the
+      eye knows where the game is without a hard box drawn round it. */
+  function frameColumn(c) {
+    c.save();
+    var edge = Math.min(60, colX);
+    var gl = c.createLinearGradient(colX - edge, 0, colX, 0);
+    gl.addColorStop(0, 'rgba(4,6,14,.55)'); gl.addColorStop(1, 'rgba(4,6,14,0)');
+    c.fillStyle = 'rgba(4,6,14,.55)'; c.fillRect(0, 0, colX - edge, SH);
+    c.fillStyle = gl; c.fillRect(colX - edge, 0, edge, SH);
+    var gr = c.createLinearGradient(colX + W, 0, colX + W + edge, 0);
+    gr.addColorStop(0, 'rgba(4,6,14,0)'); gr.addColorStop(1, 'rgba(4,6,14,.55)');
+    c.fillStyle = gr; c.fillRect(colX + W, 0, edge, SH);
+    c.fillStyle = 'rgba(4,6,14,.55)'; c.fillRect(colX + W + edge, 0, SW - colX - W - edge, SH);
+    c.restore();
   }
 
   /* ---------------- effects ---------------- */
@@ -334,7 +416,7 @@ var Stage = (function () {
 
   function toLocal(e) {
     var r = cv.getBoundingClientRect();
-    return { x: (e.clientX - r.left), y: (e.clientY - r.top) };
+    return { x: (e.clientX - r.left) - colX, y: (e.clientY - r.top) };
   }
 
   function bindInput() {
@@ -439,10 +521,15 @@ var Stage = (function () {
       Gfx.glow(c, this.w / 2, this.h / 2, Math.max(this.w, this.h) * 0.75, s.fill, g * 0.5);
     }
     var r = this.style === 'icon' ? this.h / 2 : Math.min(16, this.h * 0.32);
-    Gfx.panel(c, 0, 0, this.w, this.h, {
-      fill: s.fill, fill2: s.fill2, sink: s.sink, depth: depth - down, r: r,
-      edge: Gfx.rgba(s.edge, 0.55), edgeW: 2
+    /* The plastic body is baked - one bitmap for up, one for pressed. */
+    var bw = this.w, bh = this.h, dd = depth - down;
+    var body = Gfx.bake('btn|' + this.style + '|' + bw + '|' + bh + '|' + dd.toFixed(1), bw, bh + depth + 1, function (k) {
+      Gfx.panel(k, 0, 0, bw, bh, {
+        fill: s.fill, fill2: s.fill2, sink: s.sink, depth: dd, r: r,
+        edge: Gfx.rgba(s.edge, 0.55), edgeW: 2
+      });
     });
+    c.drawImage(body.cv, 0, 0, body.w, body.h);
     if (this.custom) this.custom(c, this, s);
     else {
       var cx = this.w / 2, cy = this.h / 2;
@@ -549,12 +636,16 @@ var Stage = (function () {
     scene: function () { return scene; },
     get: function (name) { return scenes[name]; },
     size: function () { return { W: W, H: H }; },
+    /** The whole screen, and where the play column starts on it. */
+    screen: function () { return { W: SW, H: SH, x: colX }; },
     safe: safe,
     now: function () { return now; },
     real: function () { return real; },
     still: function () { return still; },
     busy: function () { return !!trans; },
     shake: shake, hitstop: hitstop, slowmo: slowmo, punch: punch,
+    pixelRatio: function () { return dpr; },
+    stats: function () { return { fps: Math.round(stats.fps * 10) / 10, workMs: Math.round(stats.work * 100) / 100, dpr: dpr, particles: Particles.count() }; },
     block: function (on) { inputBlocked += on ? 1 : -1; if (inputBlocked < 0) inputBlocked = 0; },
     canvas: function () { return cv; },
     Button: Button, Buttons: Buttons, STYLE: STYLE, stagger: stagger

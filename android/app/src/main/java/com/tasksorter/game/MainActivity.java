@@ -133,15 +133,18 @@ public class MainActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
+                /* The page decides. Nav.back() closes an open sheet, pauses
+                   a round, or steps back to the home screen - and answers
+                   false only when there is nowhere left to go, which is
+                   the cue to leave the app.
+
+                   It used to guess: find whichever of four HTML back
+                   buttons was showing and click it. The game is drawn on
+                   a canvas now and those buttons no longer exist, so it
+                   asks the one function that knows. */
                 web.evaluateJavascript(
                         "(function(){"
-                      + "  var s = document.querySelector('.screen.is-on');"
-                      + "  if (!s || s.id === 'screen-home') return 'leave';"
-                      + "  var ids = ['#btn-exit','#btn-lv-back','#btn-guide-back','#tab-home'];"
-                      + "  for (var i = 0; i < ids.length; i++) {"
-                      + "    var b = document.querySelector(ids[i]);"
-                      + "    if (b && b.offsetParent) { b.click(); return 'handled'; }"
-                      + "  }"
+                      + "  if (window.Nav && Nav.back) return Nav.back() ? 'handled' : 'leave';"
                       + "  return 'leave';"
                       + "})()",
                         value -> {

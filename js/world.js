@@ -38,6 +38,10 @@ var World = (function () {
      and left a flat purple sky. So each scene says where its floor is,
      and the scenery is laid out above that line. */
   var FH = 0, floorWanted = 0;
+  /* Where the stage's play column starts. Scenes draw inside the column,
+     translated across by this much; the world un-translates itself and
+     always fills the whole screen. */
+  var offX = 0;
   var cache = {}, cacheKeys = [];
   var theme = 'space';
   var back = null, front = null, ground = null;
@@ -596,6 +600,9 @@ var World = (function () {
   function draw(ctx, w, h, o) {
     o = o || {};
     if (!back) return;
+    ctx.save();
+    ctx.translate(-offX, 0);
+    w = W; h = H;
     var camX = Gfx.clamp(o.camX || 0, -M, M), camY = Gfx.clamp(o.camY || 0, -M, M);
     drawLayers(ctx, { back: back, front: front }, 1, camX, camY);
     var i, p, a;
@@ -712,11 +719,14 @@ var World = (function () {
       ctx.fillStyle = 'rgba(5,8,18,' + o.dim.toFixed(3) + ')';
       ctx.fillRect(0, 0, w, h);
     }
+    ctx.restore();
   }
 
   /** Stamps the theme's ground down with its top edge at `y`. */
   function drawGround(ctx, y, camX) {
     if (!ground) return;
+    ctx.save();
+    ctx.translate(-offX, 0);
     ctx.drawImage(ground.cv, -M - (camX || 0), y - 12, W + M * 2, 160);
     if (y + 146 < H) {
       /* Taller screens: the strip is only 160px, so the rest is filled
@@ -725,11 +735,13 @@ var World = (function () {
       ctx.fillStyle = groundBody;
       ctx.fillRect(0, y + 146, W, H - y - 146);
     }
+    ctx.restore();
   }
 
   return {
     resize: resize,
     setFloor: setFloor,
+    offset: function (x) { offX = x || 0; },
     setTheme: setTheme,
     theme: function () { return theme; },
     tint: function () { return (THEME[theme] || THEME.space).tint; },
