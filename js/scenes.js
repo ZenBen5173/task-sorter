@@ -109,6 +109,8 @@ var Scenes = (function () {
         if (kind === 'back') {
           c.lineWidth = 4; c.lineCap = 'round'; c.lineJoin = 'round';
           c.beginPath(); c.moveTo(4, -9); c.lineTo(-5, 0); c.lineTo(4, 9); c.stroke();
+        } else if (kind === 'missions') {
+          Gfx.drawSprite(c, 'target', 0, 0, 26, 26);
         } else {
           /* a cog: a ring with eight teeth */
           for (var i = 0; i < 8; i++) {
@@ -242,6 +244,11 @@ var Scenes = (function () {
       var s = S(), W = s.W, H = s.H, sf = safe();
       buttons.clear();
       cornerButton(buttons, 'settings', function () { Panels.open('settings'); });
+      /* Missions sit next to the cog: always one tap away, and a red dot
+         on them when one has been finished since you last looked. */
+      var mb = cornerButton(buttons, 'missions', function () { Panels.open('missions'); });
+      mb.x += 52;
+      mb.badge = Progress.get('missionsDone') > (Progress.get('missionsSeen') || 0) ? '!' : '';
       var bw = Math.min(W - 40, 360), bx = (W - bw) / 2;
       groundY = Math.round(Gfx.clamp(H * 0.5, sf.t + 250, H - sf.b - 290));
       rankY = groundY + 46;
@@ -251,18 +258,28 @@ var Scenes = (function () {
       buttons.add({ x: bx, y: playY, w: bw, h: 76, label: 'PLAY', style: 'gold', size: 24, pulse: true, id: 'play',
                     sub: allDone ? 'EVERY LEVEL BEATEN' : 'LEVEL ' + next.n + ' · ' + next.name.toUpperCase(),
                     onTap: goPlay });
-      var gap = 10, dw = (bw - gap * 2) / 3, dy = playY + 76 + 16, dh = 82;
+      /* FOUR DOORS. The Guide Book used to be the third; it lives in
+         Settings and behind the map's "?" now, because a rulebook is
+         something you open once and two new things wanted the space -
+         a round to come back for every day, and your own list. */
+      var gap = 8, dw = (bw - gap * 3) / 4, dy = playY + 76 + 16, dh = 82;
       var beaten = Progress.rivalsBeaten();
       var pets = SHOP.pet.items.filter(function (it) { return it.cost !== 0 && Progress.owns(it.id); }).length;
       buttons.add({ x: bx, y: dy, w: dw, h: dh, label: 'BOSS', style: 'wood', id: 'boss',
                     sub: beaten >= OPPONENTS.length ? 'All beaten' : OPPONENTS[beaten].name, draw: doorDraw('battle'),
                     onTap: function () { Stage.go('bosses', {}, 'cards'); } });
-      buttons.add({ x: bx + dw + gap, y: dy, w: dw, h: dh, label: 'GEAR', style: 'wood', id: 'gear',
+      var dOpen = Daily.isOpen(), dDone = Daily.playedToday(), dStreak = Daily.streak();
+      buttons.add({ x: bx + (dw + gap), y: dy, w: dw, h: dh, label: 'DAILY', style: dOpen && !dDone ? 'gold' : 'wood', id: 'daily',
+                    sub: !dOpen ? 'Pass Level 1' : dDone ? (dStreak > 1 ? dStreak + '-day streak' : 'Done today') : '#' + Daily.today().number + ' is out',
+                    badge: dOpen && !dDone ? '!' : '', draw: doorDraw('cal'),
+                    onTap: function () { Daily.open(); } });
+      buttons.add({ x: bx + (dw + gap) * 2, y: dy, w: dw, h: dh, label: 'GEAR', style: 'wood', id: 'gear',
                     sub: pets + '/' + (SHOP.pet.items.length - 1) + ' pets', draw: doorDraw('shield'),
                     onTap: function () { Stage.go('gear', {}, 'fade'); } });
-      buttons.add({ x: bx + (dw + gap) * 2, y: dy, w: dw, h: dh, label: 'GUIDE', style: 'wood', id: 'guide',
-                    sub: 'How to play', draw: doorDraw('book'),
-                    onTap: function () { Panels.open('guide'); } });
+      var todo = MyList.count();
+      buttons.add({ x: bx + (dw + gap) * 3, y: dy, w: dw, h: dh, label: 'MY LIST', style: 'wood', id: 'mine',
+                    sub: todo ? todo + ' to do' : 'Your real week', draw: doorDraw('list'),
+                    onTap: function () { Panels.open('mine'); } });
 
       /* THE NEXT THING TO WORK TOWARD, in the space under the doors. A
          home screen that only says "PLAY" gives you a reason to play this
@@ -280,7 +297,7 @@ var Scenes = (function () {
           },
           onTap: function () { Shop.setTab(goal.kind); Stage.go('gear', {}, 'fade'); } });
       }
-      Stage.stagger(buttons.list.slice(1), 70, 200);
+      Stage.stagger(buttons.list.slice(2), 70, 200);
 
       World.setFloor(groundY + 8);
       var k = Gfx.clamp(Math.min(W / 24 * 0.21, (groundY - sf.t - 90) / 32 * 0.8), 2.6, 4.4);
@@ -337,12 +354,9 @@ var Scenes = (function () {
       draw: function (c, W, H) {
         drawWorld(c, W, H, t, {});
         World.drawGround(c, groundY, Math.sin(t / 4200) * 14);
-        var sf = safe();
-        /* The wordmark sits beside the settings cog, left of the pills -
-           centred, it ran into them on a narrow phone. */
-        var lx = Math.max(12, sf.l) + 56;
-        Gfx.text(c, 'TASK', lx, sf.t + 32, { font: 'arcade', size: 10, color: '#fff', align: 'left', stroke: '#0a0e1a', strokeW: 4 });
-        Gfx.text(c, 'SORTER', lx, sf.t + 46, { font: 'arcade', size: 10, color: Gfx.C.gold, align: 'left', stroke: '#0a0e1a', strokeW: 4 });
+        /* No wordmark here any more: the cog and the missions button
+           took its corner, and the title screen has just said the name
+           in letters a foot high. */
         TopBar.draw(c, W, { stars: true });
 
         var behind = roam.filter(function (p) { return p.y <= groundY + 8; });
@@ -467,7 +481,7 @@ var Scenes = (function () {
       var s = S();
       cardButtons.clear();
       var cw = Math.min(s.W - 24, 380), cx = (s.W - cw) / 2;
-      var ch = 236, cy = s.H - safe().b - ch - 12;
+      var ch = 272, cy = s.H - safe().b - ch - 12;
       card.rect = { x: cx, y: cy, w: cw, h: ch };
       cardButtons.add({ x: cx + 18, y: cy + ch - 78, w: cw - 36, h: 62, label: 'PLAY', style: 'gold', size: 20, pulse: true, id: 'go',
         onTap: function () {
@@ -723,6 +737,12 @@ var Scenes = (function () {
           Gfx.star(c, r.x + r.w - 76 + s * 26, r.y + 134, 10, 4.5, 5, 0); c.fill();
         }
       }
+      if (lv.twist) {
+        /* What is different about this level - the twist - on a strip of its own. */
+        Gfx.panel(c, r.x + 14, r.y + 150, r.w - 28, 40, { fill: 'rgba(30,60,100,.75)', depth: 0, r: 10, lip: false, edge: 'rgba(159,212,255,.35)' });
+        Gfx.text(c, (best ? 'TWIST: ' : 'NEW HERE: ') + lv.twist.name, r.x + 26, r.y + 162, { font: 'arcade', size: 8, color: '#9fd4ff', align: 'left', maxW: r.w - 52 });
+        Gfx.text(c, lv.twist.text, r.x + 26, r.y + 179, { size: 13, weight: 600, color: '#e6eefc', align: 'left', maxW: r.w - 52 });
+      }
       cardButtons.draw(c);
       c.restore();
     }
@@ -868,6 +888,14 @@ var Scenes = (function () {
               c.fillStyle = 'rgba(0,0,0,.5)'; Gfx.rr(c, bx2 + 56, yy - 6, bw2 - 56, 12, 6); c.fill();
               c.fillStyle = row[2]; Gfx.rr(c, bx2 + 57, yy - 5, (bw2 - 58) * row[1], 10, 5); c.fill();
             });
+            /* and the one trick they have */
+            if (def.powerName) {
+              var ty = by2 + 54;
+              if (ty + 28 < H - sf.b - 126) {
+                Gfx.text(c, 'TRICK: ' + def.powerName, cx, ty, { font: 'arcade', size: 9, color: '#ff8a7a', maxW: W - 40 });
+                Gfx.text(c, def.powerText, cx, ty + 20, { size: 14, weight: 600, color: Gfx.C.tx, maxW: W - 40 });
+              }
+            }
           }
         }
         /* page dots */

@@ -289,13 +289,74 @@ var Sfx = (function () {
     close: function (a) {
       tone(a, { type: 'sine', f: 600, f2: 400, t: 0.1, vol: 0.05 });
       noise(a, { f: 2400, f2: 1200, t: 0.08, vol: 0.03 });
+    },
+
+    /* ---- special cards and twists ---- */
+    /* a golden card arriving: a bright little sparkle */
+    shine: function (a) {
+      ['E7', 'B6', 'G#7'].forEach(function (n, i) {
+        tone(a, { type: 'sine', f: hz(n), t: 0.22, vol: 0.035, at: i * 0.05 });
+      });
+    },
+    /* ice forming over a card */
+    freeze: function (a) {
+      noise(a, { type: 'highpass', f: 5000, f2: 9000, t: 0.25, vol: 0.05 });
+      tone(a, { type: 'sine', f: hz('B6'), f2: hz('E7'), t: 0.3, vol: 0.03 });
+    },
+    crack: function (a) {
+      noise(a, { type: 'highpass', f: 2500, t: 0.05, vol: 0.12 });
+      tone(a, { type: 'square', f: 1900, f2: 900, t: 0.05, vol: 0.03, bp: 2200, q: 3 });
+    },
+    shatter: function (a) {
+      noise(a, { type: 'highpass', f: 3000, f2: 7000, t: 0.3, vol: 0.12 });
+      ['E7', 'C7', 'G6', 'D7'].forEach(function (n, i) {
+        tone(a, { type: 'triangle', f: hz(n), t: 0.12, vol: 0.03, at: i * 0.03 });
+      });
+    },
+    /* a fuse catching */
+    fuse: function (a) {
+      noise(a, { type: 'bandpass', f: 3500, f2: 6000, t: 0.4, vol: 0.05, q: 0.6 });
+      noise(a, { type: 'lowpass', f: 300, t: 0.08, vol: 0.06 });
+    },
+    burn: function (a) {
+      noise(a, { type: 'lowpass', f: 1400, f2: 200, t: 0.45, vol: 0.14 });
+      tone(a, { type: 'sawtooth', f: 220, f2: 60, t: 0.4, vol: 0.05, lp: 700 });
+    },
+    /* two trays sliding past each other */
+    swap: function (a) {
+      noise(a, { f: 900, f2: 2600, t: 0.22, vol: 0.06, q: 1.4 });
+      noise(a, { f: 2600, f2: 900, t: 0.22, vol: 0.05, q: 1.4, at: 0.12 });
+      tone(a, { type: 'triangle', f: hz('A5'), t: 0.08, vol: 0.04, at: 0.3 });
+    },
+    /* a boss talking: a quick nasal mumble */
+    blip: function (a) {
+      for (var i = 0; i < 4; i++) {
+        tone(a, { type: 'square', f: 300 + Math.random() * 260, t: 0.045, vol: 0.025, lp: 1800, at: i * 0.055 });
+      }
+    },
+    /* a boss winding up their trick */
+    power: function (a) {
+      tone(a, { type: 'sawtooth', f: 120, f2: 520, t: 0.42, vol: 0.06, lp: 1600, a: 0.2 });
+      noise(a, { type: 'highpass', f: 800, f2: 5000, t: 0.42, vol: 0.05, a: 0.25 });
+      tone(a, { type: 'square', f: hz('E5'), t: 0.12, vol: 0.05, lp: 3000, at: 0.42 });
+    },
+    /* Ivan's blackout: static */
+    glitch: function (a) {
+      for (var i = 0; i < 5; i++) noise(a, { type: 'bandpass', f: 600 + Math.random() * 4000, t: 0.05, vol: 0.06, q: 4, at: i * 0.06 });
+    },
+    /* a mission or a badge finished */
+    mission: function (a) {
+      ['G5', 'C6', 'E6', 'G6'].forEach(function (n, i) {
+        tone(a, { type: 'square', f: hz(n), t: i === 3 ? 0.4 : 0.1, vol: 0.04, lp: 4000, at: i * 0.08 });
+      });
+      noise(a, { type: 'highpass', f: 7000, t: 0.4, vol: 0.03, at: 0.24 });
     }
   };
 
   /* Minimum gap between two of the same sound, in seconds. A row of
      fifteen coins arriving in the same frame is one clink, not fifteen
      stacked into a roar. */
-  var GAP = { coin: 0.045, tick: 0.05, step: 0.12, star: 0.06, press: 0.03 };
+  var GAP = { coin: 0.045, tick: 0.05, step: 0.12, star: 0.06, press: 0.03, blip: 0.3, crack: 0.04 };
 
   function play(name, arg) {
     var a = ac();

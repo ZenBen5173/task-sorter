@@ -16,6 +16,11 @@
      minAcc      share of cards you must get right to pass (0.6 = 60%)
      boxes       which kinds of card can appear in this level
      x, y        where the level sits on the map, in percent
+     specials    how often a golden, frozen or burning card turns up
+                 (0.1 = one card in ten). See TUNING in game.js.
+     shuffleEvery seconds between two trays swapping places (0 = never)
+     twist       the one new thing this level brings, in words - shown
+                 on the map and when the round starts
 
    HOW THE DIFFICULTY RAMPS
    Four separate dials get turned up, one level at a time:
@@ -31,6 +36,16 @@
    matter. A phone is the hardest thing in anyone's life to sort,
    because every single notification FEELS urgent. Out in town is
    last: other people, real deadlines, and no easy cards left.
+
+   EVERY LEVEL ADDS ONE THING. A clock and harder cards make a level
+   harder; they do not make it DIFFERENT. So each level after the first
+   brings one new kind of card or rule, and keeps the ones before it:
+
+     Level  Twist
+     1      golden cards - worth triple, and the only new thing is good
+     2      frozen cards - tap to crack the ice before you can sort
+     3      burning cards - a fuse; sort it before it burns out
+     4      the trays swap places every so often
 
    Level 1 is a lesson, not a test: no clock, and only cards with an
    obvious answer. All four corners are live from the start - the
@@ -66,6 +81,8 @@ var LEVELS = [
     minAcc: 0.60,
     boxes: ['now', 'later', 'give', 'drop'],
     tiers: [1],
+    specials: { gold: 0.1 },
+    twist: { name: 'GOLDEN CARDS', text: 'A gold card is worth triple points.' },
     x: 26, y: 87
   },
   {
@@ -77,6 +94,8 @@ var LEVELS = [
     minAcc: 0.65,
     boxes: ['now', 'later', 'give', 'drop'],
     tiers: [1, 2],
+    specials: { gold: 0.07, ice: 0.18 },
+    twist: { name: 'FROZEN CARDS', text: 'Tap a frozen card to crack it, then sort it.' },
     x: 70, y: 68
   },
   {
@@ -88,6 +107,8 @@ var LEVELS = [
     minAcc: 0.70,
     boxes: ['now', 'later', 'give', 'drop'],
     tiers: [1, 2, 3],
+    specials: { gold: 0.07, ice: 0.08, fuse: 0.2 },
+    twist: { name: 'BURNING CARDS', text: 'Sort a burning card before its fuse runs out.' },
     x: 28, y: 47
   },
   {
@@ -99,6 +120,9 @@ var LEVELS = [
     minAcc: 0.75,
     boxes: ['now', 'later', 'give', 'drop'],
     tiers: [2, 3],
+    specials: { gold: 0.07, ice: 0.08, fuse: 0.12 },
+    shuffleEvery: 18,
+    twist: { name: 'TRAYS SWAP', text: 'Every so often two trays swap places. Watch them.' },
     x: 66, y: 24
   }
 ];
@@ -166,11 +190,47 @@ var Progress = (function () {
 
       /* which screens have already shown their first-time popup,
          e.g. { levels: true, shop: true }. See js/tips.js. */
-      tipsSeen: {}
+      tipsSeen: {},
+
+      /* the daily challenge: the day you last played it, how many days
+         in a row, and your best score on the day you last played. */
+      daily: { last: '', streak: 0, best: 0, plays: 0, bestStreak: 0 },
+
+      /* the three missions on the go, and how many you have finished. */
+      missions: null,
+      missionsDone: 0,
+      missionsSeen: 0,     // missionsDone when the sheet was last opened
+
+      /* badges you have earned, by id: { first_pass: true } */
+      badges: {},
+
+      /* running totals across every round, for missions and badges */
+      totals: { sorted: 0, golds: 0, ices: 0, later: 0, perfects: 0, rounds: 0 },
+
+      /* your own to-do list: [{ id, text, box, done }] */
+      myTasks: [],
+
+      /* bigger words on the cards and the sheets */
+      bigText: false,
+
+      /* no screen shake, no flashes, no freeze-frames */
+      calmFx: false
     };
   }
 
   var data = blank();
+
+  /** Fills in any part of a nested record an older save does not have,
+      so a save from last week never breaks this week's build. */
+  function mend(d) {
+    var b = blank();
+    ['daily', 'totals'].forEach(function (k) {
+      if (!d[k] || typeof d[k] !== 'object') d[k] = b[k];
+      for (var f in b[k]) if (typeof d[k][f] !== typeof b[k][f]) d[k][f] = b[k][f];
+    });
+    if (!d.badges || typeof d.badges !== 'object') d.badges = {};
+    if (!Array.isArray(d.myTasks)) d.myTasks = [];
+  }
 
   function load() {
     try {
@@ -185,6 +245,7 @@ var Progress = (function () {
           }
           if (!Array.isArray(fresh.owned)) fresh.owned = [];
           if (!fresh.equipped) fresh.equipped = blank().equipped;
+          mend(fresh);
           data = fresh;
         }
       }
@@ -295,6 +356,18 @@ var Progress = (function () {
     hapticsOn: function () { return data.haptics !== false; },
     setHapticsOn: function (on) { data.haptics = !!on; save(); },
 
+    /* ---- easier to read, easier to watch ---- */
+    bigText: function () { return !!data.bigText; },
+    setBigText: function (on) { data.bigText = !!on; save(); },
+    calmFx: function () { return !!data.calmFx; },
+    setCalmFx: function (on) { data.calmFx = !!on; save(); },
+
+    /* ---- the parts kept by daily.js, missions.js and mylist.js ----
+       They own what goes in them; this only keeps them and saves them.
+       `edit` hands the live record to a function and saves after it. */
+    get: function (key) { return data[key]; },
+    edit: function (key, fn) { var v = fn(data[key]); if (v !== undefined) data[key] = v; save(); },
+
     /* ---- first-time popups ---- */
     hasSeenTip: function (name) { return !!(data.tipsSeen && data.tipsSeen[name]); },
     markTipSeen: function (name) {
@@ -327,6 +400,7 @@ var Progress = (function () {
       }
       if (!Array.isArray(fresh.owned)) fresh.owned = [];
       if (!fresh.equipped) fresh.equipped = blank().equipped;
+      mend(fresh);
       data = fresh;
       save();
       return true;

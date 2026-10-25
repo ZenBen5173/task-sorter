@@ -5,6 +5,8 @@
      settings   account, background, sound, vibration, reset
      guide      the rulebook, as pages you turn
      review     the cards you got wrong, and why
+     missions   three goals on the go, and your badges
+     mine       your own to-do list, as a plan in four piles
      dialog     a question ("delete everything?") or a note
      coach      the first time you reach a place, a word about it
      toast      one line that comes and goes
@@ -25,7 +27,8 @@ var Panels = (function () {
 
   function $(id) { return document.getElementById(id); }
 
-  var SHEETS = { gear: 'sheet-gear', settings: 'sheet-settings', guide: 'sheet-guide', review: 'sheet-review' };
+  var SHEETS = { gear: 'sheet-gear', settings: 'sheet-settings', guide: 'sheet-guide', review: 'sheet-review',
+                 missions: 'sheet-missions', mine: 'sheet-mine' };
 
   /* The gear sheet sits over the gear SCENE, which draws the character
      above it - so it needs no dimming and has no close button of its
@@ -51,7 +54,7 @@ var Panels = (function () {
     if (document.activeElement && el && el.contains(document.activeElement)) document.activeElement.blur();
     $('scrim').classList.toggle('is-on', stack.some(function (n) { return !NO_SCRIM[n]; }));
     if (!silent) Sfx.play('close');
-    if (name === 'settings' && Stage.current() === 'home' && Scenes.home) Scenes.home.refresh();
+    if ((name === 'settings' || name === 'missions' || name === 'mine') && Stage.current() === 'home' && Scenes.home) Scenes.home.refresh();
   }
 
   function top() { return stack[stack.length - 1]; }
@@ -87,6 +90,10 @@ var Panels = (function () {
       if (!Progress.hasReadGuide()) Progress.markGuideRead();
     } else if (name === 'review') {
       paintReview(data);
+    } else if (name === 'missions') {
+      paintMissions();
+    } else if (name === 'mine') {
+      MyList.paint(data);
     }
   }
 
@@ -94,6 +101,45 @@ var Panels = (function () {
     $('sound-switch').classList.toggle('is-on', Progress.soundOn());
     $('haptics-switch').classList.toggle('is-on', Progress.hapticsOn());
     $('btn-haptics').hidden = !Haptics.supported();
+    $('bigtext-switch').classList.toggle('is-on', Progress.bigText());
+    $('calmfx-switch').classList.toggle('is-on', Progress.calmFx());
+    document.body.classList.toggle('big-text', Progress.bigText());
+  }
+
+  /* ---------------- missions and badges ---------------- */
+
+  function paintMissions() {
+    Progress.edit('missionsSeen', function () { return Progress.get('missionsDone') || 0; });
+    var list = $('mission-list');
+    list.innerHTML = '';
+    Missions.view().forEach(function (m, i) {
+      var li = document.createElement('li');
+      li.className = 'mission';
+      li.style.setProperty('--i', i);
+      var pct = Math.round(m.prog / m.target * 100);
+      li.innerHTML = '<span class="mission-ico"></span>' +
+        '<span class="mission-body"><b></b><span class="mission-bar"><i style="width:' + pct + '%"></i></span>' +
+        '<small>' + m.prog.toLocaleString() + ' / ' + m.target.toLocaleString() + '</small></span>' +
+        '<span class="mission-reward"><span class="shop-coin"></span>' + m.reward + '</span>';
+      li.querySelector('b').textContent = m.text;
+      Sprites.apply(li.querySelector('.mission-ico'), 'target');
+      Sprites.apply(li.querySelector('.shop-coin'), 'coin');
+      list.appendChild(li);
+    });
+    var grid = $('badge-grid');
+    grid.innerHTML = '';
+    BADGES.forEach(function (b, i) {
+      var got = Badges.has(b.id);
+      var el = document.createElement('div');
+      el.className = 'badge' + (got ? ' is-got' : '');
+      el.style.setProperty('--i', i);
+      el.innerHTML = '<span class="badge-ico"></span><b></b><small></small>';
+      el.querySelector('b').textContent = b.name;
+      el.querySelector('small').textContent = b.desc;
+      Sprites.apply(el.querySelector('.badge-ico'), b.icon);
+      grid.appendChild(el);
+    });
+    $('badge-count').textContent = Badges.count() + ' / ' + BADGES.length;
   }
 
   /* ---------------- the guide book ---------------- */
@@ -144,10 +190,20 @@ var Panels = (function () {
       answers.className = 'review-answers';
       var mine = document.createElement('span');
       mine.className = 'review-chip is-wrong';
-      mine.textContent = 'You said ' + BOXES[r.chose].label;
-      var hidden = document.createElement('span');
+      mine.textContent = r.chose ? 'You said ' + BOXES[r.chose].label : '';
+      /* The answer is under a tap. Try to work it out from the reason
+         first; tap when you want to check. */
+      var hidden = document.createElement('button');
+      hidden.type = 'button';
       hidden.className = 'review-chip is-hidden';
-      hidden.textContent = 'so what was it?';
+      hidden.textContent = 'so what was it? tap';
+      if (r.chose === null) mine.textContent = 'It burnt out';
+      hidden.addEventListener('click', function () {
+        if (!r.box || hidden.classList.contains('is-shown')) return;
+        hidden.classList.add('is-shown', 'box-' + r.box);
+        hidden.textContent = 'It was ' + BOXES[r.box].label;
+        Sfx.play('pop'); Haptics.tap();
+      });
       answers.appendChild(mine);
       answers.appendChild(hidden);
       var why = document.createElement('p');

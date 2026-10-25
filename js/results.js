@@ -21,11 +21,17 @@
    WHAT YOU MISSED is a button now, not a list underneath that you
    scroll past to find Play again. It opens the review (js/panels.js),
    which is still the part of the game that actually teaches.
+
+   AND THEN WHAT ELSE IT DID. A mission the round finished, a badge it
+   earned, the Daily Challenge it opened - each gets a card of its own
+   that stamps in over the screen, one at a time, before the buttons.
+   Tap to move on to the next one.
    ============================================================ */
 
 (function () {
 
   var t = 0, R = null, buttons = new Stage.Buttons(), skipped = false;
+  var cel = null;               // the "mission complete" cards, in turn
   var st = {};                  // everything animated, 0..1
   var flying = [];              // coins on their way to the wallet
   var L = {};
@@ -82,10 +88,12 @@
   }
   function again() {
     if (R.mode === 'battle') Stage.go('vs', { foe: R.foeN }, 'cards');
+    else if (R.mode === 'daily') Stage.go('round', { daily: true }, 'iris');
     else Stage.go('round', { level: R.levelN }, 'iris');
   }
   function home() {
-    if (R.mode === 'battle') Stage.go('bosses', { at: R.foeN }, 'cards');
+    if (R.mode === 'daily') Stage.go('home', {}, 'cards');
+    else if (R.mode === 'battle') Stage.go('bosses', { at: R.foeN }, 'cards');
     else Stage.go('map', { at: R.passed && R.hasNext ? R.levelN + 1 : R.levelN,
                            fresh: !!(R.unlock && R.unlock.fresh && R.hasNext) }, 'cards');
   }
@@ -146,8 +154,35 @@
       Tween.to(st.rows, { 5: 1 }, 280, { ease: Ease.outCubic, real: true, tag: 'results' });
       Tween.to(st, { coins: 1 }, 800, { ease: Ease.outCubic, real: true, tag: 'results', done: throwCoins });
     });
-    beat(at + 1050, showButtons);
+    /* the extras, one card each, then the buttons */
+    var extras = [];
+    (r.missionsDone || []).forEach(function (m) { extras.push({ head: 'MISSION COMPLETE', text: m.text, sub: '+' + m.reward + ' coins', icon: 'target', col: Gfx.C.gold }); });
+    (r.badgesNew || []).forEach(function (b) { extras.push({ head: 'BADGE EARNED', text: b.name, sub: b.desc, icon: badgeIcon(b.id), col: '#ff7ad9' }); });
+    if (r.dailyOpened) extras.push({ head: 'NEW ON THE HOME SCREEN', text: 'Daily Challenge', sub: 'A new round every day. Same cards for everyone.', icon: 'cal', col: '#9fd4ff' });
+    cel = extras.length ? { list: extras, i: -1, t: 0, a: 0 } : null;
+    if (cel) Tween.wait(at + 1050, nextCel, { tag: 'cel', real: true });
+    else beat(at + 1050, showButtons);
     if (r.passed) beat(500, confetti);
+  }
+
+  function badgeIcon(id) {
+    for (var i = 0; i < BADGES.length; i++) if (BADGES[i].id === id) return BADGES[i].icon;
+    return 'star';
+  }
+
+  /** The next "mission complete" card, or the buttons after the last. */
+  function nextCel() {
+    if (!cel) return;
+    cel.i++;
+    cel.t = 0;
+    if (cel.i >= cel.list.length) { cel = null; showButtons(); return; }
+    var e = cel.list[cel.i];
+    Sfx.play(e.head === 'BADGE EARNED' ? 'unlock' : 'mission');
+    Haptics.win();
+    var s = S();
+    Particles.emit({ x: s.W / 2, y: s.H * 0.47, n: 26, shape: 'star', colors: [e.col, '#ffffff', Gfx.C.gold], speed: [140, 420], life: [500, 1000], size: [3, 7], gravity: 240, layer: 'top' });
+    Tween.killTag('cel');
+    Tween.wait(1700, nextCel, { tag: 'cel', real: true });
   }
 
   function stampLanded() {
@@ -194,6 +229,10 @@
     for (i = 0; i < 5; i++) st.shown[i] = 1;
     flying = [];
     Wallet.clear();
+    /* The extras still get their moment - skipping is for the parts
+       you have seen fifty times, and these are new every time. */
+    if (cel && cel.i < 0) { Tween.killTag('cel'); nextCel(); return; }
+    if (cel) return;
     st.buttons = 1;
     buttons.list.forEach(function (b) { b.appear = 1; });
   }
@@ -211,6 +250,7 @@
 
   function update(dt, dtReal) {
     t += dtReal;
+    if (cel && cel.i >= 0) cel.t += dtReal;
     Wallet.update(dtReal);
     buttons.update(dtReal);
     var target = TopBar.coin();
@@ -266,6 +306,30 @@
     drawStats(c, W);
     for (var i = 0; i < flying.length; i++) drawFlyingCoin(c, flying[i]);
     buttons.draw(c);
+    if (cel && cel.i >= 0) drawCel(c, W, Stage.size().H);
+  }
+
+  function drawCel(c, W, H) {
+    var e = cel.list[cel.i];
+    var k = cel.t < 320 ? Ease.outBackBig(cel.t / 320) : 1;
+    var out = cel.t > 1450 ? Math.max(0, 1 - (cel.t - 1450) / 250) : 1;
+    c.save();
+    c.globalAlpha = Math.min(1, cel.t / 160) * out;
+    c.fillStyle = 'rgba(4,6,14,.82)'; c.fillRect(0, 0, W, H);
+    var w = Math.min(W - 40, 330), h = 188, cy = H * 0.47;
+    c.translate(W / 2, cy);
+    c.rotate((1 - Math.min(1, k)) * -0.2);
+    c.scale(k, k);
+    Gfx.glow(c, 0, 0, w * 0.8, e.col, 0.3 + 0.1 * Math.sin(t / 200));
+    Gfx.panel(c, -w / 2, -h / 2, w, h, { fill: '#2a3a62', fill2: '#18234a', depth: 7, r: 20, edge: Gfx.rgba(e.col, 0.9), edgeW: 3 });
+    Gfx.text(c, e.head, 0, -h / 2 + 24, { font: 'arcade', size: 10, color: e.col, maxW: w - 30 });
+    Gfx.drawSprite(c, e.icon, 0, -10 + Math.sin(t / 260) * 3, 44, 44);
+    Gfx.text(c, e.text, 0, 36, { size: 19, weight: 700, color: '#ffffff', maxW: w - 30 });
+    Gfx.text(c, e.sub, 0, 60, { size: 14, weight: 600, color: e.sub.charAt(0) === '+' ? Gfx.C.gold : Gfx.C.tx, maxW: w - 30 });
+    if (cel.list.length > 1) {
+      Gfx.text(c, (cel.i + 1) + ' / ' + cel.list.length + '  -  TAP FOR NEXT', 0, h / 2 - 14, { font: 'arcade', size: 7, color: Gfx.C.txDim });
+    }
+    c.restore();
   }
 
   function drawGrade(c, W) {
@@ -365,13 +429,19 @@
     update: update,
     draw: draw,
     pointer: function (type, x, y) {
+      /* A card up: a tap moves on to the next one, and nothing under it. */
+      if (cel && cel.i >= 0) { if (type === 'down' && cel.t > 250) nextCel(); return; }
       if (buttons.pointer(type, x, y)) return;
       if (type === 'down' && !st.buttons) skip();
     },
     key: function (e) {
       if (e.key === 'Enter' || e.key === ' ') { if (!st.buttons) skip(); else (R.hasNext ? next : again)(); }
     },
-    back: function () { if (!st.buttons) { skip(); return true; } home(); return true; },
-    exit: function () { Tween.killTag('results'); Wallet.clear(); }
+    back: function () {
+      if (cel && cel.i >= 0) { nextCel(); return true; }
+      if (!st.buttons) { skip(); return true; }
+      home(); return true;
+    },
+    exit: function () { Tween.killTag('results'); Tween.killTag('cel'); cel = null; Wallet.clear(); }
   });
 })();

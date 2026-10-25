@@ -27,6 +27,21 @@
 
    You can also TAP a tray to send the card there, and Q W A S still
    work - three ways in, for three kinds of player.
+
+   SPECIAL CARDS AND TWISTS (the rules are in js/game.js)
+   - GOLD cards are paper made of gold: triple points, coins on landing.
+   - ICE cards come frozen. Tap the card to crack it - twice, or once
+     with a strong weapon - and only then can it move.
+   - FUSE cards burn. A fuse runs along the top; sort it before the
+     spark reaches the end or it chars and drops.
+   - TRAYS SWAP. Two trays slide past each other into each other's
+     corners, and every swipe follows them.
+   - A MISS IS EXPLAINED. The tray it belonged in lights up and the
+     reason shows for a couple of seconds while you carry on - the
+     moment you are most curious is the moment it is worth reading.
+   - BOSSES TALK, and each one has a trick (js/battle.js): Steve glues
+     your card down, Carla swaps your trays, Ivan blacks out the words
+     on them, Dan sets your cards alight.
    ============================================================ */
 
 var Arena = (function () {
@@ -57,7 +72,7 @@ var Arena = (function () {
     progress: 0, goal: 0,
     label: '', calm: false
   };
-  var hp = { max: 100, you: 100, foe: 100, youBar: 1, foeBar: 1, youChip: 1, foeChip: 1, youHit: 0, foeHit: 0 };
+  var hp = { max: 100, maxFoe: 100, you: 100, foe: 100, youBar: 1, foeBar: 1, youChip: 1, foeChip: 1, youHit: 0, foeHit: 0 };
   var shields = { left: 0, total: 0 };
   var banners = [], pops = [];
   var vig = { color: '#e0524a', a: 0 };
@@ -65,8 +80,19 @@ var Arena = (function () {
   var phase = 'idle';           // 'intro' | 'play' | 'end'
   var coach = null;
   var dim = Spring.make(0.3);
+  var kind = 'level';           // 'level' | 'battle' | 'daily' | 'mine'
+  var STANDARD = { tl: 'now', tr: 'later', bl: 'give', br: 'drop' };
+  var corners = STANDARD;
+  var explain = null;           // the reason for the last miss, on screen
+  var say = null;               // what the boss just said
+  var blackout = 0;             // ms of the trays' words still hidden
+  var iceHint = 0;              // the first frozen card of a round says TAP
 
-  var PLACE = { house: 'AT HOME', school: 'AT SCHOOL', phone: 'ON YOUR PHONE', out: 'OUT IN TOWN' };
+  var PLACE = { house: 'AT HOME', school: 'AT SCHOOL', phone: 'ON YOUR PHONE', out: 'OUT IN TOWN', mine: 'YOUR LIST' };
+
+  function calmFx() { return Progress.calmFx(); }
+  function big() { return Progress.bigText(); }
+  function pick(list) { return list && list.length ? list[Math.floor(Math.random() * list.length)] : ''; }
 
   function cornerColor(box) { return Gfx.C[box] || '#888'; }
 
@@ -86,10 +112,11 @@ var Arena = (function () {
     L = { pad: pad, hudY: hudY, hudH: hudH, top: top, bottom: bottom, span: span,
           trayW: trayW, trayH: trayH, chan: chan };
 
-    setTray('now', pad, top, trayW, trayH);
-    setTray('later', W - pad - trayW, top, trayW, trayH);
-    setTray('give', pad, bottom - trayH, trayW, trayH);
-    setTray('drop', W - pad - trayW, bottom - trayH, trayW, trayH);
+    /* Each tray goes wherever the corner map says it is right now. */
+    setTray(corners.tl, pad, top, trayW, trayH);
+    setTray(corners.tr, W - pad - trayW, top, trayW, trayH);
+    setTray(corners.bl, pad, bottom - trayH, trayW, trayH);
+    setTray(corners.br, W - pad - trayW, bottom - trayH, trayW, trayH);
     /* A corner this level does not use is taken off the screen and its
        neighbour on the same row grows into the space, so a swipe into
        that half lands on what is actually there. */
@@ -130,7 +157,7 @@ var Arena = (function () {
   function setTray(key, x, y, w, h) {
     var tr = trays[key] || (trays[key] = {
       key: key, aim: Spring.make(0), squash: Spring.make(1), wiggle: Spring.make(0),
-      flash: 0, flashColor: '#fff', hits: 0, appear: 1, glow: 0
+      flash: 0, flashColor: '#fff', hits: 0, appear: 1, glow: 0, ox: 0, oy: 0
     });
     tr.x = x; tr.y = y; tr.w = w; tr.h = h;
     tr.cx = x + w / 2; tr.cy = y + h / 2;
@@ -145,7 +172,10 @@ var Arena = (function () {
   function enter(p) {
     params = p || {};
     mode = params.battle ? 'battle' : 'level';
-    var lv = mode === 'level' ? (LEVELS[(params.level || 1) - 1] || LEVELS[0]) : null;
+    kind = params.battle ? 'battle' : params.daily ? 'daily' : params.mine ? 'mine' : 'level';
+    var lv = kind === 'level' ? (LEVELS[(params.level || 1) - 1] || LEVELS[0]) : null;
+    corners = STANDARD;
+    explain = null; say = null; blackout = 0; iceHint = 0;
     boxesOn = { now: false, later: false, give: false, drop: false };
     (lv ? lv.boxes : ORDER).forEach(function (b) { boxesOn[b] = true; });
 
@@ -153,9 +183,11 @@ var Arena = (function () {
     paused = false; pauseA = 0; drag = null; trayTap = null; coach = null;
     rush = false; rushA = 0; vig.a = 0;
     hud.score = 0; hud.shown = 0; hud.streak = 0; hud.secs = lv && lv.seconds ? lv.seconds : 0;
-    hud.frac = 1; hud.calm = !!(lv && !lv.seconds);
-    hud.goal = lv ? (lv.goal || 20) : 0; hud.progress = 0;
-    hud.label = lv ? 'LEVEL ' + lv.n + ' · NEED ' + Math.round(lv.minAcc * 100) + '%' : '';
+    hud.frac = 1; hud.calm = !!(lv && !lv.seconds) || kind === 'mine';
+    hud.goal = lv ? (lv.goal || 20) : kind === 'mine' ? MyList.toSort().length : 0; hud.progress = 0;
+    hud.label = lv ? 'LEVEL ' + lv.n + ' · NEED ' + Math.round(lv.minAcc * 100) + '%'
+              : kind === 'daily' ? 'DAILY #' + Daily.today().number : kind === 'mine' ? 'MY LIST' : '';
+    if (kind === 'daily') hud.secs = DAILY.SECONDS;
     shields.total = Shop.effects().block; shields.left = shields.total;
 
     hero = new Actors.Hero({ k: 2.6, name: Hero.name() });
@@ -163,7 +195,8 @@ var Arena = (function () {
     if (mode === 'battle') {
       var def = OPPONENTS[(params.battle || 1) - 1] || OPPONENTS[0];
       foe = new Actors.Foe(def, {});
-      hp.max = BATTLE.HP; hp.you = hp.foe = BATTLE.HP;
+      hp.max = BATTLE.HP; hp.you = BATTLE.HP;
+      hp.maxFoe = hp.foe = def.hp || BATTLE.HP;
       hp.youBar = hp.foeBar = hp.youChip = hp.foeChip = 1;
     } else foe = null;
 
@@ -199,20 +232,23 @@ var Arena = (function () {
     }
     var go = function () {
       phase = 'play';
-      if (mode === 'battle') Game.startBattle(params.battle);
+      if (kind === 'battle') Game.startBattle(params.battle);
+      else if (kind === 'daily') Game.startDaily();
+      else if (kind === 'mine') Game.startMine();
       else Game.start(params.level);
     };
-    if (mode === 'battle') {
+    if (kind === 'battle') {
       Tween.wait(450, function () {
         banner('FIGHT!', { color: '#ff6a5a', size: 40, life: 800, y: L.rest.y });
         Sfx.play('vs');
         Stage.shake(8, 300);
       }, { tag: 'arena' });
       Tween.wait(1050, go, { tag: 'arena' });
-    } else {
+      Tween.wait(1300, function () { if (foe) speak(pick(foe.def.lines && foe.def.lines.intro)); }, { tag: 'arena' });
+    } else if (kind === 'daily' || kind === 'mine') {
       Tween.wait(320, function () {
-        banner('LEVEL ' + lv.n, { color: Gfx.C.gold, size: 30, life: 1000, y: L.rest.y - 22,
-                                  sub: lv.name.toUpperCase(), subColor: '#fff' });
+        if (kind === 'daily') banner('DAILY #' + Daily.today().number, { color: Gfx.C.gold, size: 30, life: 1000, y: L.rest.y - 22, sub: 'SAME CARDS FOR EVERYONE', subColor: '#fff' });
+        else banner('MY LIST', { color: Gfx.C.gold, size: 30, life: 1000, y: L.rest.y - 22, sub: 'NO WRONG ANSWERS', subColor: '#fff' });
         Sfx.play('pop');
       }, { tag: 'arena' });
       Tween.wait(1250, function () {
@@ -221,6 +257,30 @@ var Arena = (function () {
         Stage.punch(0.5);
       }, { tag: 'arena' });
       Tween.wait(1400, go, { tag: 'arena' });
+    } else {
+      Tween.wait(320, function () {
+        banner('LEVEL ' + lv.n, { color: Gfx.C.gold, size: 30, life: 1000, y: L.rest.y - 22,
+                                  sub: lv.name.toUpperCase(), subColor: '#fff' });
+        Sfx.play('pop');
+      }, { tag: 'arena' });
+      /* A level you have not passed yet says what is new in it, once,
+         before the clock starts - the twist is the thing to watch for.
+         Not on the very first round: that one is the lesson, and the
+         lesson is the four corners. */
+      var twist = lv.twist && !Progress.best(lv.n) && Progress.hasSeenTip('tutorial');
+      var gap = twist ? 1500 : 0;
+      if (twist) {
+        Tween.wait(1250, function () {
+          banner('NEW: ' + lv.twist.name, { color: '#9fd4ff', size: 20, life: 1450, y: L.rest.y - 10, sub: lv.twist.text, subColor: '#fff', subFont: 'body' });
+          Sfx.play('unlock');
+        }, { tag: 'arena' });
+      }
+      Tween.wait(1250 + gap, function () {
+        banner('GO!', { color: '#7dff9a', size: 44, life: 600, y: L.rest.y });
+        Sfx.play('release');
+        Stage.punch(0.5);
+      }, { tag: 'arena' });
+      Tween.wait(1400 + gap, go, { tag: 'arena' });
     }
   }
 
@@ -228,17 +288,117 @@ var Arena = (function () {
 
   function beginLevel(o) {
     info = o;
+    if (o.corners) setCorners(o.corners);
     hud.calm = o.calm; hud.goal = o.goal;
     hud.secs = o.seconds; hud.frac = 1;
-    hud.label = 'LEVEL ' + o.level.n + ' · NEED ' + o.target + '%';
+    hud.label = o.daily ? 'DAILY #' + Daily.today().number + ' · BEAT YOUR BEST'
+              : o.mine ? 'MY LIST'
+              : 'LEVEL ' + o.level.n + ' · NEED ' + o.target + '%';
     shields.total = o.shields; shields.left = o.shields;
   }
 
   function beginBattle(o) {
     info = o;
-    hp.max = o.hp; hp.you = o.hp; hp.foe = o.hp;
+    if (o.corners) setCorners(o.corners);
+    hp.max = o.hp; hp.you = o.hp;
+    hp.maxFoe = hp.foe = o.foeHp || o.hp;
     hud.secs = o.seconds; hud.frac = 1;
     shields.total = o.shields; shields.left = o.shields;
+  }
+
+  function setCorners(m) {
+    corners = m;
+    layout(W, H);
+  }
+
+  /** Two trays swap corners: each slides from where it was to where it
+      is now, crossing over, with a beat of warning in the middle. */
+  function shuffle(m) {
+    var old = {};
+    ORDER.forEach(function (k) { if (trays[k]) old[k] = { x: trays[k].x, y: trays[k].y }; });
+    corners = m;
+    layout(W, H);
+    ORDER.forEach(function (k) {
+      var tr = trays[k], o = old[k];
+      if (!tr || !o || (o.x === tr.x && o.y === tr.y)) return;
+      tr.ox = o.x - tr.x; tr.oy = o.y - tr.y;
+      Tween.kill(tr);
+      Tween.to(tr, { ox: 0, oy: 0 }, 560, { ease: Ease.inOutCubic, tag: 'arena' });
+      Spring.kick(tr.wiggle, 14);
+      Particles.emit({ x: tr.cx + tr.ox, y: tr.cy + tr.oy, n: 10, colors: [cornerColor(k), '#ffffff'], speed: [80, 220], life: [300, 600], size: [3, 6], gravity: 200 });
+    });
+    if (phase === 'play') {
+      banner('SWAP!', { color: '#9fd4ff', size: 26, life: 800, y: L.rest.y - L.cardH * 0.78, slot: 'swap' });
+      Sfx.play('swap');
+      Haptics.block();
+      if (!calmFx()) Stage.shake(4, 200);
+    }
+    if (drag) updateAim(drag.px - drag.sx, drag.py - drag.sy);
+  }
+
+  /* ================= special cards ================= */
+
+  /** A tap landed on a frozen card. */
+  function cracked(left) {
+    if (!card) return;
+    var cx = card.x.x, cy = card.y.x;
+    Spring.kick(card.rot, (Math.random() - 0.5) * 6);
+    Spring.kick(card.lift, 3);
+    iceHint = 0;
+    if (left > 0) {
+      Sfx.play('crack');
+      Haptics.tap();
+      Particles.emit({ x: cx, y: cy, n: 10, colors: ['#e8f6ff', '#9fd4ff', '#ffffff'], speed: [80, 260], life: [250, 500], size: [2, 5], gravity: 600, shape: 'spark' });
+    } else {
+      Sfx.play('shatter');
+      Haptics.good();
+      if (!calmFx()) Stage.shake(3, 140);
+      Particles.emit({ x: cx, y: cy, n: 26, spreadX: L.cardW * 0.4, colors: ['#e8f6ff', '#9fd4ff', '#ffffff', '#5b8fd8'], speed: [120, 420], life: [350, 800], size: [3, 8], gravity: 900, spin: 12 });
+      pop('FREE!', cx, cy - L.cardH * 0.55, '#9fd4ff', 16);
+    }
+  }
+
+  /** Tried to move a card that is still frozen. */
+  function stillFrozen() {
+    if (!card) return;
+    Spring.kick(card.rot, 4);
+    Sfx.play('nope');
+    Haptics.bad();
+    pop('TAP TO CRACK!', card.x.x, card.y.x - L.cardH * 0.55, '#9fd4ff', 13);
+  }
+
+  /** What the boss says, in a bubble under them. */
+  function speak(text) {
+    if (!text || !foe) return;
+    say = { text: text, t: 0, life: 1900 };
+    Sfx.play('blip');
+  }
+
+  /** The boss used their trick. */
+  function foePower(p) {
+    if (!foe || phase !== 'play') return;
+    var def = foe.def;
+    foe.attack();
+    Spring.kick(foe.sq, 4);
+    speak(pick(def.lines && def.lines.power));
+    banner(def.powerName || 'SPECIAL!', { color: '#ff8a7a', size: 20, life: 1300, y: L.rest.y + L.cardH * 0.5 + 34, slot: 'power',
+                                          sub: def.powerText || '', subColor: '#fff', subFont: 'body' });
+    Sfx.play('power');
+    Haptics.heavy();
+    if (!calmFx()) Stage.shake(6, 260);
+    vig.color = '#ff6a5a'; vig.a = calmFx() ? 0.15 : 0.4;
+    if (p === 'freeze' && card) {
+      /* Whatever you had in your hand is glued down where it is. */
+      if (drag) { drag = null; card.state = 'idle'; clearAim(); }
+      Particles.emit({ x: card.x.x, y: card.y.x, n: 22, spreadX: L.cardW * 0.4, colors: ['#e8f6ff', '#9fd4ff', '#ffffff'], speed: [60, 200], life: [300, 700], size: [3, 6], gravity: -40 });
+      Sfx.play('freeze');
+    } else if (p === 'blackout') {
+      blackout = BATTLE.BLACKOUT_MS;
+      Sfx.play('glitch');
+    } else if (p === 'deadline' && card) {
+      Particles.emit({ x: card.x.x, y: card.y.x - L.cardH * 0.4, n: 18, spreadX: L.cardW * 0.4, colors: ['#ffb43a', '#ff6a3a', '#ffe48a'], speed: [80, 240], life: [300, 700], size: [3, 7], gravity: -200 });
+      Sfx.play('fuse');
+    }
   }
 
   /** A new card: picked up by the hero and flipped up into the middle. */
@@ -260,17 +420,24 @@ var Arena = (function () {
     Sfx.play('deal');
     if (hero) Spring.kick(hero.sq, 1.2);
     coach = o.coach ? { box: data.box, why: data.why, n: o.lesson, t: 0 } : null;
+    if (data.special === 'gold') Tween.wait(180, function () { Sfx.play('shine'); }, { tag: 'arena' });
+    else if (data.special === 'ice') { Tween.wait(160, function () { Sfx.play('freeze'); }, { tag: 'arena' }); if (!iceHint) iceHint = 1; }
+    else if (data.special === 'fuse') Tween.wait(160, function () { Sfx.play('fuse'); }, { tag: 'arena' });
   }
 
   /** What a sort was worth. The card in play becomes a ghost flying to
       its tray; the next card is dealt straight after by the game. */
   function sorted(r) {
+    var hadCoach = !!coach;
+    if (r.burnt) { burnUp(r); return; }
     var tr = trays[r.box];
     var c = card;
     card = null;
     drag = null;
     coach = null;
     clearAim();
+    if (r.right && explain) explain.life = Math.min(explain.life, explain.t + 300);
+    if (!r.right && !r.mine && !hadCoach) showWhy(r.card, false);
     if (!c) {
       /* Sorted from the keyboard before the card had been drawn - give it
          somewhere to start from. */
@@ -297,6 +464,32 @@ var Arena = (function () {
     hud.streak = r.streak;
   }
 
+  /** The reason a card belonged where it did, while you keep playing. */
+  function showWhy(data, burnt) {
+    if (!data || !data.box) return;
+    explain = { box: data.box, why: data.why || '', burnt: burnt, t: 0, life: 2600 };
+    /* It takes the strip under the top trays, so a Perfect banner still
+       fading out there makes way for it. */
+    for (var i = banners.length - 1; i >= 0; i--) if (banners[i].slot === 'top') banners.splice(i, 1);
+  }
+
+  /** A burning card nobody sorted: it chars where it is and drops. */
+  function burnUp(r) {
+    var c = card;
+    card = null; drag = null; coach = null;
+    if (!c) return;
+    ghosts.push({ text: c.text, data: c.data, lines: c.lines, size: c.size, x: c.x.x, y: c.y.x, rot: c.rot.x,
+                  scale: c.scale, flip: 1, t: 0, ms: 9999, alpha: 1, vx: (Math.random() - 0.5) * 120, vy: -260,
+                  x0: c.x.x, y0: c.y.x, bounced: true, burnt: true, spin: (Math.random() - 0.5) * 4, box: r.card.box });
+    Particles.emit({ x: c.x.x, y: c.y.x, n: 24, spreadX: L.cardW * 0.4, colors: ['#3a3a3a', '#6a5a4a', '#1a1a1a'], speed: [30, 120], life: [600, 1200], size: [6, 12], gravity: -120, drag: 1.5 });
+    Particles.emit({ x: c.x.x, y: c.y.x, n: 14, colors: ['#ffb43a', '#ff6a3a'], speed: [80, 260], life: [300, 600], size: [2, 5], gravity: 300, shape: 'spark' });
+    pop('TOO SLOW!', c.x.x, c.y.x - L.cardH * 0.5, '#ff8a3a', 18);
+    Sfx.play('burn');
+    showWhy(r.card, true);
+    missFeel(r, null);
+    hud.streak = r.streak;
+  }
+
   function landRight(r, tr) {
     var col = cornerColor(r.box);
     tr.hits++;
@@ -306,24 +499,37 @@ var Arena = (function () {
                      speed: [120, 380], life: [300, 700], size: [3, 7], gravity: 600, drag: 2 });
     Particles.emit({ x: tr.mx, y: tr.my, n: 8, shape: 'spark', colors: ['#ffffff', Gfx.shade(col, 0.5)],
                      speed: [260, 520], life: [180, 360], size: [2, 3], drag: 3 });
-    Sfx.play('right', r.streak);
+    Sfx.play('right', r.mine ? 3 : r.streak);
     Haptics.good();
 
     var popAt = { x: tr.cx, y: tr.cy + (tr.y < L.rest.y ? tr.h * 0.62 : -tr.h * 0.62) };
+    if (r.mine) {
+      pop(BOXES[r.box].label.toUpperCase(), popAt.x, popAt.y, '#ffffff', 15);
+      if (hero) hero.cheer(0.5);
+      return;
+    }
+    if (r.gold) {
+      /* Gold pays twice: the points, and a spray of coins. */
+      Particles.emit({ x: tr.mx, y: tr.my, n: 18, shape: 'star', colors: [Gfx.C.gold, '#fff6c4', '#ffffff'], speed: [160, 420], life: [400, 900], size: [4, 8], gravity: 300 });
+      pop('+' + TUNING.GOLD_COINS + ' COINS', tr.cx, popAt.y + (tr.y < L.rest.y ? 26 : -26), Gfx.C.gold, 14);
+      Sfx.play('coin'); Tween.wait(90, function () { Sfx.play('coin'); }, { tag: 'arena' });
+    }
     if (mode === 'battle') {
       /* The answer flies up out of the tray at the boss. */
-      shoot(tr.mx, tr.my, foe.x, foe.y, col, r.perfect, function () {
-        foe.hurt(r.perfect ? 1 : 0.5);
+      var strong = r.perfect || r.gold;
+      shoot(tr.mx, tr.my, foe.x, foe.y, r.gold ? Gfx.C.gold : col, strong, function () {
+        foe.hurt(strong ? 1 : 0.5);
         hp.foe = r.hpFoe; hp.foeHit = 1;
-        pop('-' + r.hit, foe.x + 30, foe.y - 30, r.perfect ? Gfx.C.gold : '#ffffff', r.perfect ? 26 : 20);
+        pop('-' + r.hit, foe.x + 30, foe.y - 30, strong ? Gfx.C.gold : '#ffffff', strong ? 26 : 20);
         Particles.emit({ x: foe.x, y: foe.y, n: 18, colors: [col, '#fff'], speed: [140, 420], life: [300, 600], size: [3, 6], gravity: 300 });
         Sfx.play('hit', r.perfect ? 1 : 0.5);
         Stage.shake(r.perfect ? 9 : 5, 220);
         Haptics.perfect();
+        if (strong && hp.foe > 0 && Math.random() < 0.4) speak(pick(foe.def.lines && foe.def.lines.hurt));
       });
       if (r.perfect) perfectBeat(tr, 'PERFECT HIT!');
     } else {
-      pop('+' + r.gained.toLocaleString(), popAt.x, popAt.y, r.perfect ? Gfx.C.gold : '#ffffff', r.perfect ? 24 : 19);
+      pop('+' + r.gained.toLocaleString(), popAt.x, popAt.y, r.perfect || r.gold ? Gfx.C.gold : '#ffffff', r.perfect || r.gold ? 24 : 19);
       hud.score = r.score;
       Spring.kick(hud.punch, 4);
       if (r.perfect) perfectBeat(tr, 'PERFECT!');
@@ -348,7 +554,8 @@ var Arena = (function () {
     /* No rays on a Perfect. On a quick round nearly every card IS one,
        and a screen full of light every second stops meaning anything -
        the rays are kept for the moments that are rare. */
-    banner(word, { color: Gfx.C.gold, size: 24, life: 560, y: L.top + L.trayH + 26, slot: 'top' });
+    banner(word, { color: Gfx.C.gold, size: 24, life: 560, slot: 'top',
+                   y: mode === 'battle' ? L.rest.y + L.cardH * 0.5 + 24 : L.top + L.trayH + 26 });
     Particles.emit({ x: tr.mx, y: tr.my, n: 14, shape: 'star', colors: [Gfx.C.gold, '#fff6c4', '#ffffff'],
                      speed: [160, 460], life: [400, 800], size: [4, 8], gravity: 260, layer: 'world' });
     Particles.emit({ x: tr.mx, y: tr.my, n: 1, shape: 'ring', colors: [Gfx.C.gold], speed: 0, life: 420, size: 16, shrink: false });
@@ -367,7 +574,13 @@ var Arena = (function () {
     g.vy = dy / n * 300 - 380;
     g.spin = (tr.cx < W / 2 ? 1 : -1) * (6 + Math.random() * 4);
     g.stamp = 1;
+    missFeel(r, tr);
+  }
 
+  /** Everything a miss feels like, for a bounce off a tray or a card
+      that burnt up before you got to it. */
+  function missFeel(r, tr) {
+    var side = tr ? (tr.cx < W / 2 ? 1 : -1) : (Math.random() < 0.5 ? 1 : -1);
     if (r.blocked) {
       /* The shield took it: no red, no shake, and the streak survives. */
       if (hero) hero.block();
@@ -379,18 +592,20 @@ var Arena = (function () {
       Sfx.play('block');
       Haptics.block();
     } else {
-      vig.color = '#e0524a'; vig.a = 0.7;
+      vig.color = '#e0524a'; vig.a = calmFx() ? 0.25 : 0.7;
       Stage.shake(mode === 'battle' ? 9 : 7, 260);
       Sfx.play('wrong');
+      if (mode === 'battle' && foe && Math.random() < 0.45) speak(pick(foe.def.lines && foe.def.lines.miss));
       Haptics.bad();
       if (r.lostStreak >= 3) {
-        pop('COMBO BROKEN', W / 2, L.top + L.trayH + 24, '#ff8a7a', 15);
+        /* on the combo counter itself, which is what just broke */
+        pop('COMBO BROKEN', W / 2, L.top + L.trayH * 0.42 + 26, '#ff8a7a', 12);
         Particles.emit({ x: W / 2, y: L.top + L.trayH * 0.5, n: 16, colors: ['#ffb43a', '#ff6a3a', '#ffe48a'], speed: [100, 300], life: [400, 800], size: [3, 6], gravity: 700 });
         Sfx.play('comboBreak');
       }
       if (hero) {
         if (mode === 'battle') {
-          hero.hurt(tr.cx < W / 2 ? 1 : -1);
+          hero.hurt(side);
           hp.you = r.hpYou; hp.youHit = 1;
           var hc = hero.centre();
           pop('-' + r.selfHit, hc.x + 34, hc.y - 20, '#ff6a5a', 20);
@@ -398,7 +613,7 @@ var Arena = (function () {
         } else {
           /* In a level nobody hurts you; you just flinch. */
           Spring.kick(hero.sq, -2.5);
-          Spring.kick(hero.lean, (tr.cx < W / 2 ? 1 : -1) * 4);
+          Spring.kick(hero.lean, side * 4);
         }
       }
     }
@@ -433,7 +648,7 @@ var Arena = (function () {
       /* A fumble: the throw falls short and drops away. */
       shoot(foe.x, foe.y + foe.size * 0.3, foe.x + (Math.random() < 0.5 ? -1 : 1) * 70, L.rest.y - 40, '#ffffff', false, function () {
         foe.fumble();
-        pop('FUMBLED!', foe.x, foe.y - foe.size * 0.6, '#9fd4ff', 14);
+        pop('FUMBLED!', foe.x, Math.max(L.top + 14, foe.y - foe.size * 0.6), '#9fd4ff', 14);
         Sfx.play('fumble');
       }, 'paper');
     }
@@ -469,7 +684,7 @@ var Arena = (function () {
   function end(reason, next) {
     phase = 'end';
     closePause(true);
-    drag = null; coach = null;
+    drag = null; coach = null; explain = null; blackout = 0;
     if (card) {
       var c = card; card = null;
       ghosts.push({ text: c.text, data: c.data, lines: c.lines, size: c.size, x: c.x.x, y: c.y.x, rot: c.rot.x,
@@ -483,7 +698,7 @@ var Arena = (function () {
       Stage.shake(10, 400);
       Haptics.heavy();
     } else if (reason === 'goal') {
-      banner('DONE!', { color: '#7dff9a', size: 46, life: 1200, y: H * 0.45, rays: true });
+      banner(kind === 'mine' ? 'PLAN MADE!' : 'DONE!', { color: '#7dff9a', size: kind === 'mine' ? 34 : 46, life: 1200, y: H * 0.45, rays: true });
       Sfx.play('win');
       Haptics.win();
       confetti();
@@ -491,7 +706,7 @@ var Arena = (function () {
     } else if (reason === 'won') {
       wait = 1900;
       Tween.wait(260, function () {
-        if (foe) foe.knockOut();
+        if (foe) { speak(pick(foe.def.lines && foe.def.lines.ko)); foe.knockOut(); }
         banner('K.O.!', { color: Gfx.C.gold, size: 56, life: 1500, y: H * 0.42, rays: true });
         Sfx.play('ko');
         Stage.slowmo(0.3, 700);
@@ -504,6 +719,7 @@ var Arena = (function () {
       wait = 1900;
       Tween.wait(260, function () {
         if (hero) hero.knockOut();
+        if (foe) speak(pick(foe.def.lines && foe.def.lines.win));
         banner('KNOCKED OUT', { color: '#ff6a5a', size: 30, life: 1500, y: H * 0.42 });
         Sfx.play('lose');
         Stage.slowmo(0.35, 600);
@@ -531,7 +747,7 @@ var Arena = (function () {
        replaces it rather than stacking a second one on top. */
     var slot = o.slot || 'centre';
     for (var i = banners.length - 1; i >= 0; i--) if (banners[i].slot === slot) banners.splice(i, 1);
-    banners.push({ text: text, sub: o.sub || '', subColor: o.subColor || '#fff', color: o.color || '#fff',
+    banners.push({ text: text, sub: o.sub || '', subColor: o.subColor || '#fff', subFont: o.subFont || 'arcade', color: o.color || '#fff',
                    size: o.size || 28, y: o.y || H * 0.4, t: 0, life: o.life || 900, rays: !!o.rays, slot: slot });
   }
 
@@ -609,6 +825,11 @@ var Arena = (function () {
     if (phase !== 'play') return;
 
     if (type === 'down') {
+      /* A frozen card is cracked by tapping it, not dragged. */
+      if (card && card.data.ice > 0 && card.flip > 0.45 && cardHit(x, y) && Game.canSort()) {
+        Game.crack();
+        return;
+      }
       if (card && (card.state === 'idle' || (card.state === 'deal' && card.flip > 0.45)) && cardHit(x, y) && Game.canSort()) {
         card.state = 'held';
         drag = { id: e.pointerId, sx: x, sy: y, ox: card.x.x - x, oy: card.y.x - y, px: x, py: y, samples: [{ x: x, y: y, t: Stage.real() }] };
@@ -618,6 +839,7 @@ var Arena = (function () {
         return;
       }
       var tb = trayAt(x, y);
+      if (tb && card && card.data.ice > 0) { stillFrozen(); return; }
       if (tb && card && Game.canSort()) trayTap = { box: tb, x: x, y: y };
       return;
     }
@@ -796,6 +1018,25 @@ var Arena = (function () {
     for (i = banners.length - 1; i >= 0; i--) { banners[i].t += dtReal; if (banners[i].t > banners[i].life) banners.splice(i, 1); }
     for (i = pops.length - 1; i >= 0; i--) { pops[i].t += dt; if (pops[i].t > pops[i].life) pops.splice(i, 1); }
 
+    if (explain) { explain.t += dtReal; if (explain.t > explain.life) explain = null; }
+    if (say) { say.t += dtReal; if (say.t > say.life) say = null; }
+    if (blackout > 0 && !paused) blackout = Math.max(0, blackout - dt);
+
+    /* A golden card glints; a burning one throws sparks off its fuse. */
+    if (card && phase === 'play' && !paused) {
+      if (card.data.special === 'gold' && Math.random() < 0.18) {
+        Particles.emit({ x: card.x.x + (Math.random() - 0.5) * L.cardW * 0.9, y: card.y.x + (Math.random() - 0.5) * L.cardH * 0.8, n: 1,
+                         shape: 'star', colors: ['#ffffff', '#fff6c4'], speed: [5, 20], life: [300, 600], size: [3, 5], gravity: -20 });
+      }
+      if (card.data.fuseAt && card.flip > 0.9 && Math.random() < 0.7) {
+        var fl = Game.fuseLeft();
+        var sp = fusePoint(card, fl);
+        Particles.emit({ x: sp.x, y: sp.y, n: 1, shape: 'spark', colors: ['#ffe48a', '#ffb43a', '#ff6a3a'],
+                         speed: [40, 160], life: [150, 350], size: [2, 3], gravity: 300 });
+        if (fl < 0.3 && Math.random() < 0.3) Particles.emit({ x: sp.x, y: sp.y, n: 1, colors: ['#555', '#777'], speed: [10, 40], life: [400, 800], size: [4, 8], gravity: -80 });
+      }
+    }
+
     vig.a = Math.max(0, vig.a - dt / 480);
     rushA += ((rush ? 1 : 0) - rushA) * Math.min(1, dt / 300);
     pauseA += ((paused ? 1 : 0) - pauseA) * Math.min(1, dtReal / 120);
@@ -810,7 +1051,7 @@ var Arena = (function () {
 
     /* Health bars drop at once; the pale "chip" behind them drains after
        a moment, so you can see how big the hit was. */
-    hp.youBar = hp.you / hp.max; hp.foeBar = hp.foe / hp.max;
+    hp.youBar = hp.you / hp.max; hp.foeBar = hp.foe / hp.maxFoe;
     hp.youChip += (hp.youBar - hp.youChip) * Math.min(1, dt / (hp.youChip > hp.youBar + 0.001 ? 380 : 1));
     hp.foeChip += (hp.foeBar - hp.foeChip) * Math.min(1, dt / (hp.foeChip > hp.foeBar + 0.001 ? 380 : 1));
     hp.youHit = Math.max(0, hp.youHit - dt / 300); hp.foeHit = Math.max(0, hp.foeHit - dt / 300);
@@ -821,7 +1062,7 @@ var Arena = (function () {
     pauseButtons.update(dtReal);
 
     /* Flames off a hot streak. */
-    if (mode === 'level' && hud.streak >= 5 && phase === 'play' && !paused && Math.random() < 0.5) {
+    if (mode === 'level' && kind !== 'mine' && hud.streak >= 5 && phase === 'play' && !paused && Math.random() < 0.5) {
       var fx = W / 2, fy = L.top + L.trayH * 0.42;
       Particles.emit({ x: fx, y: fy + 6, n: 1, spreadX: 26, colors: hud.streak >= 8 ? ['#ff7ad9', '#ffb4ee', '#ffffff'] : ['#ffb43a', '#ff6a3a', '#ffe48a'],
                        angle: [-Math.PI * 0.62, -Math.PI * 0.38], speed: [40, 110], life: [300, 600], size: [3, 6], gravity: -90, drag: 1 });
@@ -840,7 +1081,7 @@ var Arena = (function () {
 
     if (foe) drawFoe(c);
     for (var i = 0; i < ORDER.length; i++) if (boxesOn[ORDER[i]]) drawTray(c, trays[ORDER[i]]);
-    if (mode === 'level' && phase !== 'intro') drawCombo(c);
+    if (mode === 'level' && kind !== 'mine' && phase !== 'intro') drawCombo(c);
     if (hero) {
       hero.draw(c);
       drawShieldPips(c);
@@ -855,6 +1096,9 @@ var Arena = (function () {
       c.restore();
     }
     if (coach && card) drawCoach(c);
+    else if (explain) drawExplain(c);
+    if (card && card.data.ice > 0 && iceHint && card.flip > 0.9 && pauseA < 0.5) drawIceHint(c);
+    if (say && foe) drawSay(c);
     drawPops(c);
     drawHud(c);
     drawBanners(c);
@@ -863,17 +1107,41 @@ var Arena = (function () {
     if (pauseA > 0.01) drawPause(c);
   }
 
+  /* A pattern for each tray, so they differ in more than colour - for
+     anyone who cannot tell red from orange, and on a screen in sunlight. */
+  function trayPattern(k, key, x, y, w, h) {
+    k.save();
+    Gfx.rr(k, x, y, w, h, 18); k.clip();
+    k.globalAlpha = 0.09;
+    k.fillStyle = '#ffffff'; k.strokeStyle = '#ffffff'; k.lineWidth = 3;
+    var i, j;
+    if (key === 'now') {            // diagonal stripes
+      for (i = -h; i < w; i += 14) { k.beginPath(); k.moveTo(x + i, y + h); k.lineTo(x + i + h, y); k.stroke(); }
+    } else if (key === 'later') {   // dots
+      for (i = 8; i < w; i += 14) for (j = 8; j < h; j += 14) { k.beginPath(); k.arc(x + i, y + j, 2.4, 0, Math.PI * 2); k.fill(); }
+    } else if (key === 'give') {    // chevrons pointing on
+      for (i = 0; i < w + 20; i += 18) for (j = 0; j < h + 20; j += 18) {
+        k.beginPath(); k.moveTo(x + i, y + j); k.lineTo(x + i + 6, y + j + 6); k.lineTo(x + i, y + j + 12); k.stroke();
+      }
+    } else {                        // cross-hatch
+      for (i = 0; i < h; i += 12) { k.beginPath(); k.moveTo(x, y + i); k.lineTo(x + w, y + i); k.stroke(); }
+    }
+    k.restore();
+  }
+
   function drawTray(c, tr) {
     var col = cornerColor(tr.key);
     var a = Gfx.clamp(tr.appear, 0, 1.2);
     if (a <= 0.01) return;
     var aim = tr.aim.x;
     var otherAimed = card && card.aimBox && card.aimBox !== tr.key ? card.aim : 0;
+    var hidden = blackout > 0;
+    var answer = explain && explain.box === tr.key ? Math.min(1, explain.t / 150) * Math.min(1, (explain.life - explain.t) / 300) : 0;
     c.save();
     /* Slide in from its own corner of the screen. */
     var fromX = tr.cx < W / 2 ? -tr.w : tr.w, fromY = tr.cy < H / 2 ? -tr.h : tr.h;
     var ea = Math.min(1, a);
-    c.translate(tr.cx + fromX * (1 - ea), tr.cy + fromY * (1 - ea));
+    c.translate(tr.cx + tr.ox + fromX * (1 - ea), tr.cy + tr.oy + fromY * (1 - ea));
     /* Squashed by a gulp, it gets wider as it gets shorter - the way a
        soft thing would - rather than just shrinking. */
     var base = (1 + aim * 0.08) * (a > 1 ? a : 1);
@@ -884,6 +1152,7 @@ var Arena = (function () {
 
     if (aim > 0.02) Gfx.glow(c, 0, 0, Math.max(tr.w, tr.h) * (0.7 + aim * 0.3), col, 0.45 * aim);
     if (rushA > 0.05) Gfx.glow(c, 0, 0, Math.max(tr.w, tr.h) * 0.7, '#ff8a3a', 0.18 * rushA);
+    if (answer > 0) Gfx.glow(c, 0, 0, Math.max(tr.w, tr.h) * 0.85, '#ffffff', 0.35 * answer * (0.7 + 0.3 * Math.sin(t / 90)));
 
     /* The tray itself - body, mouth, label, the cards piled in it - is
        baked, one bitmap per number of cards in the pile. Only what moves
@@ -891,12 +1160,14 @@ var Arena = (function () {
        the flash. */
     var top = tr.y < L.rest.y;
     var pile = Math.min(6, tr.hits);
-    var key = 'tray|' + tr.key + '|' + tr.w + '|' + tr.h + '|' + (top ? 1 : 0) + '|' + pile;
+    var bt = big();
+    var key = 'tray|' + tr.key + '|' + tr.w + '|' + tr.h + '|' + (top ? 1 : 0) + '|' + pile + '|' + (hidden ? 1 : 0) + '|' + (bt ? 1 : 0);
     var b = Gfx.bake(key, tr.w + 4, tr.h + 10, function (k) {
       Gfx.panel(k, 2, 2, tr.w, tr.h, {
         fill: Gfx.shade(col, -0.18), fill2: Gfx.shade(col, -0.45), sink: Gfx.shade(col, -0.72),
         depth: 6, r: 18, edge: Gfx.rgba(Gfx.shade(col, 0.45), 0.6), edgeW: 2
       });
+      trayPattern(k, tr.key, 2, 2, tr.w, tr.h);
       var mw = tr.w - 22, mh = tr.h * 0.38;
       var my = top ? 2 + tr.h - mh - 10 : 2 + 10;
       k.fillStyle = 'rgba(0,0,0,.28)';
@@ -907,14 +1178,41 @@ var Arena = (function () {
         k.fillRect(2 + 22 + (i % 3) * 3, py, mw - 22 - (i % 3) * 3, 3);
       }
       var iy0 = 2 + (top ? tr.h * 0.27 : tr.h * 0.7);
-      Gfx.textNow(k, BOXES[tr.key].label.toUpperCase(), 2 + 52, iy0 - 7, {
-        font: 'arcade', size: 11, color: '#ffffff', align: 'left', maxW: tr.w - 62, shadow: 'rgba(0,0,0,.4)', shadowY: 2
+      if (hidden) {
+        /* Ivan's blackout: the words are scrambled away. */
+        Gfx.textNow(k, '? ? ? ?', 2 + 52, iy0, { font: 'arcade', size: 11, color: 'rgba(255,255,255,.55)', align: 'left', maxW: tr.w - 62 });
+        return;
+      }
+      Gfx.textNow(k, BOXES[tr.key].label.toUpperCase(), 2 + 52, iy0 - (bt ? 8 : 7), {
+        font: 'arcade', size: bt ? 12 : 11, color: '#ffffff', align: 'left', maxW: tr.w - 62, shadow: 'rgba(0,0,0,.4)', shadowY: 2
       });
-      Gfx.textNow(k, BOXES[tr.key].hint, 2 + 52, iy0 + 10, {
-        size: 12, weight: 600, color: 'rgba(255,255,255,.78)', align: 'left', maxW: tr.w - 62
+      Gfx.textNow(k, BOXES[tr.key].hint, 2 + 52, iy0 + (bt ? 12 : 10), {
+        size: bt ? 14 : 12, weight: bt ? 700 : 600, color: bt ? '#ffffff' : 'rgba(255,255,255,.78)', align: 'left', maxW: tr.w - 62
       });
     });
     c.drawImage(b.cv, x - 2, y - 2, b.w, b.h);
+    if (hidden) {
+      /* static crawling over the tray while its words are gone */
+      c.save();
+      Gfx.rr(c, x, y, tr.w, tr.h, 18); c.clip();
+      c.globalAlpha = 0.18;
+      for (var sl = 0; sl < 6; sl++) {
+        c.fillStyle = Math.random() < 0.5 ? '#ffffff' : '#000000';
+        c.fillRect(x, y + Math.random() * tr.h, tr.w, 2 + Math.random() * 4);
+      }
+      c.restore();
+    }
+    if (answer > 0) {
+      /* the tray the missed card belonged in */
+      c.save();
+      c.globalAlpha *= answer;
+      c.lineWidth = 4;
+      c.setLineDash([10, 8]); c.lineDashOffset = -t / 30;
+      c.strokeStyle = '#ffffff';
+      Gfx.rr(c, x - 3, y - 3, tr.w + 6, tr.h + 6, 20); c.stroke();
+      c.setLineDash([]);
+      c.restore();
+    }
 
     if (aim > 0.02) {
       /* aimed at: brighter, with a thicker edge */
@@ -926,8 +1224,8 @@ var Arena = (function () {
     }
 
     var iy = top ? y + tr.h * 0.27 : y + tr.h * 0.7;
-    var bounce = aim > 0.05 ? Math.sin(t / 90) * 3 * aim : 0;
-    Gfx.drawSprite(c, BOXES[tr.key].sprite, x + 30, iy + bounce, 30, 30);
+    var bounce = aim > 0.05 ? Math.sin(t / 90) * 3 * aim : answer > 0 ? Math.abs(Math.sin(t / 110)) * -5 * answer : 0;
+    if (!hidden) Gfx.drawSprite(c, BOXES[tr.key].sprite, x + 30, iy + bounce, 30, 30);
 
     if (tr.flash > 0) {
       c.globalAlpha = tr.flash * 0.55;
@@ -957,7 +1255,16 @@ var Arena = (function () {
     c.scale(scale * sx, scale);
 
     var aimCol = !isGhost && cd.aimBox ? cornerColor(cd.aimBox) : null;
+    var special = cd.data && cd.data.special;
     if (aimCol) Gfx.glow(c, 0, 0, w * 0.75, aimCol, 0.4 * cd.aim);
+    else if (special === 'gold' && !isGhost) Gfx.glow(c, 0, 0, w * 0.72, Gfx.C.gold, 0.3 + 0.1 * Math.sin(t / 200));
+    var fl = !isGhost && cd.data && cd.data.fuseAt ? Game.fuseLeft() : 1;
+    if (fl < 1) {
+      /* the card shakes, gently and then less gently, as the fuse runs down */
+      var heat = 1 - fl;
+      if (heat > 0.6) c.translate((Math.random() - 0.5) * (heat - 0.6) * 10, 0);
+      Gfx.glow(c, 0, 0, w * 0.72, heat > 0.7 ? '#ff4a2a' : '#ff8a3a', 0.15 + heat * 0.3);
+    }
     /* the shadow rises away from the card as it is lifted */
     c.fillStyle = 'rgba(0,0,0,' + (0.32 - lift * 0.08).toFixed(3) + ')';
     Gfx.rr(c, -w / 2 + lift * 6, -h / 2 + 7 + lift * 12, w, h, 16); c.fill();
@@ -980,15 +1287,30 @@ var Arena = (function () {
        pips, the words - and stamped down as one image every frame after.
        Only the coloured edge you aim with is drawn live on top. */
     var place = PLACE[cd.data && cd.data.theme] || 'TASK';
-    var face = Gfx.bake('card|' + cd.text + '|' + w + '|' + h, w, h, function (k) {
-      Gfx.panel(k, 0, 0, w, h, { fill: Gfx.C.paper, fill2: Gfx.C.paper2, depth: 0, r: 16, lip: false,
-                                 edge: 'rgba(120,90,40,.35)', edgeW: 2 });
+    var gold = special === 'gold';
+    var bt = big();
+    /* once the ice is off, it is an ordinary card again */
+    if (special === 'ice' && !(cd.data && cd.data.ice > 0)) special = null;
+    /* A special card says what it is where the place usually goes. */
+    if (gold) place = 'GOLDEN  x' + TUNING.GOLD_MULT;
+    else if (special === 'fuse') place = 'BURNING - BE QUICK';
+    else if (special === 'ice') place = 'FROZEN - TAP IT';
+    var face = Gfx.bake('card|' + (special || '') + (bt ? 'b' : '') + '|' + cd.text + '|' + w + '|' + h, w, h, function (k) {
+      Gfx.panel(k, 0, 0, w, h, { fill: gold ? '#ffe9a0' : Gfx.C.paper, fill2: gold ? '#f2c14e' : Gfx.C.paper2, depth: 0, r: 16, lip: false,
+                                 edge: gold ? 'rgba(160,100,10,.8)' : 'rgba(120,90,40,.35)', edgeW: gold ? 3 : 2 });
       k.save();
       Gfx.rr(k, 0, 0, w, h, 16); k.clip();
-      k.fillStyle = 'rgba(60,40,20,.08)';
+      k.fillStyle = gold ? 'rgba(140,80,0,.14)' : 'rgba(60,40,20,.08)';
       k.fillRect(0, 0, w, 26);
+      if (gold) {
+        /* a sheen across the gold */
+        var gg = k.createLinearGradient(0, 0, w, h);
+        gg.addColorStop(0.3, 'rgba(255,255,255,0)'); gg.addColorStop(0.45, 'rgba(255,255,255,.45)'); gg.addColorStop(0.6, 'rgba(255,255,255,0)');
+        k.fillStyle = gg; k.fillRect(0, 0, w, h);
+      }
       k.restore();
-      Gfx.textNow(k, place, w / 2, 14, { font: 'arcade', size: 8, color: 'rgba(90,64,30,.6)' });
+      Gfx.textNow(k, place, w / 2, 14, { font: 'arcade', size: 8,
+        color: gold ? 'rgba(110,60,0,.85)' : special === 'fuse' ? '#c2412f' : special === 'ice' ? '#2f6fb0' : 'rgba(90,64,30,.6)' });
       /* four pips, the four corners, like a playing card's suit */
       var cols = [Gfx.C.now, Gfx.C.later, Gfx.C.give, Gfx.C.drop];
       k.globalAlpha = 0.55;
@@ -998,13 +1320,22 @@ var Arena = (function () {
         k.fillRect(w - 24 + (i % 2) * 7, 8 + (i > 1 ? 7 : 0), 5, 5);
       }
       k.globalAlpha = 1;
-      var f = Gfx.fit(k, cd.text, w - 36, h - 50, { size: Math.round(Gfx.clamp(w * 0.075, 17, 24)), weight: 700, maxLines: 4, lead: 1.18 });
+      var f = Gfx.fit(k, cd.text, w - 36, h - 50, { size: Math.round(Gfx.clamp(w * 0.075, 17, 24) * (bt ? 1.18 : 1)), weight: 700, maxLines: 4, lead: 1.18 });
       var lh = f.size * 1.18, ty = h / 2 + 12 - (f.lines.length - 1) * lh / 2;
       for (i = 0; i < f.lines.length; i++) {
         Gfx.textNow(k, f.lines[i], w / 2, ty + i * lh, { size: f.size, weight: 700, color: '#2a1e10' });
       }
     });
     c.drawImage(face.cv, -w / 2, -h / 2, w, h);
+    if (cd.burnt) {
+      /* charred: the paper goes dark from the edges in */
+      c.globalAlpha *= Math.min(1, cd.t / 250);
+      c.fillStyle = 'rgba(30,18,10,.72)';
+      Gfx.rr(c, -w / 2, -h / 2, w, h, 16); c.fill();
+      c.globalAlpha = 1;
+    }
+    if (cd.data && cd.data.ice > 0) drawIce(c, w, h, cd.data.ice);
+    if (fl < 1 && !isGhost) drawFuse(c, w, h, fl);
     if (aimCol) {
       c.lineWidth = 3 + cd.aim * 3;
       c.strokeStyle = Gfx.rgba(aimCol, 0.5 + cd.aim * 0.5);
@@ -1020,6 +1351,139 @@ var Arena = (function () {
       Gfx.text(c, 'NOPE', 0, 2, { font: 'arcade', size: 16, color: '#d23a30' });
       c.restore();
     }
+    c.restore();
+  }
+
+  /** Ice over a frozen card: clear blue, frost round the edge, and cracks
+      once it has been tapped. Baked per crack stage. */
+  function drawIce(c, w, h, left) {
+    var stage = Math.max(0, iceStart() - left);
+    var b = Gfx.bake('ice|' + w + '|' + h + '|' + stage, w + 8, h + 8, function (k) {
+      k.translate(4, 4);
+      k.save();
+      Gfx.rr(k, 0, 0, w, h, 16); k.clip();
+      var g = k.createLinearGradient(0, 0, w, h);
+      g.addColorStop(0, 'rgba(210,240,255,.78)'); g.addColorStop(0.5, 'rgba(150,205,245,.55)'); g.addColorStop(1, 'rgba(200,235,255,.8)');
+      k.fillStyle = g; k.fillRect(0, 0, w, h);
+      /* frost creeping in from the edges */
+      k.fillStyle = 'rgba(255,255,255,.55)';
+      for (var i = 0; i < 26; i++) {
+        var ex = (i * 37) % w, side = i % 4;
+        var px = side === 0 ? ex : side === 1 ? w - 4 : side === 2 ? ex : 0;
+        var py = side === 0 ? 0 : side === 1 ? (i * 23) % h : side === 2 ? h - 4 : (i * 29) % h;
+        k.beginPath(); k.arc(px, py, 5 + (i % 3) * 3, 0, Math.PI * 2); k.fill();
+      }
+      /* glints */
+      k.strokeStyle = 'rgba(255,255,255,.8)'; k.lineWidth = 3; k.lineCap = 'round';
+      k.beginPath(); k.moveTo(w * 0.12, h * 0.3); k.lineTo(w * 0.22, h * 0.14); k.stroke();
+      k.beginPath(); k.moveTo(w * 0.78, h * 0.86); k.lineTo(w * 0.88, h * 0.7); k.stroke();
+      if (stage > 0) {
+        /* cracks from the middle out */
+        k.strokeStyle = 'rgba(40,90,140,.75)'; k.lineWidth = 2.2;
+        var arms = 4 + stage * 3;
+        for (var a = 0; a < arms; a++) {
+          var ang = a / arms * Math.PI * 2 + 0.4, r = 0, x = w / 2, y = h / 2;
+          k.beginPath(); k.moveTo(x, y);
+          for (var s = 0; s < 4; s++) {
+            r += Math.min(w, h) * (0.14 + ((a * 7 + s * 3) % 5) * 0.03);
+            ang += (((a + s) % 3) - 1) * 0.35;
+            k.lineTo(w / 2 + Math.cos(ang) * r * 1.4, h / 2 + Math.sin(ang) * r);
+          }
+          k.stroke();
+        }
+      }
+      k.restore();
+      k.lineWidth = 3; k.strokeStyle = 'rgba(230,248,255,.95)';
+      Gfx.rr(k, 1.5, 1.5, w - 3, h - 3, 16); k.stroke();
+    });
+    c.drawImage(b.cv, -w / 2 - 4, -h / 2 - 4, b.w, b.h);
+  }
+
+  function iceStart() { return Shop.effects().mult >= TUNING.ICE_ONE_HIT_MULT ? 1 : TUNING.ICE_HITS; }
+
+  /** Where the spark on a burning card's fuse is, in screen space. */
+  function fusePoint(cd, fl) {
+    var w = L.cardW, h = L.cardH;
+    var lx = -w / 2 + 16 + (w - 32) * fl, ly = -h / 2 - 2;
+    var r = cd.rot.x, s = cd.scale || 1;
+    return { x: cd.x.x + (lx * Math.cos(r) - ly * Math.sin(r)) * s, y: cd.y.x + (lx * Math.sin(r) + ly * Math.cos(r)) * s };
+  }
+
+  /** The fuse along the top of a burning card: the rope still to burn,
+      the burnt bit behind it, and the spark where they meet. */
+  function drawFuse(c, w, h, fl) {
+    var x0 = -w / 2 + 16, x1 = w / 2 - 16, y = -h / 2 - 2;
+    var xs = x0 + (x1 - x0) * fl;
+    var heat = 1 - fl;
+    /* the edge of the card catching, redder as it goes */
+    c.lineWidth = 3 + heat * 2;
+    c.strokeStyle = Gfx.rgba(heat > 0.65 ? '#ff4a2a' : '#ff8a3a', 0.55 + 0.35 * Math.sin(t / 80));
+    Gfx.rr(c, -w / 2 + 1.5, -h / 2 + 1.5, w - 3, h - 3, 16); c.stroke();
+    /* the burnt track, then the rope still to go */
+    c.lineCap = 'round';
+    c.lineWidth = 9; c.strokeStyle = 'rgba(20,12,6,.55)';
+    c.beginPath(); c.moveTo(x0, y); c.lineTo(x1, y); c.stroke();
+    c.lineWidth = 7; c.strokeStyle = '#5a3a1a';
+    c.beginPath(); c.moveTo(x0, y); c.lineTo(xs, y); c.stroke();
+    c.lineWidth = 4; c.strokeStyle = '#e8c58a';
+    c.setLineDash([5, 4]);
+    c.beginPath(); c.moveTo(x0, y); c.lineTo(xs, y); c.stroke();
+    c.setLineDash([]);
+    Gfx.glow(c, xs, y, 34, '#ffb43a', 1);
+    Gfx.drawSprite(c, 'fire', xs, y - 8 + Math.sin(t / 50) * 1.5, 22, 22);
+    if (fl < 0.35) {
+      Gfx.text(c, 'HURRY!', 0, -h / 2 + 30, { font: 'arcade', size: 9, color: '#e0524a', alpha: 0.6 + 0.4 * Math.sin(t / 70) });
+    }
+  }
+
+  /** The first frozen card of a round says what to do with it. */
+  function drawIceHint(c) {
+    var y = card.y.x + L.cardH * 0.5 + 22 + Math.sin(t / 160) * 3;
+    Gfx.panel(c, W / 2 - 74, y - 14, 148, 28, { fill: 'rgba(20,60,110,.92)', depth: 2, r: 10, lip: false, edge: 'rgba(159,212,255,.8)' });
+    Gfx.text(c, 'TAP TO CRACK', W / 2, y, { font: 'arcade', size: 9, color: '#e8f6ff' });
+  }
+
+  /** "It was Do Later - the reason." Under the top trays, while you play on. */
+  function drawExplain(c) {
+    var e = explain;
+    var a = Math.min(1, e.t / 160) * Math.min(1, (e.life - e.t) / 260);
+    if (a <= 0) return;
+    var bw = Math.min(W - 24, 380), bx = (W - bw) / 2;
+    var by = mode === 'battle' ? L.rest.y + L.cardH * 0.5 + 12 : L.top + L.trayH + 8;
+    var col = cornerColor(e.box);
+    var bt = big();
+    var lines = Gfx.wrap(c, e.why, bw - 28, { size: bt ? 15 : 13, weight: 600 }).slice(0, 2);
+    var bh = 30 + lines.length * (bt ? 18 : 16);
+    c.save();
+    c.globalAlpha = a;
+    c.translate(0, (1 - Math.min(1, e.t / 160)) * -10);
+    Gfx.panel(c, bx, by, bw, bh, { fill: 'rgba(10,16,34,.93)', depth: 3, r: 12, edge: Gfx.rgba(col, 0.95), edgeW: 2 });
+    var head = (e.burnt ? 'TOO SLOW - IT WAS ' : 'IT WAS ') + BOXES[e.box].label.toUpperCase();
+    Gfx.text(c, head, bx + bw / 2, by + 15, { font: 'arcade', size: 9, color: col === Gfx.C.drop ? '#d8dee8' : Gfx.shade(col, 0.3), maxW: bw - 20 });
+    for (var i = 0; i < lines.length; i++) {
+      Gfx.text(c, lines[i], bx + bw / 2, by + 33 + i * (bt ? 18 : 16), { size: bt ? 15 : 13, weight: 600, color: '#e6eefc' });
+    }
+    /* the time it has left, as a thin bar along the bottom */
+    c.fillStyle = Gfx.rgba(col, 0.8);
+    c.fillRect(bx + 10, by + bh - 4, (bw - 20) * Math.max(0, 1 - e.t / e.life), 2);
+    c.restore();
+  }
+
+  /** The boss's speech bubble, just under them. */
+  function drawSay(c) {
+    var s = say;
+    var k = s.t < 160 ? Ease.outBack(s.t / 160) : 1;
+    var a = Math.min(1, (s.life - s.t) / 250);
+    var tw = Math.min(W - 40, Gfx.measure(c, s.text, { size: 14, weight: 700 }) + 28);
+    var x = Gfx.clamp(foe.x, tw / 2 + 12, W - tw / 2 - 12), y = foe.y + foe.size * 0.56 + 22;
+    c.save();
+    c.globalAlpha = a;
+    c.translate(x, y);
+    c.scale(k, k);
+    c.fillStyle = '#ffffff';
+    c.beginPath(); c.moveTo(foe.x - x - 8, 2); c.lineTo(foe.x - x + 8, 2); c.lineTo(foe.x - x, -9); c.closePath(); c.fill();
+    Gfx.panel(c, -tw / 2, 0, tw, 30, { fill: '#ffffff', fill2: '#e6eefc', depth: 3, sink: 'rgba(0,0,0,.35)', r: 12, lip: false });
+    Gfx.text(c, s.text, 0, 15, { size: 14, weight: 700, color: '#1a1a2e', maxW: tw - 16 });
     c.restore();
   }
 
@@ -1104,6 +1568,9 @@ var Arena = (function () {
     var cxClock = W - L.pad - 26, cyClock = y + h / 2;
     if (mode === 'battle') {
       drawHpBars(c, y, h, cxClock);
+    } else if (kind === 'mine') {
+      Gfx.text(c, 'MY LIST', W / 2 + 4, y + 18, { font: 'arcade', size: 14, color: '#ffffff', stroke: '#0a0e1a', strokeW: 5 });
+      Gfx.text(c, 'Where does each one go?', W / 2 + 4, y + 40, { size: 13, weight: 600, color: Gfx.C.tx, maxW: W - 150 });
     } else {
       /* score */
       var sx = W / 2 + 4;
@@ -1207,7 +1674,8 @@ var Arena = (function () {
       }
       c.scale(s, s);
       Gfx.text(c, b.text, 0, 0, { font: 'arcade', size: b.size, color: b.color, stroke: '#0a0e1a', strokeW: Math.max(6, b.size * 0.28), maxW: W - 30, shadow: 'rgba(0,0,0,.5)', shadowY: 5 });
-      if (b.sub) Gfx.text(c, b.sub, 0, b.size * 0.95, { font: 'arcade', size: Math.max(10, b.size * 0.36), color: b.subColor, stroke: '#0a0e1a', strokeW: 5, maxW: W - 40 });
+      if (b.sub && b.subFont === 'body') Gfx.text(c, b.sub, 0, b.size * 1.1, { size: 15, weight: 700, color: b.subColor, stroke: '#0a0e1a', strokeW: 4, maxW: W - 40 });
+      else if (b.sub) Gfx.text(c, b.sub, 0, b.size * 0.95, { font: 'arcade', size: Math.max(10, b.size * 0.36), color: b.subColor, stroke: '#0a0e1a', strokeW: 5, maxW: W - 40 });
       c.restore();
     }
   }
@@ -1272,6 +1740,10 @@ var Arena = (function () {
     beginBattle: beginBattle,
     deal: deal,
     sorted: sorted,
+    shuffle: shuffle,
+    cracked: cracked,
+    stillFrozen: stillFrozen,
+    foePower: foePower,
     setClock: setClock,
     setProgress: setProgress,
     setRush: setRush,
@@ -1279,7 +1751,9 @@ var Arena = (function () {
     end: end,
     /* for tests and for the debug overlay */
     state: function () {
-      return { phase: phase, paused: paused, card: card ? { text: card.text, box: card.data.box, state: card.state } : null,
+      return { phase: phase, paused: paused, kind: kind, corners: corners, blackout: blackout, explain: explain ? explain.box : null,
+               say: say ? say.text : null,
+               card: card ? { text: card.text, box: card.data.box, state: card.state, special: card.data.special, ice: card.data.ice, x: card.x.x, y: card.y.x } : null,
                score: hud.score, streak: hud.streak, secs: hud.secs, trays: L ? {
                  now: trays.now && { x: trays.now.cx, y: trays.now.cy }, later: trays.later && { x: trays.later.cx, y: trays.later.cy },
                  give: trays.give && { x: trays.give.cx, y: trays.give.cy }, drop: trays.drop && { x: trays.drop.cx, y: trays.drop.cy }

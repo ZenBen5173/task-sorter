@@ -25,6 +25,21 @@
      accuracy  how often they get it right (0.85 = 85%)
      sprite    their picture, drawn in js/sprites.js. Leave it out
                and they fall back to the plain stand-in figure.
+     power     their one special trick (see usePower in game.js):
+                 freeze    the card you are holding comes frozen
+                 shuffle   two of your trays swap places
+                 blackout  the words on your trays vanish for a while
+                 deadline  this card and the next two catch fire
+     powerEvery  ms between tricks
+     hp        how much health they have. Yours is always BATTLE.HP; the
+               later bosses take longer to bring down, so the fight
+               lasts long enough for their trick to matter.
+     lines     what they say, and when. One is picked at random.
+
+   EVERY TRICK IS ONE THE MAP ALREADY TAUGHT. Frozen cards are Level 2,
+   burning ones Level 3, swapping trays Level 4 - a boss fight tests
+   what the levels taught, louder. Ivan's blackout is the one new thing,
+   and it only takes away words you should not need by then.
    ============================================================ */
 
 var BATTLE = {
@@ -35,6 +50,9 @@ var BATTLE = {
   HIT_PERFECT: 18,  // ...and you were fast about it
   PERFECT_MS: 1200,
   SELF_HIT: 10,     // damage you take for a wrong sort
+  GOLD_HIT: 1.6,    // a golden card hits this much harder
+  FIRST_POWER_MS: 4500,   // a boss's first trick, this long into the fight
+  BLACKOUT_MS: 6000,
 
   WIN_COINS: 120   // plus a bonus per rival, see coinsFor()
 };
@@ -43,22 +61,62 @@ var OPPONENTS = [
   {
     n: 1, name: 'Sticky Steve',
     taunt: 'Sorts slowly and gets it wrong a lot.',
-    speed: 2600, accuracy: 0.60, damage: 9, sprite: 'steve'
+    speed: 2600, accuracy: 0.60, damage: 9, sprite: 'steve', hp: 100,
+    power: 'freeze', powerEvery: 11000,
+    powerName: 'STICKY FINGERS', powerText: 'Glues your card down. Tap it free.',
+    lines: {
+      intro: ['Hey. Have you seen my stapler?', 'I will get to it. Eventually.'],
+      power: ['Oops. Sticky.', 'Hold that thought. Forever.', 'Glue is a filing system.'],
+      hurt: ['Ow! My paperclips!', 'That was MY pile!', 'Rude.'],
+      miss: ['Ha! Same thing I would do.', 'Close enough. Not really.'],
+      ko: ['I needed a nap anyway.'],
+      win: ['Slow and sticky wins the race!']
+    }
   },
   {
     n: 2, name: 'Clip Carla',
     taunt: 'Quick hands, average judgement.',
-    speed: 2000, accuracy: 0.72, damage: 10, sprite: 'carla'
+    speed: 2000, accuracy: 0.72, damage: 10, sprite: 'carla', hp: 120,
+    power: 'shuffle', powerEvery: 10000,
+    powerName: 'RESHUFFLE', powerText: 'Swaps two of your trays around.',
+    lines: {
+      intro: ['I reorganised your desk. You are welcome.', 'Let us make this quick.'],
+      power: ['New system! Keep up.', 'Moved it. Obviously.', 'Who put that there? Me.'],
+      hurt: ['Hey, that was clipped!', 'You bent my clip!', 'Not the folders!'],
+      miss: ['Wrong drawer, darling.', 'Messy. I like it.'],
+      ko: ['Fine. FINE. File me under "lost".'],
+      win: ['Organised. Like I said.']
+    }
   },
   {
     n: 3, name: 'Inbox Ivan',
     taunt: 'Rarely wrong. Never stops.',
-    speed: 1500, accuracy: 0.82, damage: 11, sprite: 'ivan'
+    speed: 1500, accuracy: 0.82, damage: 11, sprite: 'ivan', hp: 140,
+    power: 'blackout', powerEvery: 11000,
+    powerName: 'INBOX FLOOD', powerText: 'Hides the words on your trays for a few seconds.',
+    lines: {
+      intro: ['You have 4,812 unread messages.', 'Reply all. To everything.'],
+      power: ['Notification storm!', 'Can you read this? No.', 'Everything is urgent!'],
+      hurt: ['That message bounced!', 'Unsubscribe!', 'My inbox!'],
+      miss: ['Marked as spam. You.', 'Sent to the wrong folder!'],
+      ko: ['...out of office.'],
+      win: ['Inbox zero. Yours.']
+    }
   },
   {
     n: 4, name: 'Deadline Dan',
     taunt: 'Faster than you. Almost never wrong.',
-    speed: 1100, accuracy: 0.92, damage: 13, sprite: 'dan'
+    speed: 1100, accuracy: 0.92, damage: 13, sprite: 'dan', hp: 160,
+    power: 'deadline', powerEvery: 9000,
+    powerName: 'DEADLINE', powerText: 'Sets your next three cards on fire.',
+    lines: {
+      intro: ['It was due yesterday.', 'Tick. Tock.'],
+      power: ['Due in five seconds!', 'Feel the heat!', 'No extensions!'],
+      hurt: ['Impossible!', 'That was ahead of schedule!', 'Late fee!'],
+      miss: ['Too slow!', 'Missed it. Like a deadline.'],
+      ko: ['I... need... more time.'],
+      win: ['Time is up. Forever.']
+    }
   }
 ];
 

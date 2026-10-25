@@ -57,7 +57,15 @@ var Hero = (function () {
         text: e.block ? e.block : 'none' },
       { label: 'Points', hint: 'what each card is worth',
         fill: maxMult ? (e.mult - 1) / maxMult : 0,
-        text: e.mult > 1 ? '+' + Math.round((e.mult - 1) * 100) + '%' : 'normal' }
+        text: e.mult > 1 ? '+' + Math.round((e.mult - 1) * 100) + '%' : 'normal' },
+      /* What the gear does to the special cards: a pet finds more gold,
+         a strong enough weapon breaks ice in one tap. */
+      { label: 'Golden cards', hint: 'how often a triple-points card turns up (your pet)',
+        fill: maxCoin ? (equippedItem('pet').coin || 0) / ceilingOf('pet', 'coin') : 0,
+        text: equippedItem('pet').coin ? '+' + (Math.round(equippedItem('pet').coin * TUNING.PET_GOLD_SHARE * 1000) / 10) + '% more' : 'normal' },
+      { label: 'Breaking ice', hint: 'taps to crack a frozen card (your weapon)',
+        fill: e.mult >= TUNING.ICE_ONE_HIT_MULT ? 1 : 0.5,
+        text: e.mult >= TUNING.ICE_ONE_HIT_MULT ? '1 tap' : TUNING.ICE_HITS + ' taps' }
     ];
   }
 

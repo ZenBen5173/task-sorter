@@ -400,19 +400,24 @@ var Stage = (function () {
 
   /* ---------------- effects ---------------- */
 
+  /** The phone asked for less motion, or the player did, in Settings
+      ("Calm screen"). Either way: no shaking, no freeze-frames, no
+      punches toward the viewer. */
+  function calm() { return still || !!(window.Progress && Progress.calmFx && Progress.calmFx()); }
+
   /** Shakes the camera. `amt` in pixels. */
   function shake(amt, ms) {
-    if (still) return;
+    if (calm()) return;
     if (amt * 1 < shakeAmt * (shakeLeft / shakeDur)) return;
     shakeAmt = amt; shakeDur = ms || 240; shakeLeft = shakeDur;
   }
   /** Freezes the stage clock for `ms`. Two or three frames of nothing
       on a big moment is what makes it land - every fighting game does
       it on a hit, and it is why a Perfect feels like one. */
-  function hitstop(ms) { if (!still) hitstopLeft = Math.max(hitstopLeft, ms); }
-  function slowmo(scale, ms) { if (!still) { slow.scale = scale; slow.left = ms; } }
+  function hitstop(ms) { if (!calm()) hitstopLeft = Math.max(hitstopLeft, ms); }
+  function slowmo(scale, ms) { if (!calm()) { slow.scale = scale; slow.left = ms; } }
   /** A punch of the whole picture toward the viewer. */
-  function punch(amt) { if (!still) Spring.kick(zoom, amt || 0.4); }
+  function punch(amt) { if (!calm()) Spring.kick(zoom, amt || 0.4); }
 
   /* ---------------- input ---------------- */
 
@@ -661,7 +666,7 @@ var Stage = (function () {
     safe: safe,
     now: function () { return now; },
     real: function () { return real; },
-    still: function () { return still; },
+    still: function () { return calm(); },
     busy: function () { return !!trans; },
     shake: shake, hitstop: hitstop, slowmo: slowmo, punch: punch,
     pixelRatio: function () { return dpr; },

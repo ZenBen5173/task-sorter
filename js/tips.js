@@ -20,9 +20,9 @@ var TIPS = {
   home: {
     title: 'This is you',
     lines: [
-      'Whatever pet and gear you buy, <b>you will see it on you</b> - here and in every round.',
       '<b>PLAY</b> takes you to the map. <b>BOSS</b> is a one-on-one fight.',
-      'Stars come from beating levels well - three for an S.'
+      '<b>DAILY</b> is a new round every day. <b>MY LIST</b> is your real week.',
+      'Gear you buy shows <b>on you</b>. The <b>target</b> holds your missions.'
     ]
   },
 

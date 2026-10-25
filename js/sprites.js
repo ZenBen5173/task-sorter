@@ -895,6 +895,178 @@ var SPRITE_DATA = {
     ]
   },
 
+  /* ---- badge and door icons ----
+     Drawn for the missions sheet, the badges and the home screen's new
+     doors. Same rules as the rest: nothing thinner than two pixels. */
+  star: {
+    pal: { g: '#f2c14e', d: '#a8741e', w: '#fff3c4' },
+    px: [
+      '................',
+      '.......gg.......',
+      '.......gg.......',
+      '......gwgg......',
+      '......gggg......',
+      '.ggggggggggggg..',
+      '..gggwgggggggd..',
+      '...gggggggggd...',
+      '....ggggggggd...',
+      '....gggggggd....',
+      '...gggggdggg....',
+      '...ggggd.dggg...',
+      '..gggdd...ddgg..',
+      '..ggd.......dg..',
+      '................',
+      '................'
+    ]
+  },
+  flag: {
+    pal: { p: '#c9d4ec', r: '#e0524a', d: '#a8322b' },
+    px: [
+      '................',
+      '..pp............',
+      '..pprrrrrrrrr...',
+      '..pprrrrrrrrrr..',
+      '..pprrrrrrrrrd..',
+      '..pprrrrrrrrd...',
+      '..pprrrrrrrrr...',
+      '..pprrrrrrrrrr..',
+      '..pp..dddddddd..',
+      '..pp............',
+      '..pp............',
+      '..pp............',
+      '..pp............',
+      '..pp............',
+      '.pppp...........',
+      '................'
+    ]
+  },
+  crown: {
+    pal: { g: '#f2c14e', d: '#a8741e', r: '#e0524a', b: '#5b8fd8' },
+    px: [
+      '................',
+      '................',
+      '................',
+      '.g.....gg.....g.',
+      '.gg....gg....gg.',
+      '.ggg..gggg..ggg.',
+      '.gggggggggggggg.',
+      '.gggggggggggggg.',
+      '.ggrggggbggggrg.',
+      '.gggggggggggggg.',
+      '.dddddddddddddd.',
+      '.gggggggggggggg.',
+      '.dddddddddddddd.',
+      '................',
+      '................',
+      '................'
+    ]
+  },
+  fire: {
+    pal: { r: '#e0524a', o: '#ff8a3a', y: '#ffe48a' },
+    px: [
+      '................',
+      '.......r........',
+      '......rr........',
+      '......rrr..r....',
+      '.....rrrr..rr...',
+      '....rrrorr.rr...',
+      '....rrroorrrr...',
+      '...rrrooorrrrr..',
+      '...rrooooorrrr..',
+      '...rroooyoorrr..',
+      '...rrooyyyoorr..',
+      '...rrooyyyoorr..',
+      '....rrooyoorr...',
+      '.....rrooorr....',
+      '.......rrr......',
+      '................'
+    ]
+  },
+  bolt: {
+    pal: { y: '#ffe48a', g: '#f2c14e' },
+    px: [
+      '................',
+      '........yyyy....',
+      '.......yyyy.....',
+      '......yyyy......',
+      '.....yyyy.......',
+      '....yyyy........',
+      '...yyyyyyyyy....',
+      '...ggggggggg....',
+      '.......gggg.....',
+      '......gggg......',
+      '.....gggg.......',
+      '....ggg.........',
+      '...gg...........',
+      '..g.............',
+      '................',
+      '................'
+    ]
+  },
+  ice: {
+    pal: { w: '#e8f6ff', b: '#9fd4ff', d: '#5b8fd8' },
+    px: [
+      '................',
+      '.......ww.......',
+      '...w...ww...w...',
+      '....w..ww..w....',
+      '.....w.ww.w.....',
+      '......wbbw......',
+      '.wwwwwbddbwwwww.',
+      '.wwwwwbddbwwwww.',
+      '......wbbw......',
+      '.....w.ww.w.....',
+      '....w..ww..w....',
+      '...w...ww...w...',
+      '.......ww.......',
+      '................',
+      '................',
+      '................'
+    ]
+  },
+  list: {
+    pal: { p: '#fbf3e0', l: '#c9b48a', g: '#5cc46a', r: '#8a5a2b' },
+    px: [
+      '................',
+      '...rrrrrrrrrr...',
+      '..rppppppppppr..',
+      '..rpgpplllllpr..',
+      '..rpggpppppppr..',
+      '..rppppppppppr..',
+      '..rpgpplllllpr..',
+      '..rpggpppppppr..',
+      '..rppppppppppr..',
+      '..rplpplllllpr..',
+      '..rppppppppppr..',
+      '..rplpplllllpr..',
+      '..rppppppppppr..',
+      '...rrrrrrrrrr...',
+      '................',
+      '................'
+    ]
+  },
+  target: {
+    pal: { r: '#e0524a', w: '#ffffff', b: '#8a5a2b' },
+    px: [
+      '................',
+      '.....rrrrrr.....',
+      '...rrwwwwwwrr...',
+      '..rwwrrrrrrwwr..',
+      '..rwrrwwwwrrwr..',
+      '.rwrrwwrrwwrrwr.',
+      '.rwrwwrrrrwwrwr.',
+      '.rwrwrrrrrrwrwr.',
+      '.rwrwrrrrrrwrwr.',
+      '.rwrwwrrrrwwrwr.',
+      '.rwrrwwrrwwrrwr.',
+      '..rwrrwwwwrrwr..',
+      '..rwwrrrrrrwwr..',
+      '...rrwwwwwwrr...',
+      '.....rrrrrr.....',
+      '................'
+    ]
+  },
+
   /* Drop - a bin */
   bin: {
     pal: { c: '#ffffff', w: '#1d2733' },

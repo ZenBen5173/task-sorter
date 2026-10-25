@@ -425,6 +425,127 @@ html, body {
 .toast.is-good { box-shadow: 0 5px 0 rgba(0,0,0,.45), inset 0 0 0 2px rgba(118,212,131,.7); }
 .toast.is-bad { box-shadow: 0 5px 0 rgba(0,0,0,.45), inset 0 0 0 2px rgba(224,82,74,.75); }
 
+/* ---------------- the review's hidden answer ----------------
+   A button now: tap it to turn it over. */
+button.review-chip { border: 0; cursor: pointer; font-family: var(--arcade); transition: transform .3s var(--snap), background .25s, color .25s; }
+button.review-chip.is-hidden:hover { background: rgba(60,40,20,.2); }
+button.review-chip.is-shown { color: #fff; animation: chip-flip .4s var(--snap); }
+button.review-chip.is-shown.box-now { background: var(--now); }
+button.review-chip.is-shown.box-later { background: var(--later); }
+button.review-chip.is-shown.box-give { background: #c97a1e; }
+button.review-chip.is-shown.box-drop { background: #6a7280; }
+@keyframes chip-flip { from { transform: rotateX(90deg) scale(.8); } }
+
+/* ---------------- the special cards, in the guide book ---------------- */
+.guide-specials { list-style: none; padding-left: 0; }
+.guide-specials li { display: flex; gap: 10px; align-items: baseline; }
+.sp-chip { flex: 0 0 52px; text-align: center; font: 400 8px/1 var(--arcade); padding: 6px 0; border-radius: 7px; color: #fff; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.sp-gold { background: linear-gradient(#ffd76a, #e8a33a); color: #3a2208; }
+.sp-ice { background: linear-gradient(#bfe6ff, #5b8fd8); }
+.sp-fuse { background: linear-gradient(#ffb43a, #e0524a); }
+.sp-swap { background: linear-gradient(#9aa2ae, #4a5d86); }
+
+/* ---------------- missions ---------------- */
+.sheet-missions { max-height: calc(88% - var(--safe-t)); }
+.mission-lead { margin: 0 0 12px; font-size: 13px; color: var(--tx-dim); }
+.mission-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.mission {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px;
+  background: linear-gradient(#2b3a5c, #1c2742); box-shadow: 0 5px 0 #060a14, inset 0 2px 0 rgba(255,255,255,.1);
+  animation: tile-in .4s var(--snap) both; animation-delay: calc(var(--i, 0) * .06s);
+  transition: transform .2s var(--spring);
+}
+.mission:hover { transform: translateY(-2px); }
+.mission:hover .mission-ico { transform: rotate(-12deg) scale(1.1); }
+.mission-ico { flex: 0 0 auto; width: 30px; height: 30px; transition: transform .3s var(--snap); }
+.mission-body { flex: 1 1 auto; min-width: 0; }
+.mission-body b { display: block; font-size: 15px; color: #fff; line-height: 1.25; }
+.mission-body small { display: block; margin-top: 4px; font-size: 12px; color: var(--tx-dim); }
+.mission-bar { display: block; height: 8px; margin-top: 7px; border-radius: 4px; background: rgba(0,0,0,.4); overflow: hidden; }
+.mission-bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #f0a93a, #ffd76a); animation: bar-in .9s var(--spring) both; animation-delay: calc(var(--i, 0) * .06s + .15s); transform-origin: left; }
+@keyframes bar-in { from { transform: scaleX(0); } }
+.mission-reward { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; font: 400 11px/1 var(--arcade); color: var(--gold); }
+.mission-reward .shop-coin { width: 16px; height: 16px; }
+
+.badge-count { margin-left: 6px; color: var(--gold); }
+.badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; padding-bottom: 8px; }
+.badge {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;
+  padding: 12px 6px 10px; border-radius: 16px; background: rgba(0,0,0,.25);
+  animation: tile-in .4s var(--snap) both; animation-delay: calc(var(--i, 0) * .03s);
+  transition: transform .2s var(--spring), background .2s;
+}
+.badge-ico { width: 34px; height: 34px; filter: grayscale(1) brightness(.45); transition: transform .3s var(--snap), filter .3s; }
+.badge b { font-size: 12px; color: var(--tx-dim); line-height: 1.15; }
+.badge small { font-size: 10.5px; color: var(--tx-dim); line-height: 1.2; opacity: .8; }
+.badge.is-got { background: linear-gradient(rgba(242,193,78,.22), rgba(242,193,78,.06)); box-shadow: inset 0 0 0 2px rgba(242,193,78,.55); }
+.badge.is-got .badge-ico { filter: none; }
+.badge.is-got b { color: #fff; }
+.badge:hover { transform: translateY(-3px); }
+.badge.is-got:hover .badge-ico { transform: scale(1.15) rotate(-8deg); }
+
+/* ---------------- my list ---------------- */
+.sheet-mine { max-height: calc(90% - var(--safe-t)); }
+.mine-lead { margin: 0 0 10px; font-size: 14px; color: var(--tx); flex: 0 0 auto; line-height: 1.35; }
+.mine-add { display: flex; gap: 8px; flex: 0 0 auto; margin: 0 0 12px; }
+.mine-add input {
+  flex: 1 1 auto; min-width: 0; border: 0; outline: 0; border-radius: 12px; padding: 12px 14px;
+  font: 600 16px var(--round); color: #fff; background: rgba(0,0,0,.35); box-shadow: inset 0 2px 0 rgba(0,0,0,.35);
+  -webkit-user-select: text; user-select: text; transition: box-shadow .2s;
+}
+.mine-add input:focus { box-shadow: inset 0 2px 0 rgba(0,0,0,.35), 0 0 0 2px var(--gold); }
+.mine-add input::placeholder { color: rgba(255,255,255,.35); }
+.mine-empty { margin: 6px 2px 12px; font-size: 14px; color: var(--tx-dim); line-height: 1.4; }
+.mine-group { margin: 0 0 14px; border-radius: 16px; padding: 10px 10px 6px; background: rgba(0,0,0,.22); animation: tile-in .4s var(--snap) both; }
+.mine-group h4 { margin: 0 0 8px; display: flex; flex-direction: column; gap: 3px; padding: 0 4px; }
+.mine-group h4 b { font: 400 10px/1 var(--arcade); color: #fff; }
+.mine-group h4 small { font-size: 12px; font-weight: 600; color: var(--tx-dim); }
+.mine-group.box-now { box-shadow: inset 4px 0 0 var(--now); }
+.mine-group.box-later { box-shadow: inset 4px 0 0 var(--later); }
+.mine-group.box-give { box-shadow: inset 4px 0 0 var(--give); }
+.mine-group.box-drop { box-shadow: inset 4px 0 0 var(--drop); }
+.mine-group.box-now h4 b { color: #ff9a8a; }
+.mine-group.box-later h4 b { color: #9fc4f4; }
+.mine-group.box-give h4 b { color: #ffc77a; }
+.mine-row {
+  display: flex; align-items: center; gap: 10px; padding: 9px 8px; margin: 0 0 4px; border-radius: 12px;
+  background: #fbf3e0; color: #2a1e10; box-shadow: 0 3px 0 rgba(0,0,0,.3);
+  animation: tile-in .35s var(--snap) both; animation-delay: calc(var(--i, 0) * .04s);
+  transition: opacity .2s, transform .2s var(--spring);
+}
+.mine-row:hover { transform: translateX(3px); }
+.mine-row.is-new { animation: row-new .55s var(--snap) both; }
+@keyframes row-new { from { opacity: 0; transform: translateY(-12px) scale(.9); } 60% { box-shadow: 0 3px 0 rgba(0,0,0,.3), 0 0 0 3px var(--gold); } }
+.mine-row.is-gone { opacity: 0; transform: translateX(40px) scale(.95); }
+.mine-tick {
+  flex: 0 0 auto; width: 26px; height: 26px; border-radius: 8px; border: 0; cursor: pointer;
+  background: rgba(60,40,20,.12); box-shadow: inset 0 0 0 2px rgba(60,40,20,.3);
+  position: relative; transition: background .2s, transform .2s var(--snap);
+}
+.mine-tick:active { transform: scale(.85); }
+.mine-row.is-done .mine-tick { background: var(--good); box-shadow: none; }
+.mine-row.is-done .mine-tick::after {
+  content: ''; position: absolute; left: 8px; top: 4px; width: 7px; height: 13px;
+  border: solid #fff; border-width: 0 3px 3px 0; transform: rotate(45deg); animation: tick-in .3s var(--snap);
+}
+@keyframes tick-in { from { transform: rotate(45deg) scale(0); } }
+.mine-text { flex: 1 1 auto; min-width: 0; font-size: 15px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; transition: color .2s; }
+.mine-row.is-done .mine-text { text-decoration: line-through; color: #9a8a6a; }
+.mine-x { flex: 0 0 auto; width: 30px; height: 30px; border: 0; border-radius: 50%; background: transparent; color: #a08a6a; font-size: 22px; line-height: 1; cursor: pointer; transition: background .2s, color .2s, transform .2s var(--snap); }
+.mine-x:hover { background: rgba(176,58,51,.12); color: #b03a33; transform: rotate(90deg); }
+.mine-clear { margin: 2px auto 10px; display: block; }
+.mine-foot { flex: 0 0 auto; padding-top: 10px; }
+.mine-foot .gbtn { width: 100%; font-size: 13px; }
+
+/* ---------------- bigger text ----------------
+   Settings > Bigger text. The canvas reads the same setting for the
+   cards and trays; this is the same for the sheets. */
+body.big-text .sheet, body.big-text .book, body.big-text .dialog-card, body.big-text .coach-bubble { font-size: 112%; }
+body.big-text .page { font-size: 18px; }
+body.big-text .row-btn b, body.big-text .mission-body b, body.big-text .review-task, body.big-text .mine-text { font-size: 17px; }
+body.big-text .row-btn small, body.big-text .review-why, body.big-text .shop-tile small, body.big-text .mine-group h4 small { font-size: 14px; }
+body.big-text .dialog-lines p, body.big-text .coach-lines { font-size: 17px; }
+
 /* Somebody who asked for less motion gets none of the bouncing. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

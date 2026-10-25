@@ -310,6 +310,33 @@ music, art, all of it. That is the whole reason the fonts are bundled and the
 soundtrack is generated. If the typography changes with the network off,
 something is still being fetched.
 
+### The new things (special cards, bosses, daily, missions, My List)
+
+All checked in a desktop browser with real taps and drags; these want a real
+finger on a real phone.
+
+- **Frozen card** (Level 2): tap the card itself twice and it cracks free;
+  tapping a tray first only says TAP TO CRACK.
+- **Burning card** (Level 3): the fuse runs down and the card shakes near the
+  end; leave one and it chars, and the reason shows.
+- **Trays swap** (Level 4, about 18 seconds in): drag a card while they slide -
+  it should follow the tray that ends up in that corner.
+- **A miss**: the right tray gets a moving dashed edge and the reason shows
+  under the top trays for a couple of seconds, while the next card is already
+  in play.
+- **Each boss once**: Steve's glue, Carla's swap, Ivan's blank trays, Dan's
+  fire, and the speech bubble under them.
+- **Daily**: play it, then check the DAILY door says the streak; play it again
+  and the bonus is not paid twice. Change the phone's date to tomorrow and the
+  door shows a new number with a !.
+- **My List**: type tasks with the phone keyboard, sort them, tick one off,
+  close and reopen the app - the plan is still there.
+- **Settings > Bigger text and Calm screen**: both should change the round at
+  once, not just the sheets.
+- **HUAWEI bridge**: `adb logcat -s TaskSorterGames` should print an
+  `achievement ...` line when a badge is earned and a `score daily = ...` line
+  after a daily round.
+
 ---
 
 ## Reporting what you find

@@ -78,6 +78,34 @@ device it reaches.
 
 ---
 
+## HUAWEI Game Service (leaderboards and achievements)
+
+The game already reports everything; the app only has to pass it on. Badges
+call `GameServices.unlockAchievement(id)` and scores call
+`GameServices.submitScore(board, score)`, through `window.HuaweiGames`
+(`js/services.js`). Today both only write to the log (`adb logcat -s
+TaskSorterGames`). To connect them:
+
+1. Sign up as a HUAWEI developer, and create the app in **AppGallery Connect**
+   with the package name `com.tasksorter.game`.
+2. Turn on **Game Service** for it, and add the signing certificate's SHA-256
+   fingerprint to the project.
+3. Download `agconnect-services.json` into `android/app/`, and add the
+   `com.huawei.agconnect` Gradle plugin plus the HMS `game` SDK, as HUAWEI's
+   current Game Service guide describes.
+4. Create the ids below in AppGallery Connect, then put the HMS calls in the
+   two marked lines in `GameServices.java`, mapping each game id to the
+   HUAWEI one. Sign the player in first (HUAWEI ID), as the guide shows.
+
+**Achievements** (one per badge in `js/missions.js`):
+`first_pass` `trail` `all_s` `boss_1` `boss_all` `combo8` `perfect15` `flawless` `later50` `gold25` `ice25` `daily3` `daily7` `mylist` `pets5` `saver` 
+
+**Leaderboards:** `daily` (today's Daily Challenge score), and `level1` to
+`level4` (a passed level's score).
+
+None of this changes the game: in a browser, or with the bridge left as it is,
+every call is a quiet no-op.
+
 ## What is not done yet
 
 - Never run on real hardware. It **has** now been run: installed on an

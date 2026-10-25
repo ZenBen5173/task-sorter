@@ -20,9 +20,10 @@ import androidx.webkit.WebViewAssetLoader;
  * Task Sorter, as an Android app.
  *
  * <p>The whole thing is one WebView holding the same game that runs on
- * the web. There is no second implementation and no bridge: the game
- * does not know it is inside an app, and nothing in js/ had to change
- * for this to exist.
+ * the web. There is no second implementation. The one bridge is
+ * {@link GameServices}, for HUAWEI's leaderboards and achievements, and
+ * the game treats it as optional: in a browser it is simply not there,
+ * and every call to it is a quiet no-op.
  *
  * <p><b>IT IS SERVED OVER HTTPS, NOT LOADED FROM file://.</b> The
  * obvious way to put a web game in a WebView is
@@ -105,6 +106,10 @@ public class MainActivity extends AppCompatActivity {
         }
         web.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+
+        /* Badges and scores, for HUAWEI Game Service once it is connected.
+           See GameServices.java and js/services.js. */
+        web.addJavascriptInterface(new GameServices(), "HuaweiGames");
 
         setContentView(web);
         web.loadUrl("https://appassets.androidplatform.net/index.html");

@@ -12,10 +12,15 @@ document.addEventListener('DOMContentLoaded', function () {
   var $ = UI.$;
 
   Progress.load();
+  /* A save from before badges existed has already earned some of them -
+     Level 1 passed, a boss beaten. They are handed over now, quietly,
+     rather than all popping up at the end of the next round. */
+  Badges.check(null);
   UI.sound.setOn(Progress.soundOn());
   Game.init();
   Hero.init();
   Panels.init();
+  MyList.init();
   Cloud.init();
   Stage.init();
   Themes.init();
@@ -25,6 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
   Stage.define('boot', { draw: function (c, W, H) { World.draw(c, W, H, { dim: 0.2 }); } });
   Stage.go('boot', {}, 'none');
   Gfx.preload(function () { Stage.go('title', {}, 'fade'); });
+  document.body.classList.toggle('big-text', Progress.bigText());
 
   /* ---- settings: sound and vibration ---- */
 
@@ -41,6 +47,20 @@ document.addEventListener('DOMContentLoaded', function () {
     Progress.setHapticsOn(on);
     Panels.paintSwitches();
     Haptics.good();           // the buzz you just switched on, so you know it works
+    Sfx.play('release');
+  });
+
+  /* ---- settings: easier to play ---- */
+
+  $('btn-bigtext').addEventListener('click', function () {
+    Progress.setBigText(!Progress.bigText());
+    Panels.paintSwitches();
+    Sfx.play('release');
+  });
+
+  $('btn-calmfx').addEventListener('click', function () {
+    Progress.setCalmFx(!Progress.calmFx());
+    Panels.paintSwitches();
     Sfx.play('release');
   });
 

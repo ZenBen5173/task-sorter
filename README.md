@@ -7,7 +7,11 @@ you pass.
 Sort right and fast, keep your streak alive, get an S.
 
 Four levels wind up a trail - the **Day to Day** pack. Each level is a
-**place in your life**, and only that place's tasks turn up there.
+**place in your life**, and only that place's tasks turn up there, and each
+one brings **one new twist**. Four bosses each have a trick of their own. A
+**Daily Challenge** deals the same round to everybody each day, **missions**
+and **badges** give you something to come back for, and **My List** turns
+the four corners on your own real week.
 
 ---
 
@@ -71,6 +75,117 @@ Any direction maps to a corner, so a sloppy flick still counts. A drag shorter
 than `SWIPE_MIN_PX` that is not a flick snaps back instead of sorting, so a
 stray touch costs you nothing.
 
+### When you miss
+
+The tray the card belonged in lights up with a moving dashed edge, and a strip
+under the top trays says **"It was Do Later"** and the card's reason, for a
+couple of seconds **while you keep playing**. The moment you miss is the moment
+you are most curious about why, so that is when the reason is shown. The round
+does not stop for it: the stun after a miss is still only the bounce.
+
+The end-screen review still lists every miss with its reason. The right corner
+is there too now, **under a tap** - try to work it out from the reason first,
+then tap to check.
+
+---
+
+## Special cards and twists
+
+**Every level adds one thing and keeps the ones before it.** A clock and harder
+cards make a level harder; they do not make it different. So:
+
+| Level | Twist | What it is |
+|---|---|---|
+| 1 House | **Golden cards** | Gold paper, triple points, +5 coins. The only new thing is good |
+| 2 School | **Frozen cards** | Iced over. Tap the card to crack it (twice), then sort it |
+| 3 Phone | **Burning cards** | A fuse runs along the top. Sort it before the spark reaches the end, or it chars and counts as a miss |
+| 4 Town | **Trays swap** | Every 18 seconds two trays slide into each other's corners. Every swipe follows them |
+
+A level you have not passed yet names its twist on the map card and in a
+banner before the clock starts. How often each card turns up is `specials` in
+`js/levels.js`; the fixed numbers (triple, five coins, two taps, 3.4 seconds of
+fuse) are in `TUNING` in `js/game.js`.
+
+**Your gear works on them too.** A Longsword or better breaks ice in one tap. A
+pet makes golden cards a little more likely (its coin bonus x 0.15). A shield
+covers a card that burns out, because a burnt card is a wrong answer.
+
+A special card says what it is in the strip where the place usually goes -
+GOLDEN x3, FROZEN - TAP IT, BURNING - BE QUICK - so nobody has to have read the
+Guide Book to know what is happening.
+
+---
+
+## Daily Challenge
+
+**One round a day, the same for everybody.** The deck, which cards are special,
+and which trays swap are drawn from random numbers seeded with today's date
+(`js/daily.js`, `startDaily` in `js/game.js`). Three separate streams, so the
+Nth card of the day is the same card with the same special for everybody,
+however fast they got there. Two friends on two phones get exactly the same
+round - the one place where comparing scores is fair.
+
+- 75 seconds, every kind of card, every twist.
+- Opens once **Level 1 is passed**, so a first-time player meets the corners on
+  the gentle level.
+- **Streak:** play on consecutive days and it climbs; miss one and it starts
+  again. The first finish each day pays **40 coins + 15 per streak day**, capped
+  at a week. Replays can beat your best but do not pay the bonus again.
+- The DAILY door on the home screen goes gold with a **!** when today's round
+  is waiting.
+
+---
+
+## Missions and badges
+
+`js/missions.js`. **Three missions are always on the go** - "Get 8 Perfects in
+one round", "Crack 3 frozen cards", "Sort 6 Do Later cards right". Finish one
+and its coins pay out with that round, flying into the wallet with the rest, and
+a new one takes its place. They get harder after every four you finish. Some
+count over many rounds, some want it done in one.
+
+There is a mission for **Do Later** on purpose: it is the corner the game argues
+changes your life, and the one people skip.
+
+**Sixteen badges** are for keeps: every level passed, an S on all four, every
+boss beaten, a seven-day streak, sorting your own list. Each is also an
+achievement id for HUAWEI Game Service (below).
+
+Both live behind the **target** button next to the cog on the home screen, with
+a red dot when something has finished since you last looked. On the results
+screen, a finished mission or a new badge gets a card of its own that stamps in
+before the buttons.
+
+---
+
+## My List
+
+**The game pointed at real life.** Open MY LIST on the home screen, type in what
+is actually on your plate - "Science project due Friday", "Reply to grandma" -
+and press **Sort my list**. It plays like a round of your own cards: same four
+trays, same drag, no clock, **no score and no wrong answers**, because only you
+know whether your project is a Do Now.
+
+What you get is a **plan in four piles**, kept on the sheet, with a hint on each
+pile ("Urgent, but not yours. Who could do it?") and a tick box on every task.
+Sort the week again whenever it changes. It is saved on the phone like the rest
+of your progress (`myTasks`), and never leaves it unless you made an account.
+
+---
+
+## Easier to play
+
+Settings has two switches:
+
+- **Bigger text** - larger words on the cards, the trays, the miss strip and
+  every sheet.
+- **Calm screen** - no screen shake, no freeze-frames, no punch-zoom, softer
+  red flashes. The phone's own "reduce motion" setting does the same.
+
+The trays also carry a **pattern** each - stripes, dots, chevrons, lines - so
+they differ in more than colour, for anyone who cannot tell the red from the
+orange.
+
 ---
 
 ## What is in the box
@@ -83,7 +198,11 @@ stray touch costs you nothing.
 | `js/levels.js` | **The levels**, the ranks, and your saved progress |
 | `js/game.js` | **The rules of a round:** scoring, the clock, grading, unlocks |
 | `js/shop.js` | **The shop:** pets, armour, weapons and coin rewards |
-| `js/battle.js` | **The bosses** you duel |
+| `js/battle.js` | **The bosses** you duel, their tricks and what they say |
+| `js/daily.js` | **The Daily Challenge**: today's seed, the streak, the bonus |
+| `js/missions.js` | **Missions** (three at a time) and **badges** (for keeps) |
+| `js/mylist.js` | **My List**: your own tasks, and the plan they become |
+| `js/services.js` | Where **HUAWEI Game Service** plugs in (achievements, leaderboards) |
 | `js/hero.js` | Your character's name, and the readout of what your gear does |
 
 **The engine** - how it is drawn, on one canvas (see *Why it is drawn now*):
@@ -540,16 +659,31 @@ fighting game. Both of you sort the same cards:
 - They sort one right on their own clock → they hit you
 
 Two health bars, a 60 second clock. First bar to empty loses; if the clock runs
-out, whoever has more health wins.
+out, whoever has more of their own bar left wins.
 
 ### The bosses
 
-| Boss | Is | Sorts | Accuracy | Damage |
-|---|---|---|---|---|
-| Sticky Steve | a sticky note with a face | one every 2.6s | 60% | 9 |
-| Clip Carla | paperclips in her hair | one every 2.0s | 72% | 10 |
-| Inbox Ivan | buried under his own paperwork | one every 1.5s | 82% | 11 |
-| Deadline Dan | an alarm clock, not a person | one every 1.1s | 92% | 13 |
+| Boss | Is | Sorts | Accuracy | Damage | Health | Trick |
+|---|---|---|---|---|---|---|
+| Sticky Steve | a sticky note with a face | one every 2.6s | 60% | 9 | 100 | **Sticky Fingers** - glues the card you are holding; tap it free |
+| Clip Carla | paperclips in her hair | one every 2.0s | 72% | 10 | 120 | **Reshuffle** - swaps two of your trays |
+| Inbox Ivan | buried under his own paperwork | one every 1.5s | 82% | 11 | 140 | **Inbox Flood** - the words on your trays vanish for 6 seconds |
+| Deadline Dan | an alarm clock, not a person | one every 1.1s | 92% | 13 | 160 | **Deadline** - this card and the next two catch fire |
+
+**Every boss has one trick, and it is the one their name promises.** Each is a
+twist the map already taught - frozen cards, swapping trays, burning cards -
+turned up, so a boss fight tests what the levels taught. Ivan's blackout is the
+only new one, and it only takes away words you should not need by then: the
+colours, icons and patterns stay. The first trick comes 4.5 seconds in, so you
+meet it in every fight, then every 9 to 11 seconds.
+
+**They talk.** A speech bubble under the boss: a line when the fight starts,
+when they use their trick, sometimes when you land a big hit or miss, and when
+one of you goes down. The lines are in `lines` on each boss.
+
+The later bosses have **more health**, so their fights last long enough for the
+trick to matter - at full speed a player could take a 100 HP boss apart in six
+cards.
 
 Each boss has its own drawing, named by `sprite` on the opponent. They are
 all named after the thing that buries people, so each one IS that thing - you
@@ -810,7 +944,11 @@ timer stays honest even if the app goes to the background.
   computer one is lying to whoever is playing.
 - Give Away characters (pick a teammate to hand the task to)
 - Rush mode (3x)
-- HUAWEI Game Service leaderboard
+- **HUAWEI Game Service, connected.** The game is built for it - every badge is
+  an achievement id, every daily and level score a leaderboard entry, all
+  passed through `js/services.js` to `GameServices.java` in the app. What is
+  missing is the part that cannot be in a repository: a HUAWEI developer
+  account and an AppGallery Connect project. `android/README.md` has the steps.
 - Office pack
 
 ---
@@ -827,7 +965,11 @@ timer stays honest even if the app goes to the background.
 - [ ] Presentation slides (ppt, max 40) — needs Issue Clarification and SDGs.
       The SDG answer is in the game as well as on the slide: see **Why this
       game exists** in the Guide Book
-- [ ] Video, max 3 minutes, max 60 MB, English subtitles if not in English
+- [ ] Video, max 3 minutes, max 60 MB, English subtitles if not in English.
+      `store/gameplay.mp4` is 53 seconds of real play to cut from (no sound -
+      record the soundtrack separately, or play over it)
+- [x] Store screenshots, 1080 x 1920 - `store/screenshots/`
+- [x] Store text: name, short and long description - `store/listing.md`
 - [x] An installable Android app — `android/`, about 3.4 MB
 - [x] Under **100 MB** — the APK is 3.4 MB, the game itself under 1 MB
 - [x] **Run the APK.** Done on an Android 15 emulator (Pixel 7, API 35): save

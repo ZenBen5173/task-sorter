@@ -120,6 +120,20 @@
         </button>
       </div>
 
+      <!-- For anyone who finds small words hard, or a shaking screen too
+           much. Both change the round as well as these sheets. -->
+      <div class="block">
+        <h3 class="sheet-h">Easier to play</h3>
+        <button class="row-btn" id="btn-bigtext" type="button">
+          <span><b>Bigger text</b><small>Larger words on the cards and the trays</small></span>
+          <span class="switch" id="bigtext-switch"><span class="knob"></span></span>
+        </button>
+        <button class="row-btn" id="btn-calmfx" type="button">
+          <span><b>Calm screen</b><small>No shaking, no flashes, no freeze-frames</small></span>
+          <span class="switch" id="calmfx-switch"><span class="knob"></span></span>
+        </button>
+      </div>
+
       <div class="block">
         <h3 class="sheet-h">The rules</h3>
         <button class="row-btn" id="btn-guide" type="button">
@@ -194,15 +208,39 @@
       </article>
 
       <article class="page">
+        <h3 class="guide-h">Special cards</h3>
+        <ul class="guide-ul guide-specials">
+          <li><span class="sp-chip sp-gold">GOLD</span> <b>Triple points</b>, and a few coins as well. From Level 1.</li>
+          <li><span class="sp-chip sp-ice">ICE</span> <b>Frozen.</b> Tap the card to crack it, then sort it. From Level 2.</li>
+          <li><span class="sp-chip sp-fuse">FUSE</span> <b>Burning.</b> Sort it before the fuse runs out, or it counts as a miss. From Level 3.</li>
+          <li><span class="sp-chip sp-swap">SWAP</span> <b>The trays move.</b> Every so often two of them change places. From Level 4.</li>
+        </ul>
+        <h3 class="guide-h">When you miss</h3>
+        <p>The tray it belonged in lights up, and the reason shows for a moment while you keep going. Every miss is also kept for the end of the round, under <b>What you missed</b>.</p>
+      </article>
+
+      <article class="page">
         <h3 class="guide-h">Your gear</h3>
         <ul class="guide-ul">
-          <li><b>Weapon</b> - more points per card, and harder hits on a boss.</li>
-          <li><b>Armour</b> - a shield that covers wrong answers so they do not count.</li>
-          <li><b>Pet</b> - pays extra coins, but <em>speeds your clock up</em>. Less time, smaller score. That is the deal.</li>
+          <li><b>Weapon</b> - more points per card, and harder hits on a boss. A Longsword or better <b>smashes ice in one tap</b>.</li>
+          <li><b>Armour</b> - a shield that covers wrong answers so they do not count. A card that burns out is a wrong answer, so it covers those too.</li>
+          <li><b>Pet</b> - pays extra coins and <b>finds more golden cards</b>, but <em>speeds your clock up</em>. Less time, smaller score. That is the deal.</li>
           <li>Wear all three at once for <b>+25% coins</b>.</li>
         </ul>
         <h3 class="guide-h">Boss fights</h3>
         <p>A boss sorts the same cards you do, on their own clock. Sort right to hit them, sort wrong and they hit you. <b>Watch the bar under them</b> - when it fills, they swing.</p>
+        <p>Every boss also has <b>one trick</b>: Steve glues your card down, Carla swaps your trays, Ivan hides the words on them, and Dan sets your cards on fire.</p>
+      </article>
+
+      <article class="page">
+        <h3 class="guide-h">Every day</h3>
+        <ul class="guide-ul">
+          <li><b>Daily Challenge</b> - one round, the same cards for everyone that day. Play it every day to build a <b>streak</b>; the bonus grows with it.</li>
+          <li><b>Missions</b> - three small goals at a time (the target by the cog on the home screen). Finish one and it pays out with that round.</li>
+          <li><b>Badges</b> - for keeps. Every level passed, every boss beaten, a week-long streak.</li>
+        </ul>
+        <h3 class="guide-h">My List</h3>
+        <p>Type in what is really on your plate this week and sort it with the same four corners. <b>Nobody marks it</b> - only you know your week. What you get is a plan in four piles, and you tick things off as you do them.</p>
       </article>
 
       <!-- WHY THIS IS IN THE GAME AND NOT ONLY IN THE SLIDES. A
@@ -244,6 +282,46 @@
     </div>
   </section>
 
+  <!-- ==================== MISSIONS AND BADGES ====================
+       Three goals on the go, and the badges you have earned. -->
+  <section class="sheet sheet-missions" id="sheet-missions" aria-label="Missions">
+    <div class="sheet-grip"></div>
+    <header class="sheet-head">
+      <h2>MISSIONS</h2>
+      <button class="sheet-x" type="button" data-close aria-label="Close">&times;</button>
+    </header>
+    <div class="sheet-scroll">
+      <p class="mission-lead">Finish one and it pays out at the end of that round. A new one takes its place.</p>
+      <ul class="mission-list" id="mission-list"></ul>
+      <h3 class="sheet-h">Badges <span class="badge-count" id="badge-count"></span></h3>
+      <div class="badge-grid" id="badge-grid"></div>
+    </div>
+  </section>
+
+  <!-- ==================== MY LIST ====================
+       Your own week, sorted with the four corners. See js/mylist.js. -->
+  <section class="sheet sheet-mine" id="sheet-mine" aria-label="My List">
+    <div class="sheet-grip"></div>
+    <header class="sheet-head">
+      <h2>MY LIST</h2>
+      <button class="sheet-x" type="button" data-close aria-label="Close">&times;</button>
+    </header>
+    <p class="mine-lead" id="mine-lead"></p>
+    <form class="mine-add" id="mine-add" autocomplete="off">
+      <input id="mine-text" type="text" maxlength="60" spellcheck="true"
+             placeholder="e.g. Science project due Friday" aria-label="A task to add">
+      <button class="gbtn gbtn-blue gbtn-sm" type="submit">Add</button>
+    </form>
+    <div class="sheet-scroll">
+      <p class="mine-empty" id="mine-empty">Nothing here yet. Add three or four real things - homework, chores, messages you owe - then sort them.</p>
+      <div class="mine-plan" id="mine-plan"></div>
+      <button class="gbtn gbtn-dark gbtn-sm mine-clear" id="mine-clear" type="button" hidden>Clear the done ones</button>
+    </div>
+    <footer class="mine-foot">
+      <button class="gbtn gbtn-gold" id="mine-sort" type="button">Sort my list</button>
+    </footer>
+  </section>
+
   <!-- ==================== A QUESTION, OR A NOTE ====================
        One dialog, reused: asking before a reset, explaining the online
        boss. -->
@@ -281,6 +359,10 @@
 <script src="js/levels.js"></script>
 <script src="js/shop.js"></script>
 <script src="js/battle.js"></script>
+<script src="js/daily.js"></script>
+<script src="js/services.js"></script>
+<script src="js/missions.js"></script>
+<script src="js/mylist.js"></script>
 <script src="js/sprites.js"></script>
 <script src="js/pets.js"></script>
 <script src="js/themes.js"></script>

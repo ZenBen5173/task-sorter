@@ -265,7 +265,9 @@ var Shop = (function () {
     var name = document.createElement('b');
     name.textContent = item.name;
     var desc = document.createElement('small');
-    desc.textContent = item.desc;
+    /* A strong enough weapon does something a weaker one cannot, and
+       that belongs on its tile, not only in the Guide Book. */
+    desc.textContent = item.desc + (kind === 'weapon' && item.mult >= TUNING.ICE_ONE_HIT_MULT ? '\nIce in 1 tap' : '');
 
     var tag = document.createElement('span');
     tag.className = 'shop-tag';
@@ -337,6 +339,8 @@ var Shop = (function () {
     Sfx.play('buy'); Haptics.win();
     Panels.toast(item.name + ' bought and equipped!', 'good');
     changed(kind);
+    /* a fifth pet is a badge; said a beat after the purchase, not over it */
+    setTimeout(function () { Badges.checkQuietly(); }, 1900);
   }
 
   return {
