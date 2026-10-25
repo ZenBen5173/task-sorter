@@ -149,6 +149,11 @@ var Progress = (function () {
       /* whether the game makes any noise. Flipped on the Me screen. */
       sound: true,
 
+      /* whether the phone buzzes when a card lands. A save written
+         before this existed has no such key, and load() fills it in
+         from here - so it comes back ON. */
+      haptics: true,
+
       /* what the player called their character. Empty means they have
          not named it, and the game just says "You". */
       heroName: '',
@@ -286,6 +291,9 @@ var Progress = (function () {
        left the game. */
     soundOn: function () { return data.sound !== false; },
     setSoundOn: function (on) { data.sound = !!on; save(); },
+
+    hapticsOn: function () { return data.haptics !== false; },
+    setHapticsOn: function (on) { data.haptics = !!on; save(); },
 
     /* ---- first-time popups ---- */
     hasSeenTip: function (name) { return !!(data.tipsSeen && data.tipsSeen[name]); },

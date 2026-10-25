@@ -214,11 +214,12 @@ var Pets = (function () {
          stay in the list, because the screen comes back, but nothing is
          written while nobody can see them.
 
-         Asked by class rather than by measuring: reading a position or
+         The shop lives in a sheet now, so it is the sheet's is-open
+         that is asked. Asked by class rather than by measuring: reading a position or
          an offsetParent makes the browser lay the page out, which is
          the one thing a 25-times-a-second timer must not do. */
-      if (e.screen === undefined) e.screen = e.el.closest('.screen');
-      if (e.screen && !e.screen.classList.contains('is-on')) continue;
+      if (e.screen === undefined) e.screen = e.el.closest('.sheet, .dialog');
+      if (e.screen && !e.screen.classList.contains('is-open') && !e.screen.classList.contains('dialog')) continue;
 
       e.waited += STEP_MS;
       if (e.waited < 1000 / e.sheet.fps) continue;

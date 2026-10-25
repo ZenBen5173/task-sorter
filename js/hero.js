@@ -70,7 +70,6 @@ var Hero = (function () {
     paintWorn();
     paintSet();
     paintStats();
-    Shop.paintCoins();
   }
 
   /** One line naming what the figure has on. A READOUT, not a control:
@@ -98,6 +97,7 @@ var Hero = (function () {
   /** The full-set banner: on when all three slots hold a real item. */
   function paintSet() {
     var el = UI.$('hero-set');
+    if (!el) return;
     var full = Shop.hasFullSet();
     var pct = Math.round(COIN_REWARD.setBonus * 100);
 
@@ -120,6 +120,7 @@ var Hero = (function () {
 
   function paintStats() {
     var host = UI.$('hero-stats');
+    if (!host) return;
     host.innerHTML = '';
 
     stats().forEach(function (s) {
@@ -232,7 +233,6 @@ var Hero = (function () {
 
   function init() {
     initName();
-    paintFigure(UI.$('hero-art'), true, 88);
   }
 
   return {

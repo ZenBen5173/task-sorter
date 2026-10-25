@@ -3,450 +3,89 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#12161b">
-
-<!-- The four corners and a card. It is what the game IS, and it is the
-     only thing that still reads at 16px on a browser tab - a hero at
-     that size is four grey pixels.
-
-     Also the one request the game was still getting a 404 on: a browser
-     asks for /favicon.ico whether you declare one or not, and an error
+<meta name="theme-color" content="#0a0e1a">
+<!-- The icon is the game: four corners and a card. It is also the one
+     request a browser makes whether you declare it or not, and an error
      in the console of a game being judged is an error in the console of
      a game being judged. -->
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="assets/icon-180.png">
 <meta name="description" content="Task Sorter - sort the pile before it buries you.">
 <title>Task Sorter</title>
-<!-- Two fonts, and the split is the whole point. Press Start 2P is a
-     real arcade face - eight pixels tall, no curves - and it is what
-     made the pixel sprites look like they were sitting in a dashboard
-     before: every picture in this game is pixel art and every word was
-     set in a UI sans. It is used ONLY for the loud things (the logo,
-     PLAY, the score, a heading) because it is very wide and unreadable
-     in a paragraph. Fredoka carries everything you actually read.
-
-     BOTH FONTS SHIP WITH THE GAME. They used to be fetched from Google
-     on every load, which meant the game only looked like itself when it
-     had the internet - and this is a mobile game, demonstrated on a
-     stranger's wifi and packaged into an app that has no reason to need
-     a network at all. A round that falls back to the system stack half
-     way through a judge's three minutes is a round that looks broken.
-
-     They are in css/style.css as @font-face, so there is nothing to
-     fetch and nothing to preconnect to. See assets/fonts/CREDITS.md -
-     both are Open Font Licence. -->
-<link rel="stylesheet" href="css/style.css">
+<!-- Both fonts ship with the game - see the top of css/game.css. -->
+<link rel="stylesheet" href="css/game.css">
 </head>
-<body>
+<body data-scene="boot">
 
-<div id="app">
+<!-- ============================================================
+     THE STAGE. Everything you play is drawn on this one canvas, every
+     frame: the world, your character, the round, the map, the bosses.
+     See js/stage.js for why the game stopped being eight HTML pages.
+     ============================================================ -->
+<canvas id="stage" role="img" aria-label="Task Sorter"></canvas>
 
-  <!-- The moving background: petals, leaves or rain, built by
-       js/weather.js. It sits behind EVERY screen, not just a round.
-       Menus used to be flat dead black while the only place anything
-       moved was inside a level - which is exactly what made the rest of
-       the game feel like a website with a game buried in it. -->
-  <div class="weather" id="weather" hidden></div>
+<!-- ============================================================
+     THE SHEETS. What HTML is genuinely better at than a canvas: a shop
+     you scroll, a box you type a name into, a rulebook, a list of the
+     cards you got wrong. They slide up over the living world rather
+     than replacing it - the game is still there, moving, behind them.
+     js/panels.js opens and closes them.
+     ============================================================ -->
+<div id="ui">
 
+  <div class="scrim" id="scrim"></div>
 
-  <!-- ==================== HOME ====================
-       The front door, and the only screen you land on. It used to be a
-       title card: a logo, the four corners written out again, and one
-       button - a screen you passed through once and never came back to.
-
-       A game's home is where you SEE what you have got. Your character
-       stands here wearing what you chose, with your rank, your stars and
-       your coins around them, and the biggest thing on it is PLAY. -->
-  <section id="screen-home" class="screen is-on">
-    <header class="home-top">
-      <h1 class="logo logo-sm">Task<span>Sorter</span></h1>
-      <div class="home-pills">
-        <div class="coin-pill star-pill"><span class="star-ico">&#9733;</span><b id="home-stars">0</b></div>
-        <div class="coin-pill"><span class="tab-coin-ico" data-sprite="coin"></span><b class="coin-count">0</b></div>
-      </div>
-    </header>
-
-    <div class="home-body">
-
-      <!-- Your character, wearing what you actually chose, with the pet
-           you actually bought walking about next to them. Nothing else
-           on the screen proves the gear was worth the coins. -->
-      <div class="home-stage">
-        <span class="home-hero" id="home-hero"></span>
-        <b class="home-name" id="home-name">You</b>
-      </div>
-
-      <div class="home-rank">
-        <div class="rank-line">
-          <b id="rank-name">Beginner</b>
-          <span id="rank-stars">0 / 12 stars</span>
-        </div>
-        <div class="rank-track"><div class="rank-fill" id="rank-fill"></div></div>
-      </div>
-
-      <button class="btn-play-big" id="btn-play" type="button">
-        <span class="play-tri">&#9654;</span>
-        <span class="play-words">
-          <b>PLAY</b>
-          <small id="play-next">Level 1 &middot; In the House</small>
-        </span>
-      </button>
-
-      <div class="home-row">
-        <button class="home-card" id="home-battle" type="button">
-          <span class="home-card-ico" data-sprite="battle"></span>
-          <b>Boss</b>
-          <small id="home-battle-sub">Out-sort a boss</small>
-        </button>
-        <button class="home-card" id="home-gear" type="button">
-          <span class="home-card-ico" data-sprite="shield"></span>
-          <b>Gear</b>
-          <small id="home-gear-sub">Pets &middot; armour &middot; weapons</small>
-        </button>
-      </div>
-
-      <!-- The other thing you are working towards. Stars come from
-           playing well; the collection comes from playing a lot, and a
-           row of creatures you have actually caught is worth more on a
-           home screen than a number. -->
-      <button class="home-collect" id="home-collect" type="button">
-        <span class="collect-head">
-          <b>Collection</b>
-          <small id="collect-count">0 of 13 pets</small>
-        </span>
-        <span class="collect-row" id="collect-row"></span>
-      </button>
-    </div>
-  </section>
-
-  <!-- ==================== LEVEL SELECT ==================== -->
-  <section id="screen-levels" class="screen">
-    <header class="lv-head">
-      <button class="btn btn-ghost btn-back" id="btn-lv-back" type="button">&#8592; Home</button>
-      <div>
-        <h2 class="lv-title" id="lv-title">Day to Day</h2>
-        <p class="lv-sub" id="lv-sub">Four places. Same four corners.</p>
-      </div>
-      <!-- The rulebook is one tap from the map rather than a tab of its
-           own: it is read once and come back to now and then, which is a
-           button, not a fifth of the bottom bar. -->
-      <button class="btn-help" id="btn-help" type="button" aria-label="Open the Guide Book">?</button>
-      <div class="coin-pill"><span class="tab-coin-ico" data-sprite="coin"></span><b class="coin-count">0</b></div>
-    </header>
-
-    <div class="lv-scene" id="lv-scene">
-      <!-- The wood. Every tree is a drawn silhouette placed by
-           js/forest.js - a jagged, stepped pine outline rather than a
-           triangle, and no two the same height, width or lean. It used
-           to be a repeat-x gradient, which can only ever draw one tree
-           over and over at a fixed spacing. -->
-      <svg class="lv-trees" id="lv-trees" viewBox="0 0 100 100"
-           preserveAspectRatio="none" aria-hidden="true"></svg>
-
-      <!-- the winding trail. Drawn in percent so it stretches to any phone. -->
-      <svg class="lv-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <path class="trail-base" vector-effect="non-scaling-stroke"
-              d="M 26 87 C 45 89, 64 80, 70 68 C 76 56, 42 56, 28 47 C 15 39, 52 36, 66 24"></path>
-        <path class="trail-dash" vector-effect="non-scaling-stroke"
-              d="M 26 87 C 45 89, 64 80, 70 68 C 76 56, 42 56, 28 47 C 15 39, 52 36, 66 24"></path>
-      </svg>
-
-      <span class="deco deco-1"></span>
-      <span class="deco deco-2"></span>
-      <span class="deco deco-3"></span>
-      <span class="deco deco-4"></span>
-
-      <div class="lv-ribbon" id="lv-ribbon">In the House</div>
-
-      <!-- level nodes get placed here -->
-    </div>
-  </section>
-
-
-
-
-  <!-- ==================== GUIDE BOOK ====================
-       The rulebook. Every new player is sent here before their first
-       game, and it stays on a tab so anyone can come back to it.
-       This is where the game explains the Eisenhower Matrix in plain
-       words - the screen that does the actual teaching. -->
-  <section id="screen-guide" class="screen">
-    <header class="lv-head">
-      <button class="btn btn-ghost btn-back" id="btn-guide-back" type="button">&#8592; Back</button>
-      <div>
-        <h2 class="lv-title">Guide Book</h2>
-        <p class="lv-sub">How to play</p>
-      </div>
-      <div class="coin-pill"><span class="tab-coin-ico" data-sprite="coin"></span><b class="coin-count">0</b></div>
-    </header>
-
-    <div class="guide-body">
-
-      <p class="guide-intro">
-        Every day throws jobs at you. Some matter, some are just loud.
-        <b>This book is how you tell them apart.</b>
-      </p>
-
-      <h3 class="guide-h">The two questions</h3>
-      <p class="guide-p">
-        Before every card, ask yourself two things:
-      </p>
-      <ol class="guide-ol">
-        <li><b>Does this actually matter?</b> Will skipping it cause a real problem?</li>
-        <li><b>Does it have to be now?</b> Is there a deadline today?</li>
-      </ol>
-      <p class="guide-p">
-        Your two answers point at one corner. That is the whole game.
-      </p>
-
-      <h3 class="guide-h">The four corners</h3>
-      <div class="guide-grid">
-        <div class="guide-box box-now">
-          <span class="guide-ico" data-sprite="bang"></span>
-          <b>Do Now</b>
-          <small>Matters <em>and</em> due today</small>
-          <p>Pot boiling over. Homework due at 8am.</p>
-        </div>
-        <div class="guide-box box-later">
-          <span class="guide-ico" data-sprite="cal"></span>
-          <b>Do Later</b>
-          <small>Matters, but not yet</small>
-          <p>Exam in 3 weeks. Dentist with no toothache.</p>
-        </div>
-        <div class="guide-box box-give">
-          <span class="guide-ico" data-sprite="arrow"></span>
-          <b>Give Away</b>
-          <small>Urgent, but not yours</small>
-          <p>The bin, on your brother's night.</p>
-        </div>
-        <div class="guide-box box-drop">
-          <span class="guide-ico" data-sprite="bin"></span>
-          <b>Drop</b>
-          <small>Neither</small>
-          <p>Checking who viewed your story.</p>
-        </div>
-      </div>
-
-      <p class="guide-p">
-        All four are live from Level 1. What makes the early levels easy is
-        the <b>cards</b>, not the corners - Level 1 only deals ones with an
-        obvious answer, and the tricky ones arrive later.
-      </p>
-
-      <div class="guide-note">
-        <b>The trap everyone falls into</b>
-        <p>
-          <em>Urgent</em> and <em>important</em> are not the same thing. A
-          buzzing phone feels urgent and almost never is. A big exam feels
-          far away and is the most important thing you own.
-        </p>
-        <p>
-          <b>Do Later is the corner that changes your life</b>, and it is the
-          one people skip, because nothing bad happens today if you do.
-        </p>
-      </div>
-
-      <!-- WHY THIS IS IN THE GAME AND NOT ONLY IN THE SLIDES.
-
-           A competition entry is asked what it does for the Sustainable
-           Development Goals, and the honest failure mode is to answer
-           that on a slide and nowhere else - a claim made to judges
-           about a game that never makes it to the person playing.
-
-           It is also the only place the game says what it is FOR. Every
-           other page teaches the method; none of them said why anybody
-           should want it. It is kept to three sentences and no logos,
-           because a player came here to learn how to play. -->
-      <div class="guide-note guide-why">
-        <b>Why this game exists</b>
-        <p>
-          The four corners are the <b>Eisenhower Matrix</b>, and it is taught
-          in management courses to adults who pay for them. There is nothing
-          in it a twelve year old cannot do - the only reason most people
-          meet it at thirty is that nobody showed them at twelve.
-        </p>
-        <p>
-          That is the gap this is aimed at, and it is why the game is free,
-          runs on any phone, and needs no account to play: <b>UN Goal 4,
-          Quality Education</b> - a life skill, for anyone, at no cost.
-        </p>
-        <p>
-          The skill itself is the point. Knowing which things actually matter
-          is how people stop drowning in the ones that do not.
-        </p>
-      </div>
-
-      <h3 class="guide-h">How to play</h3>
-      <ul class="guide-ul">
-        <li>A card appears. <b>Swipe it into a corner.</b> On a laptop: <b>Q W A S</b>.</li>
-        <li>Get it right and your <b>streak</b> climbs, up to x8. Every card is worth more.</li>
-        <li>Get it wrong and the streak drops to x1. That is the real punishment.</li>
-        <li>Sort within 1.2 seconds for a <b>Perfect</b> and a big bonus.</li>
-      </ul>
-
-      <h3 class="guide-h">How to pass</h3>
-      <p class="guide-p">
-        One thing decides it: <b>the share you got right</b>. Level 1 needs 60%,
-        and it climbs to 75% by Level 4. Speed only changes your score, never
-        whether you pass.
-      </p>
-      <p class="guide-p">
-        Get one wrong and the round does not stop to lecture you - you just
-        hear it and see the card fly the wrong way. <b>Every mistake is
-        waiting on the end screen</b> under <b>What you missed</b>, with the
-        right answer and the reason, for as long as you want to sit and read
-        it. That is the part worth reading.
-      </p>
-
-      <h3 class="guide-h">Your gear</h3>
-      <ul class="guide-ul">
-        <li><b>Weapon</b> - more points per card. Safe, always good.</li>
-        <li><b>Armour</b> - covers wrong answers so they do not count against you.</li>
-        <li><b>Pet</b> - pays extra coins, but <em>speeds your clock up</em>. Less time, smaller score. That is the deal.</li>
-        <li>Wear all three at once for <b>+25% coins</b>.</li>
-      </ul>
-
-      <h3 class="guide-h">Boss fights</h3>
-      <p class="guide-p">
-        A boss sorts the same cards you do, on their own clock. Sort right to
-        hit them, sort wrong and they hit you. Your weapon decides how hard.
-      </p>
-
-      <h3 class="guide-h">Change the background</h3>
-      <p class="guide-p">
-        In a level, the round button in the <b>top right corner</b> opens the
-        background picker. Sakura, forest, waterfalls, or plain deep space.
-        Pick one and it stays that way for every round after.
-      </p>
-      <div class="guide-swatches" id="guide-swatches"></div>
-      <p class="guide-p">
-        <b>The clock stops while the picker is open</b>, so changing it never
-        costs you a second.
-      </p>
-
-      <div class="guide-note is-last">
-        <b>If you remember one thing</b>
-        <p>
-          Loud is not the same as important. Most of what shouts at you today
-          belongs in <em>Drop</em> or <em>Give Away</em> - and the thing that
-          actually matters is sitting quietly in <em>Do Later</em>.
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ==================== BATTLE SELECT ==================== -->
-  <section id="screen-battle" class="screen">
-    <header class="lv-head">
-      <div>
-        <h2 class="lv-title">Boss</h2>
-        <p class="lv-sub">One on one</p>
-      </div>
-      <div class="coin-pill">
-        <span class="tab-coin-ico" data-sprite="coin"></span>
-        <b class="coin-count">0</b>
-      </div>
-    </header>
-    <div class="battle-list" id="battle-list"></div>
-  </section>
-  <!-- ==================== HERO ==================== -->
   <!-- ==================== GEAR ====================
-       Your character and the whole shop, on ONE screen. They used to be
-       two tabs showing the same list of items: you bought on one and
-       equipped on the other, so choosing your gear meant hopping between
-       them. Tapping an item you own already equips it and tapping one you
-       can afford already buys AND equips it, so the split was never doing
-       any work. -->
-  <section id="screen-gear" class="screen">
-    <header class="lv-head">
-      <div>
-        <h2 class="lv-title">Gear</h2>
-        <p class="lv-sub">Tap to wear or buy</p>
-      </div>
-      <div class="coin-pill">
-        <span class="tab-coin-ico" data-sprite="coin"></span>
-        <b class="coin-count">0</b>
-      </div>
-    </header>
-
-    <div class="hero-body">
-
-      <!-- YOUR CHARACTER, ASSEMBLED. This used to be three slot boxes
-           around a small figure - tap a box, a picker opens underneath,
-           choose from it. All three were doing a job the shop below
-           already does: tapping an item on a shelf buys it if you need
-           to and puts it on either way. So the boxes were a second way
-           to do the same thing, and they turned the one place in the
-           game that should show you a CHARACTER into a form.
-
-           What is left is the character, wearing what you chose, with
-           the pet walking beside them. The line under it is a readout,
-           not a control. -->
-      <div class="hero-stage">
-        <div class="hero-figure">
-          <span class="hero-art" id="hero-art"></span>
-        </div>
-
-        <!-- Tap to type. A plain text box rather than a popup, so
-             naming your character is one tap, not three. -->
+       The shop, under your character. The character itself stands on
+       the stage above this sheet, large, and changes outfit when you
+       tap something here. -->
+  <section class="sheet sheet-gear" id="sheet-gear" aria-label="Gear">
+    <div class="sheet-grip"></div>
+    <div class="gear-top">
+      <!-- Tap to type. A plain text box, so naming your character is one
+           tap, not three. -->
+      <label class="name-field">
+        <span class="name-k">NAME</span>
         <input class="hero-name" id="hero-name" type="text" maxlength="14"
                autocomplete="off" spellcheck="false"
                placeholder="Name me" aria-label="Your character's name">
-
-        <p class="hero-worn" id="hero-worn"></p>
-      </div>
-
-      <div class="hero-set" id="hero-set"></div>
-
-      <!-- Everything you can buy, directly under the character who would
-           be wearing it. It goes ABOVE the stat bars because it is what
-           people come to this page for; the bars are a readout of what
-           you already chose, so they read last. -->
-      <div class="shop-body" id="shop-body"></div>
-
+      </label>
+      <p class="hero-worn" id="hero-worn"></p>
+    </div>
+    <div class="hero-set" id="hero-set"></div>
+    <nav class="shop-tabs" role="tablist">
+      <button type="button" data-shop-tab="pet" role="tab">PETS</button>
+      <button type="button" data-shop-tab="armour" role="tab">ARMOUR</button>
+      <button type="button" data-shop-tab="weapon" role="tab">WEAPONS</button>
+    </nav>
+    <p class="shop-blurb" id="shop-blurb"></p>
+    <div class="sheet-scroll">
+      <div class="shop-grid" id="shop-grid"></div>
+      <h3 class="sheet-h">What your gear does</h3>
       <div class="hero-stats" id="hero-stats"></div>
     </div>
-    <div class="shop-flash" id="shop-flash"></div>
   </section>
 
-  <!-- ==================== ME ====================
-       Everything ABOUT the player rather than about a round: the
-       account that keeps a save, the background, the sound, the
-       rulebook, and the one button that deletes it all.
-
-       Saving your progress used to live on the Character page, in among
-       the pets and the swords. Nobody looking for "keep my progress"
-       opens a page about gear. -->
-  <section id="screen-me" class="screen">
-    <header class="lv-head">
-      <div>
-        <h2 class="lv-title">Me</h2>
-        <p class="lv-sub">Save and settings</p>
-      </div>
-      <div class="coin-pill">
-        <span class="tab-coin-ico" data-sprite="coin"></span>
-        <b class="coin-count">0</b>
-      </div>
+  <!-- ==================== SETTINGS ==================== -->
+  <section class="sheet sheet-settings" id="sheet-settings" aria-label="Settings">
+    <div class="sheet-grip"></div>
+    <header class="sheet-head">
+      <h2>SETTINGS</h2>
+      <button class="sheet-x" type="button" data-close aria-label="Close">&times;</button>
     </header>
+    <div class="sheet-scroll">
 
-    <div class="me-body">
-
-      <!-- ==================== ACCOUNT ====================
-           A username and a password. No email is asked for, ever -
+      <!-- A username and a password. No email is asked for, ever -
            see the note at the top of js/cloud.js for why. -->
-      <div class="acct" id="acct">
+      <div class="block acct" id="acct">
+        <h3 class="sheet-h">Save online</h3>
         <div class="acct-in" id="acct-in" hidden>
           <span class="acct-dot"></span>
           <span class="acct-who">Signed in as <b id="acct-name"></b></span>
-          <button class="btn btn-ghost btn-tiny" id="btn-signout" type="button">Sign out</button>
+          <button class="gbtn gbtn-dark gbtn-sm" id="btn-signout" type="button">Sign out</button>
         </div>
-
         <div class="acct-out" id="acct-out">
-          <p class="acct-lead">
-            <b>Save your progress online.</b>
-            Make an account and your levels, coins and gear follow you to any
-            phone or computer.
-          </p>
+          <p class="acct-lead">Make an account and your levels, coins and gear follow you to any phone.</p>
           <div class="acct-fields">
             <input id="acct-user" type="text" maxlength="14" autocomplete="username"
                    autocapitalize="none" spellcheck="false" placeholder="Username">
@@ -454,231 +93,212 @@
                    placeholder="Password">
           </div>
           <div class="acct-buttons">
-            <button class="btn btn-primary" id="btn-signin" type="button">Sign in</button>
-            <button class="btn" id="btn-signup" type="button">Create account</button>
+            <button class="gbtn gbtn-gold" id="btn-signin" type="button">Sign in</button>
+            <button class="gbtn gbtn-blue" id="btn-signup" type="button">Create account</button>
           </div>
           <p class="acct-privacy">No email needed. Just a name you make up.</p>
         </div>
-
         <p class="acct-msg" id="acct-msg" hidden></p>
       </div>
 
-      <!-- The background, choosable OUTSIDE a round. It used to be
-           reachable only from the button inside a level, which meant you
-           had to start playing something to change how the game looked. -->
-      <div class="me-block">
-        <h3 class="me-h">Background</h3>
-        <div class="theme-picker is-inline is-on" id="theme-picker-me"></div>
+      <!-- The background. The world behind this sheet changes while you
+           watch, because it is the same world. -->
+      <div class="block">
+        <h3 class="sheet-h">Background</h3>
+        <div class="theme-row" id="theme-picker-me"></div>
       </div>
 
-      <div class="me-block">
-        <h3 class="me-h">Sound</h3>
-        <button class="me-row" id="btn-sound" type="button">
-          <span class="me-row-t"><b>Sound</b><small>Music, and the chimes when you sort</small></span>
-          <span class="me-switch" id="sound-switch"><span class="me-knob"></span></span>
+      <div class="block">
+        <h3 class="sheet-h">Feel</h3>
+        <button class="row-btn" id="btn-sound" type="button">
+          <span><b>Sound</b><small>Music, and the chimes when you sort</small></span>
+          <span class="switch" id="sound-switch"><span class="knob"></span></span>
+        </button>
+        <button class="row-btn" id="btn-haptics" type="button">
+          <span><b>Vibration</b><small>A buzz in your hand when a card lands</small></span>
+          <span class="switch" id="haptics-switch"><span class="knob"></span></span>
         </button>
       </div>
 
-      <div class="me-block">
-        <h3 class="me-h">The rules</h3>
-        <button class="me-row" id="btn-guide" type="button">
-          <span class="me-row-t"><b>Guide Book</b><small>The four corners, and how to pass</small></span>
-          <span class="me-go">&#8594;</span>
+      <div class="block">
+        <h3 class="sheet-h">The rules</h3>
+        <button class="row-btn" id="btn-guide" type="button">
+          <span><b>Guide Book</b><small>The four corners, and how to pass</small></span>
+          <span class="go">&rarr;</span>
         </button>
       </div>
 
       <!-- Last, alone, and it asks first. -->
-      <div class="me-block is-danger">
-        <h3 class="me-h">Danger</h3>
-        <button class="btn btn-ghost btn-tiny" id="btn-reset" type="button">Reset all progress</button>
+      <div class="block is-danger">
+        <h3 class="sheet-h">Danger</h3>
+        <button class="gbtn gbtn-dark gbtn-sm" id="btn-reset" type="button">Reset all progress</button>
       </div>
     </div>
   </section>
 
-  <!-- ==================== PLAY ==================== -->
-  <section id="screen-play" class="screen">
-
-    <!-- What you are playing in front of, drawn by js/scenery.js. It
-         sits behind the HUD and the arena and takes no taps. Three of
-         the four themes used to name a photograph that never existed,
-         so picking Sakura got you a flat pink page. -->
-    <div class="play-scene" id="play-scene" aria-hidden="true"></div>
-
-    <header class="hud">
-      <button class="btn-exit" id="btn-exit" type="button" aria-label="Leave this level">&#8592;</button>
-      <div class="hud-score">
-        <span class="hud-k"><b id="play-level">Level 1</b> &middot; need <b id="play-target">0</b></span>
-        <div class="odo" id="odo"></div>
-      </div>
-      <div class="streak" id="streak">x1</div>
-      <div class="hud-clock">
-        <span class="hud-k" id="clock-k">Time</span>
-        <b id="clock">90</b>
-      </div>
-      <!-- Change the background mid-round. Opening it pauses the clock,
-           so choosing a picture never costs you seconds. -->
-      <button class="btn-theme" id="btn-theme" type="button" aria-label="Change the background">&#9673;</button>
+  <!-- ==================== THE GUIDE BOOK ====================
+       The rulebook, as a book: pages you turn, not a page you scroll.
+       This is where the game explains the Eisenhower Matrix in plain
+       words. The first round TEACHES it by doing (js/game.js); this is
+       where you come back to read it properly. -->
+  <section class="book" id="sheet-guide" aria-label="Guide Book">
+    <header class="sheet-head">
+      <h2>GUIDE BOOK</h2>
+      <button class="sheet-x" type="button" data-close aria-label="Close">&times;</button>
     </header>
+    <div class="pages" id="guide-pages">
 
-    <!-- the background picker, filled in by js/themes.js -->
-    <div class="theme-picker" id="theme-picker" hidden></div>
+      <article class="page">
+        <p class="guide-intro">Every day throws jobs at you. Some matter, some are just loud.
+          <b>This book is how you tell them apart.</b></p>
+        <h3 class="guide-h">The two questions</h3>
+        <p>Before every card, ask yourself two things:</p>
+        <ol class="guide-ol">
+          <li><b>Does this actually matter?</b> Will skipping it cause a real problem?</li>
+          <li><b>Does it have to be now?</b> Is there a deadline today?</li>
+        </ol>
+        <p>Your two answers point at one corner. That is the whole game.</p>
+      </article>
 
-    <div class="fight-hud">
-      <div class="fighter">
-        <span class="fight-name" id="you-name">You</span>
-        <div class="hp-track"><div class="hp-fill" id="hp-you"></div></div>
-      </div>
-      <div class="fight-mid">
-        <span class="foe-art-live" id="foe-art-live"></span>
-        <b id="fight-clock">60</b>
-      </div>
-      <div class="fighter fighter-foe">
-        <span class="fight-name" id="foe-name">Boss</span>
-        <div class="hp-track"><div class="hp-fill is-foe" id="hp-foe"></div></div>
-      </div>
+      <article class="page">
+        <h3 class="guide-h">The four corners</h3>
+        <div class="guide-grid">
+          <div class="guide-box box-now"><span class="guide-ico" data-sprite="bang"></span><b>Do Now</b><small>Matters <em>and</em> due today</small><p>Pot boiling over. Homework due at 8am.</p></div>
+          <div class="guide-box box-later"><span class="guide-ico" data-sprite="cal"></span><b>Do Later</b><small>Matters, but not yet</small><p>Exam in 3 weeks. Dentist with no toothache.</p></div>
+          <div class="guide-box box-give"><span class="guide-ico" data-sprite="arrow"></span><b>Give Away</b><small>Urgent, but not yours</small><p>The bin, on your brother's night.</p></div>
+          <div class="guide-box box-drop"><span class="guide-ico" data-sprite="bin"></span><b>Drop</b><small>Neither</small><p>Checking who viewed your story.</p></div>
+        </div>
+      </article>
+
+      <article class="page">
+        <div class="guide-note">
+          <b>The trap everyone falls into</b>
+          <p><em>Urgent</em> and <em>important</em> are not the same thing. A buzzing phone feels urgent and almost never is. A big exam feels far away and is the most important thing you own.</p>
+          <p><b>Do Later is the corner that changes your life</b>, and it is the one people skip, because nothing bad happens today if you do.</p>
+        </div>
+        <p>All four corners are live from Level 1. What makes the early levels easy is the <b>cards</b> - Level 1 only deals ones with an obvious answer, and the tricky ones arrive later.</p>
+      </article>
+
+      <article class="page">
+        <h3 class="guide-h">How to play</h3>
+        <ul class="guide-ul">
+          <li>A card appears. <b>Drag or flick it into a corner</b> - or tap the corner. On a laptop: <b>Q W A S</b>.</li>
+          <li>Get it right and your <b>combo</b> climbs, up to x8. Every card is worth more.</li>
+          <li>Get it wrong and the combo drops to x1. That is the real punishment.</li>
+          <li>Sort within 1.2 seconds for a <b>Perfect</b> and a big bonus.</li>
+          <li>The last stretch of a level is the <b>final rush</b>: double points.</li>
+        </ul>
+        <h3 class="guide-h">How to pass</h3>
+        <p>One thing decides it: <b>the share you got right</b>. Level 1 needs 60%, and it climbs to 75% by Level 4. Speed only changes your score, never whether you pass.</p>
+        <p>Every mistake waits on the end screen under <b>What you missed</b>, with the reason. That is the part worth reading.</p>
+      </article>
+
+      <article class="page">
+        <h3 class="guide-h">Your gear</h3>
+        <ul class="guide-ul">
+          <li><b>Weapon</b> - more points per card, and harder hits on a boss.</li>
+          <li><b>Armour</b> - a shield that covers wrong answers so they do not count.</li>
+          <li><b>Pet</b> - pays extra coins, but <em>speeds your clock up</em>. Less time, smaller score. That is the deal.</li>
+          <li>Wear all three at once for <b>+25% coins</b>.</li>
+        </ul>
+        <h3 class="guide-h">Boss fights</h3>
+        <p>A boss sorts the same cards you do, on their own clock. Sort right to hit them, sort wrong and they hit you. <b>Watch the bar under them</b> - when it fills, they swing.</p>
+      </article>
+
+      <!-- WHY THIS IS IN THE GAME AND NOT ONLY IN THE SLIDES. A
+           competition entry is asked what it does for the Sustainable
+           Development Goals, and the honest failure mode is to answer
+           that on a slide and nowhere else - a claim made to judges about
+           a game that never makes it to the person playing. -->
+      <article class="page">
+        <div class="guide-note guide-why">
+          <b>Why this game exists</b>
+          <p>The four corners are the <b>Eisenhower Matrix</b>, and it is taught in management courses to adults who pay for them. There is nothing in it a twelve year old cannot do - the only reason most people meet it at thirty is that nobody showed them at twelve.</p>
+          <p>That is the gap this is aimed at, and it is why the game is free, runs on any phone, and needs no account to play: <b>UN Goal 4, Quality Education</b> - a life skill, for anyone, at no cost.</p>
+        </div>
+        <div class="guide-note is-last">
+          <b>If you remember one thing</b>
+          <p>Loud is not the same as important. Most of what shouts at you today belongs in <em>Drop</em> or <em>Give Away</em> - and the thing that actually matters is sitting quietly in <em>Do Later</em>.</p>
+        </div>
+      </article>
     </div>
-    <!-- Shield charges left this round. This strip used to sit beside the
-         desk meter; the desk is gone, so it stands on its own now. -->
-    <div class="shieldbar">
-      <span class="shield-pips" id="shield-pips" hidden></span>
-    </div>
+    <footer class="book-foot">
+      <button class="gbtn gbtn-dark gbtn-sm" id="guide-prev" type="button">&larr; Back</button>
+      <span class="dots" id="guide-dots"></span>
+      <button class="gbtn gbtn-gold gbtn-sm" id="guide-next" type="button">Next &rarr;</button>
+    </footer>
+  </section>
 
-    <div class="arena" id="arena">
-      <div class="corner corner-tl" id="corner-now">
-        <span class="corner-ico"></span>
-        <b class="corner-label">Do Now</b>
-        <span class="corner-hint"></span>
-      </div>
-      <div class="corner corner-tr" id="corner-later">
-        <span class="corner-ico"></span>
-        <b class="corner-label">Do Later</b>
-        <span class="corner-hint"></span>
-      </div>
-      <div class="corner corner-bl" id="corner-give">
-        <span class="corner-ico"></span>
-        <b class="corner-label">Give Away</b>
-        <span class="corner-hint"></span>
-      </div>
-      <div class="corner corner-br" id="corner-drop">
-        <span class="corner-ico"></span>
-        <b class="corner-label">Drop</b>
-        <span class="corner-hint"></span>
-      </div>
-
-      <div class="card" id="card">
-        <span class="card-text">&nbsp;</span>
-      </div>
-
-      <div class="flash" id="flash"></div>
+  <!-- ==================== WHAT YOU MISSED ====================
+       Every card you got wrong, what you said, and the reason. The
+       right corner is never shown: working it out is the lesson. -->
+  <section class="sheet sheet-review" id="sheet-review" aria-label="What you missed">
+    <div class="sheet-grip"></div>
+    <header class="sheet-head">
+      <h2 id="review-head">WHAT YOU MISSED</h2>
+      <button class="sheet-x" type="button" data-close aria-label="Close">&times;</button>
+    </header>
+    <p class="review-note">The corner is never given away. Read the reason, work it out, and go again.</p>
+    <div class="sheet-scroll">
+      <ul class="review-list" id="review-list"></ul>
     </div>
   </section>
 
-  <!-- ==================== END ==================== -->
-  <section id="screen-end" class="screen">
-    <div class="end-wrap">
-      <h2 class="end-title" id="end-title">Time!</h2>
-      <p class="end-sub" id="end-sub">Round complete.</p>
-
-      <div class="grade" id="grade">A</div>
-      <p class="end-unlock" id="end-unlock"></p>
-
-      <!-- The first two rows are relabelled in a battle: a duel has no
-           score and no pass mark, it has health left and a boss. The
-           ids on the labels are what js/game.js rewrites. -->
-      <ul class="end-stats">
-        <li><span id="end-score-k">Score</span><b id="end-score">0</b></li>
-        <li><span id="end-target-k">Needed to pass</span><b id="end-target">0</b></li>
-        <li><span>Accuracy</span><b id="end-acc">0%</b></li>
-        <li><span>Best streak</span><b id="end-streak">x1</b></li>
-        <li><span>Cards sorted</span><b id="end-sorted">0</b></li>
-        <li><span>Coins earned</span><b id="end-coins">+0</b></li>
-      </ul>
-
-      <button class="btn btn-primary btn-lg" id="btn-next" type="button" hidden>Next level</button>
-      <button class="btn btn-lg" id="btn-again" type="button">Play again</button>
-      <button class="btn btn-ghost" id="btn-home" type="button">Back to the map</button>
-
-      <!-- Every card you got wrong, with the right answer and the reason.
-           During a round the explanation flashes past in under two seconds,
-           so this is where the game actually gets to teach.
-
-           It sits BELOW the buttons on purpose: someone who just wants
-           another go should not have to scroll past ten cards to find
-           Play again. -->
-      <section class="review" id="review" hidden>
-        <h3 class="review-head" id="review-head">What you missed</h3>
-        <p class="review-note" id="review-note" hidden></p>
-        <ul class="review-list" id="review-list"></ul>
-      </section>
-    </div>
-  </section>
-
-</div>
-
-
-<!-- ==================== BOTTOM BAR ==================== -->
-
-<!-- ==================== FIRST-TIME POPUP ====================
-     One card, reused for every screen. js/tips.js fills it in the
-     first time each screen opens. -->
-<div class="tip" id="tip" hidden>
-  <div class="tip-card" role="dialog" aria-modal="true" aria-labelledby="tip-title">
-    <span class="tip-ico" id="tip-ico"></span>
-    <h3 class="tip-title" id="tip-title"></h3>
-    <ul class="tip-lines" id="tip-lines"></ul>
-    <div class="tip-buttons">
-      <!-- Only shown when the popup is ASKING something rather than
-           telling you something. See Tips.confirm(). -->
-      <button class="btn tip-no" id="tip-no" type="button" hidden>Cancel</button>
-      <button class="btn btn-primary tip-ok" id="tip-ok" type="button">Got it</button>
+  <!-- ==================== A QUESTION, OR A NOTE ====================
+       One dialog, reused: asking before a reset, explaining the online
+       boss. -->
+  <div class="dialog" id="dialog" hidden>
+    <div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+      <span class="dialog-ico" id="dialog-ico"></span>
+      <h3 class="dialog-title" id="dialog-title"></h3>
+      <div class="dialog-lines" id="dialog-lines"></div>
+      <div class="dialog-buttons">
+        <button class="gbtn gbtn-dark" id="dialog-no" type="button">Cancel</button>
+        <button class="gbtn gbtn-gold" id="dialog-ok" type="button">Got it</button>
+      </div>
     </div>
   </div>
+
+  <!-- ==================== THE FIRST-TIME NOTE ====================
+       The first time you arrive somewhere, your character tells you what
+       it is - a speech bubble at the bottom, not a box in your face. -->
+  <div class="coach" id="coach" hidden>
+    <span class="coach-who" id="coach-who"></span>
+    <div class="coach-bubble">
+      <b class="coach-title" id="coach-title"></b>
+      <ul class="coach-lines" id="coach-lines"></ul>
+      <button class="gbtn gbtn-gold gbtn-sm" id="coach-ok" type="button">Got it</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<!-- The bottom bar is built around the thing you came to do. PLAY sits
-     in the middle, raised and gold, and it is the only round button on
-     the screen - you can hit it without looking. The level map is what
-     it opens, so the map stopped being a tab of its own: it is a place
-     you go through on the way into a round, not a section of an app. -->
-<nav class="tabbar" id="tabbar" hidden>
-  <button class="tab" id="tab-home" type="button">
-    <span class="tab-ico tab-pic" data-sprite="house"></span>
-    <span>Home</span>
-  </button>
-  <button class="tab" id="tab-battle" type="button">
-    <span class="tab-ico tab-pic" data-sprite="battle"></span>
-    <span>Boss</span>
-  </button>
+<!-- Transitions, and anything flying over the sheets. -->
+<canvas id="fx" aria-hidden="true"></canvas>
 
-  <button class="tab-play" id="tab-play" type="button" aria-label="Play">
-    <span class="tab-play-tri">&#9654;</span>
-  </button>
-
-  <button class="tab" id="tab-gear" type="button">
-    <span class="tab-ico tab-pic" data-sprite="shield"></span>
-    <span>Gear</span>
-  </button>
-  <button class="tab" id="tab-me" type="button">
-    <span class="tab-ico tab-pic" data-sprite="hero"></span>
-    <span>Me</span>
-  </button>
-</nav>
 <script src="js/cards.js"></script>
 <script src="js/levels.js"></script>
-<script src="js/forest.js"></script>
 <script src="js/shop.js"></script>
-<script src="js/hero.js"></script>
 <script src="js/battle.js"></script>
 <script src="js/sprites.js"></script>
 <script src="js/pets.js"></script>
-<script src="js/weather.js"></script>
 <script src="js/themes.js"></script>
 <script src="js/cloud.js"></script>
 <script src="js/tips.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/music.js"></script>
-<script src="js/scenery.js"></script>
+<script src="js/sfx.js"></script>
+<script src="js/gfx.js"></script>
+<script src="js/stage.js"></script>
+<script src="js/world.js"></script>
+<script src="js/actors.js"></script>
+<script src="js/hero.js"></script>
 <script src="js/game.js"></script>
+<script src="js/arena.js"></script>
+<script src="js/scenes.js"></script>
+<script src="js/results.js"></script>
+<script src="js/panels.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

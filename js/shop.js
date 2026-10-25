@@ -203,53 +203,36 @@ var Shop = (function () {
     return Math.round(base * (1 + coinBonus()));
   }
 
-  /* ---------------- drawing the shop ---------------- */
+  /* ---------------- the shop, in the Gear sheet ----------------
+     ONE KIND AT A TIME, ON TABS. All three kinds used to be stacked down
+     one long page - nineteen pets, then armour, then weapons - which is
+     a catalogue. A game's shop shows you one shelf and lets you flip
+     between them.
+
+     And the character wearing it all is not on this sheet any more:
+     they stand on the stage just above it (js/scenes.js), large, and
+     change outfit in a puff of smoke the moment you tap something. */
+
+  var tab = 'pet';
 
   function paint() {
-    var host = UI.$('shop-body');
+    var host = document.getElementById('shop-grid');
+    if (!host) return;
     host.innerHTML = '';
-
-    for (var kind in SHOP) {
-      host.appendChild(section(kind, SHOP[kind]));
+    SHOP[tab].items.forEach(function (item) { host.appendChild(tile(tab, item)); });
+    var tabs = document.querySelectorAll('[data-shop-tab]');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.toggle('is-on', tabs[i].getAttribute('data-shop-tab') === tab);
     }
-    paintCoins();
+    var blurb = document.getElementById('shop-blurb');
+    if (blurb) blurb.textContent = SHOP[tab].blurb;
   }
 
-  function section(kind, group) {
-    var wrap = document.createElement('div');
-    wrap.className = 'shop-group';
-
-    var head = document.createElement('div');
-    head.className = 'shop-head';
-    head.innerHTML = '<b>' + group.label + '</b><small>' + group.blurb + '</small>';
-    wrap.appendChild(head);
-
-    /* THREE TO A SHELF. The items used to be a two-column grid of
-       cards, which is how a website lists products - a shop is a wall
-       of shelves with things STANDING on them, and you cannot stand
-       anything on a card.
-
-       Chunked here rather than in CSS because each shelf needs its own
-       plank drawn underneath it, and a grid has no element per row to
-       hang one off. */
-    var PER_SHELF = 3;
-    for (var i = 0; i < group.items.length; i += PER_SHELF) {
-      var shelf = document.createElement('div');
-      shelf.className = 'shelf';
-
-      group.items.slice(i, i + PER_SHELF).forEach(function (item) {
-        shelf.appendChild(tile(kind, item));
-      });
-      /* A short shelf still gets a full plank, so the bottom row of a
-         group does not end in mid-air. */
-      for (var pad = group.items.slice(i, i + PER_SHELF).length; pad < PER_SHELF; pad++) {
-        var gap = document.createElement('span');
-        gap.className = 'shelf-gap';
-        shelf.appendChild(gap);
-      }
-      wrap.appendChild(shelf);
-    }
-    return wrap;
+  function setTab(kind) {
+    if (!SHOP[kind] || kind === tab) return;
+    tab = kind;
+    if (window.Sfx) Sfx.play('page');
+    paint();
   }
 
   function tile(kind, item) {
@@ -259,10 +242,8 @@ var Shop = (function () {
     var open = isUnlocked(item);
 
     /* The free item in a group is the EMPTY SLOT, not a thing you own:
-       "None", "Bare Hands". It was getting the same green border and the
-       same "Worn" badge as a pet you saved up for, which read as an
-       achievement for having no pet. Wearing nothing is not wearing
-       something, so it says what it is and what tapping it does. */
+       "None", "Bare Hands". Wearing nothing is not wearing something,
+       so it says what it is and what tapping it does. */
     var blank = item.cost === 0;
 
     var el = document.createElement('button');
@@ -274,20 +255,15 @@ var Shop = (function () {
       + (!open ? ' is-sealed' : '')
       + (open && !owned && !afford ? ' is-broke' : '');
 
-    /* The item stands on the plank, with a shadow pooled under it. The
-       shadow is what puts it ON the shelf rather than floating over it. */
     var stand = document.createElement('span');
     stand.className = 'shop-stand';
-
     var art = document.createElement('span');
     art.className = 'shop-art';
-    Sprites.apply(art, item.sprite, 46);
-    if (item.tint) art.style.filter = 'hue-rotate(' + item.tint + 'deg)';
+    Sprites.apply(art, item.sprite || (kind === 'pet' ? 'nopet' : kind === 'armour' ? 'noarm' : 'nowep'), 46);
     stand.appendChild(art);
 
     var name = document.createElement('b');
     name.textContent = item.name;
-
     var desc = document.createElement('small');
     desc.textContent = item.desc;
 
@@ -297,15 +273,13 @@ var Shop = (function () {
       tag.textContent = lockReason(item);
       tag.classList.add('is-sealed');
     } else if (blank) {
-      /* Currently empty, so there is nothing to do here - or something
-         is worn, and tapping this is how you take it off. */
       tag.textContent = worn ? 'Empty' : 'Take off';
       tag.classList.add('is-blank');
     } else if (worn) {
       tag.textContent = 'Worn';
       tag.classList.add('is-worn');
     } else if (owned) {
-      tag.textContent = 'Use';
+      tag.textContent = 'Wear';
       tag.classList.add('is-use');
     } else {
       var ico = document.createElement('span');
@@ -319,78 +293,62 @@ var Shop = (function () {
     el.appendChild(name);
     el.appendChild(desc);
     el.appendChild(tag);
-
-    el.addEventListener('click', function () { tap(kind, item); });
+    el.addEventListener('click', function () { tap(kind, item, el); });
     return el;
   }
 
-  /* Repainting the shelf is only half the screen. The figure at the top
-     of Gear, the line naming what it has on, the full-set banner and the
-     stats panel are all Hero's, and tapping a tile changes every one of
-     them. Without redrawing Hero too, you buy a shield and the character
-     above keeps wearing the old one until you leave the screen and come
-     back - which looked exactly like the purchase had not registered. */
-  function repaint() {
+  /** Buying or wearing something. Everything that shows what you have on
+      is told at once: this sheet, the character on the stage above it,
+      the readout of what your gear does. Telling only the sheet is how
+      the old game ended up with a character still wearing last week's
+      shield. */
+  function changed(kind) {
     paint();
-    Hero.paint();
+    if (window.Hero) Hero.paint();
+    if (window.Scenes && Scenes.gear) Scenes.gear.refresh(kind);
   }
 
-  function tap(kind, item) {
+  function tap(kind, item, el) {
     var owned = Progress.owns(item.id) || item.cost === 0;
+    var nudge = function () {
+      if (!el) return;
+      el.classList.remove('is-nope'); void el.offsetWidth; el.classList.add('is-nope');
+    };
 
     if (!isUnlocked(item)) {
-      UI.sound.bad();
-      flash(lockReason(item) + ' to unlock the ' + item.name + '.');
+      Sfx.play('nope'); Haptics.bad(); nudge();
+      Panels.toast(lockReason(item) + ' to unlock the ' + item.name + '.', 'bad');
       return;
     }
-
     if (owned) {
+      if (Progress.equipped()[kind] === item.id) { Sfx.play('press'); return; }
       Progress.equip(kind, item.id);
-      UI.sound.tick();
-      repaint();
+      Sfx.play('equip'); Haptics.good();
+      changed(kind);
       return;
     }
-
     if (Progress.coins() < item.cost) {
-      UI.sound.bad();
-      flash('You need ' + (item.cost - Progress.coins()) + ' more coins.');
+      Sfx.play('nope'); Haptics.bad(); nudge();
+      Panels.toast('You need ' + (item.cost - Progress.coins()) + ' more coins.', 'bad');
       return;
     }
-
     Progress.buy(item.id, item.cost);
     Progress.equip(kind, item.id);
-    UI.sound.perfect();
-    flash(item.name + ' bought and equipped!');
-    repaint();
-  }
-
-  function paintCoins() {
-    var nodes = document.querySelectorAll('.coin-count');
-    for (var i = 0; i < nodes.length; i++) {
-      nodes[i].textContent = Progress.coins().toLocaleString();
-    }
-  }
-
-  var flashTimer = null;
-  function flash(text) {
-    var el = UI.$('shop-flash');
-    el.textContent = text;
-    el.className = 'shop-flash is-on';
-    clearTimeout(flashTimer);
-    flashTimer = setTimeout(function () { el.className = 'shop-flash'; }, 1600);
+    Sfx.play('buy'); Haptics.win();
+    Panels.toast(item.name + ' bought and equipped!', 'good');
+    changed(kind);
   }
 
   return {
     paint: paint,
-    paintCoins: paintCoins,
+    setTab: setTab,
+    tab: function () { return tab; },
     effects: effects,
     coinsFor: coinsFor,
     isUnlocked: isUnlocked,
     lockReason: lockReason,
     hasFullSet: hasFullSet,
     coinBonus: coinBonus,
-    /** The item worn in a slot. The home screen uses it to stand your
-        pet next to you. */
     equippedItem: equipped
   };
 })();

@@ -86,13 +86,31 @@ var Music = (function () {
     'C4', 'D4', 'E4', '.',   'D4', '.',   '.',   '.'
   ];
 
+  /* The same melody over the relative minor: Am F C G instead of C G Am
+     F. Every note of the C major pentatonic is also in A minor, so the
+     melody fits it without a single change - and the whole thing goes
+     from cheerful to tense, which is what a boss fight wants. */
+  var CHORDS_MINOR = [
+    { root: 'A2', notes: ['A3', 'C4', 'E4'] },
+    { root: 'F2', notes: ['F3', 'A3', 'C4'] },
+    { root: 'C2', notes: ['C4', 'E4', 'G4'] },
+    { root: 'G2', notes: ['G3', 'B3', 'D4'] }
+  ];
+
   var TUNES = {
     /* Slow, and the melody only every other phrase, so a screen you
        are reading on does not get sung at. */
     menu: { bpm: 92,  arp: false, hat: false, melodyEvery: 2, gain: 0.30 },
     /* A round has a clock on it. Busier, and it can be heard under
        the card sounds without covering them. */
-    play: { bpm: 126, arp: true,  hat: true,  melodyEvery: 1, gain: 0.34 }
+    play: { bpm: 126, arp: true,  hat: true,  melodyEvery: 1, gain: 0.34, kick: true },
+    /* The title: the menu's tempo with the arpeggio running, so the
+       very first thing you hear already has some life in it. */
+    title: { bpm: 100, arp: true, hat: false, melodyEvery: 1, gain: 0.30 },
+    /* The last twenty seconds of a round. Faster, driven by a kick on
+       every beat - the music telling you the clock is nearly out. */
+    rush: { bpm: 152, arp: true, hat: true, melodyEvery: 1, gain: 0.38, kick: true, kickAll: true },
+    battle: { bpm: 138, arp: true, hat: true, melodyEvery: 1, gain: 0.36, kick: true, chords: CHORDS_MINOR }
   };
 
   /* ---------------- the machine ---------------- */
@@ -156,12 +174,27 @@ var Music = (function () {
     src.start(at);
   }
 
+  /** The kick: a sine dropping fast from 150Hz to 45Hz. That drop IS a
+      kick drum - every one in every electronic track is roughly this. */
+  function kick(at) {
+    var osc = actx.createOscillator();
+    var g = actx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, at);
+    osc.frequency.exponentialRampToValueAtTime(45, at + 0.12);
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(0.42, at + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + 0.22);
+    osc.connect(g); g.connect(master);
+    osc.start(at); osc.stop(at + 0.25);
+  }
+
   /** Books everything that happens on one eighth-note. */
   function play(i, at) {
     var beat = i % 8;                       // where we are in the bar
     var bar = Math.floor(i / 8) % 4;        // which chord
     var phrase = Math.floor(i / 32);        // which time round the whole thing
-    var chord = CHORDS[bar];
+    var chord = (tune.chords || CHORDS)[bar];
     var eighth = 30 / tune.bpm;             // seconds per eighth note
 
     /* Bass on the first and middle beat. A triangle rather than a
@@ -179,6 +212,7 @@ var Music = (function () {
     }
 
     if (tune.hat && beat % 2 === 1) hat(at);
+    if (tune.kick && (beat === 0 || beat === 4 || (tune.kickAll && beat % 2 === 0))) kick(at);
 
     if (phrase % tune.melodyEvery === 0) {
       var m = MELODY[i % 32];
@@ -264,9 +298,11 @@ var Music = (function () {
      alone entirely - one has nothing on it yet and the other is
      already playing its own fanfare. */
   var FOR_SCREEN = {
-    play: 'play',
-    home: 'menu', levels: 'menu', gear: 'menu',
-    battle: 'menu', me: 'menu', guide: 'menu'
+    play: 'play', rush: 'rush', battle: 'battle',
+    title: 'title',
+    home: 'menu', map: 'menu', gear: 'menu', bosses: 'menu'
+    /* `results` and `vs` are deliberately missing: each plays its own
+       moment over silence, and a loop under a fanfare is mud. */
   };
 
   /** Which tune the screen that is showing right now wants.
@@ -278,9 +314,11 @@ var Music = (function () {
       navigated somewhere. Reading it off the page covers however the
       player arrived, including that first one. */
   function onScreenNow() {
-    var el = document.querySelector('.screen.is-on');
-    if (!el || !el.id) return null;
-    return FOR_SCREEN[el.id.replace(/^screen-/, '')] || null;
+    if (!window.Stage) return null;
+    var sc = Stage.scene();
+    if (!sc) return null;
+    var m = typeof sc.music === 'function' ? sc.music() : (sc.music || sc.name);
+    return FOR_SCREEN[m] || null;
   }
 
   return {
