@@ -68,7 +68,6 @@ var OPPONENTS = [
       intro: ['Hey. Have you seen my stapler?', 'I will get to it. Eventually.'],
       power: ['Oops. Sticky.', 'Hold that thought. Forever.', 'Glue is a filing system.'],
       hurt: ['Ow! My paperclips!', 'That was MY pile!', 'Rude.'],
-      miss: ['Ha! Same thing I would do.', 'Close enough. Not really.'],
       ko: ['I needed a nap anyway.'],
       win: ['Slow and sticky wins the race!']
     }
@@ -83,7 +82,6 @@ var OPPONENTS = [
       intro: ['I reorganised your desk. You are welcome.', 'Let us make this quick.'],
       power: ['New system! Keep up.', 'Moved it. Obviously.', 'Who put that there? Me.'],
       hurt: ['Hey, that was clipped!', 'You bent my clip!', 'Not the folders!'],
-      miss: ['Wrong drawer, darling.', 'Messy. I like it.'],
       ko: ['Fine. FINE. File me under "lost".'],
       win: ['Organised. Like I said.']
     }
@@ -98,7 +96,6 @@ var OPPONENTS = [
       intro: ['You have 4,812 unread messages.', 'Reply all. To everything.'],
       power: ['Notification storm!', 'Can you read this? No.', 'Everything is urgent!'],
       hurt: ['That message bounced!', 'Unsubscribe!', 'My inbox!'],
-      miss: ['Marked as spam. You.', 'Sent to the wrong folder!'],
       ko: ['...out of office.'],
       win: ['Inbox zero. Yours.']
     }
@@ -113,7 +110,6 @@ var OPPONENTS = [
       intro: ['It was due yesterday.', 'Tick. Tock.'],
       power: ['Due in five seconds!', 'Feel the heat!', 'No extensions!'],
       hurt: ['Impossible!', 'That was ahead of schedule!', 'Late fee!'],
-      miss: ['Too slow!', 'Missed it. Like a deadline.'],
       ko: ['I... need... more time.'],
       win: ['Time is up. Forever.']
     }

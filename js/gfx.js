@@ -281,20 +281,24 @@ var Particles = (function () {
       ctx.fillStyle = p.color;
       ctx.strokeStyle = p.color;
       switch (p.shape) {
+        /* Square, like a pixel: a round dot of colour is the one thing in
+           a pixel-art scene that gives away it was drawn by a computer. */
         case 'circle':
-          ctx.beginPath(); ctx.arc(p.x, p.y, sz, 0, 6.2832); ctx.fill();
+          ctx.fillRect(p.x - sz, p.y - sz, sz * 2, sz * 2);
           break;
-        case 'ring':
-          ctx.lineWidth = Math.max(1, sz * 0.25);
-          ctx.beginPath(); ctx.arc(p.x, p.y, sz * (1 + t * 3), 0, 6.2832); ctx.stroke();
+        case 'ring': {
+          var rr2 = sz * (1 + t * 3);
+          ctx.lineWidth = Math.max(2, Math.round(sz * 0.3));
+          ctx.strokeRect(p.x - rr2, p.y - rr2 * 0.86, rr2 * 2, rr2 * 1.72);
           break;
+        }
         case 'spark': {
           /* A streak drawn along its own velocity: the faster it is going,
              the longer it is. */
           var len = Math.min(26, Math.sqrt(p.vx * p.vx + p.vy * p.vy) * 0.05 + sz);
           var ang = Math.atan2(p.vy, p.vx);
           ctx.lineWidth = Math.max(1, sz * 0.5);
-          ctx.lineCap = 'round';
+          ctx.lineCap = 'butt';
           ctx.beginPath();
           ctx.moveTo(p.x, p.y);
           ctx.lineTo(p.x - Math.cos(ang) * len, p.y - Math.sin(ang) * len);
@@ -320,7 +324,7 @@ var Particles = (function () {
           ctx.restore();
           break;
         case 'text':
-          Gfx.text(ctx, p.text, p.x, p.y, { size: sz, color: p.color, font: 'arcade', stroke: '#000', strokeW: 3 });
+          Gfx.text(ctx, p.text, p.x, p.y, { size: sz, color: p.color, font: 'arcade', stroke: '#2a1e12', strokeW: 3 });
           break;
         default:
           ctx.save();
@@ -359,10 +363,22 @@ var Gfx = (function () {
     ink: '#0a0e1a', ink2: '#121a2e', ink3: '#1c2742', ink4: '#293755',
     line: '#3a4a6d', sink: '#060a14',
     paper: '#fbf3e0', paper2: '#efe1bf',
-    tx: '#cdd8ec', txDim: '#8a9ac0', white: '#ffffff'
+    tx: '#fff4dd', txDim: '#e8d8b8', white: '#ffffff'
   };
 
-  var FONT_ARCADE = '"Press Start 2P", "Courier New", monospace';
+  /* THE DESK DAY TYPE. Three faces, each with one job:
+       'arcade'  Bungee - sign-painted capitals for anything loud: scores,
+                 tray names, banners, buttons. (Still called 'arcade' so
+                 every caller written for the pixel font keeps working.)
+       round     Kalam - handwriting, for the cards and everything you
+                 read: it is how a task looks written on an index card.
+       'mono'    IBM Plex Mono - the typewriter on labels and tags.
+     Each is scaled so a size tuned for the old faces still lands about
+     the same height: Press Start 2P drew big for its size, Bungee
+     draws smaller. */
+  var FONT_ARCADE = 'Bungee, Impact, "Arial Black", sans-serif';
+  var FONT_MONO = '"IBM Plex Mono", "Courier New", monospace';
+  var SCALE = { arcade: 1.3, mono: 1.15, round: 1.08 };
 
   /* ---------------- baking ----------------
      WHY: every canvas call is a draw call, and on a phone the cost of
@@ -400,7 +416,7 @@ var Gfx = (function () {
     renderScale = k;
     baked = {}; bakedKeys = [];
   }
-  var FONT_ROUND = 'Fredoka, "Trebuchet MS", system-ui, sans-serif';
+  var FONT_ROUND = 'Kalam, "Comic Sans MS", "Trebuchet MS", cursive';
 
   /* ---------------- maths ---------------- */
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
@@ -534,9 +550,10 @@ var Gfx = (function () {
     try {
       if (document.fonts && document.fonts.load) {
         Promise.all([
-          document.fonts.load('16px "Press Start 2P"'),
-          document.fonts.load('600 16px Fredoka'),
-          document.fonts.load('700 16px Fredoka')
+          document.fonts.load('16px Bungee'),
+          document.fonts.load('400 16px Kalam'),
+          document.fonts.load('700 16px Kalam'),
+          document.fonts.load('600 16px "IBM Plex Mono"')
         ]).then(fontsDone, fontsDone);
         setTimeout(fontsDone, 2500);
       } else fontsDone();
@@ -640,27 +657,26 @@ var Gfx = (function () {
 
   /* ---------------- shapes ---------------- */
 
-  /** A rounded rectangle path. `r` may be one radius or [tl, tr, br, bl].
-      Written out by hand: ctx.roundRect only arrived in Chrome 99, and
-      the WebView on an older phone may predate it. */
+  /** A box cut from paper or card: sharp corners with the tip just
+      nicked off, the way a guillotine leaves card - not the smooth
+      rounded rectangle every app uses. `r` still says how big the corner
+      was meant to be (so every caller keeps working); it only decides
+      how big the nick is. May be one size or [tl, tr, br, bl]. */
   function rr(ctx, x, y, w, h, r) {
     var a, b, c, d;
     if (typeof r === 'object') { a = r[0]; b = r[1]; c = r[2]; d = r[3]; }
     else { a = b = c = d = r || 0; }
     var m = Math.min(w, h) / 2;
-    a = Math.min(a, m); b = Math.min(b, m); c = Math.min(c, m); d = Math.min(d, m);
+    a = nick(a, m); b = nick(b, m); c = nick(c, m); d = nick(d, m);
     ctx.beginPath();
     ctx.moveTo(x + a, y);
-    ctx.lineTo(x + w - b, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + b);
-    ctx.lineTo(x + w, y + h - c);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - c, y + h);
-    ctx.lineTo(x + d, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - d);
+    ctx.lineTo(x + w - b, y); ctx.lineTo(x + w, y + b);
+    ctx.lineTo(x + w, y + h - c); ctx.lineTo(x + w - c, y + h);
+    ctx.lineTo(x + d, y + h); ctx.lineTo(x, y + h - d);
     ctx.lineTo(x, y + a);
-    ctx.quadraticCurveTo(x, y, x + a, y);
     ctx.closePath();
   }
+  function nick(r, m) { return r ? Math.min(m, Math.max(1, Math.min(3, r * 0.18))) : 0; }
 
   function star(ctx, x, y, outer, inner, points, rot) {
     ctx.beginPath();
@@ -679,14 +695,22 @@ var Gfx = (function () {
       hard block of shadow `depth` pixels underneath - stamped out of
       plastic rather than floated on a blur. The old CSS did this with
       box-shadow; it is the one look worth carrying across unchanged. */
+  /** The one look for every box: a piece of paper or card lying on the
+      desk. Flat colour, a fine darker edge where the card is cut, and a
+      hard brown shadow under it, offset down and to the right as if the
+      lamp is above and to the left. No gloss, no blur, no outline.
+
+      `fill2` is the colour of the card's thickness along the bottom
+      (buttons are thick card, paper is not). `outline: false` drops the
+      cut edge. `lip` is the faint light catching the top edge. */
   function panel(ctx, x, y, w, h, o) {
     o = o || {};
     var r = o.r === undefined ? 14 : o.r;
     var depth = o.depth === undefined ? 5 : o.depth;
     var fill = o.fill || C.ink3;
     if (depth > 0) {
-      ctx.fillStyle = o.sink || 'rgba(0,0,0,.45)';
-      rr(ctx, x, y + depth, w, h, r); ctx.fill();
+      ctx.fillStyle = o.sink && o.sink.indexOf('rgba(0,0,0') !== 0 ? o.sink : 'rgba(46,24,6,.42)';
+      rr(ctx, x + Math.min(3, depth * 0.5), y + depth, w, h, r); ctx.fill();
     }
     if (o.glow) {
       ctx.save();
@@ -696,18 +720,23 @@ var Gfx = (function () {
       rr(ctx, x, y, w, h, r); ctx.fill();
       ctx.restore();
     }
+    ctx.save();
+    rr(ctx, x, y, w, h, r);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.clip();
     if (o.fill2) {
-      var g = ctx.createLinearGradient(0, y, 0, y + h);
-      g.addColorStop(0, fill); g.addColorStop(1, o.fill2);
-      ctx.fillStyle = g;
-    } else ctx.fillStyle = fill;
-    rr(ctx, x, y, w, h, r); ctx.fill();
+      ctx.fillStyle = o.fill2;
+      ctx.fillRect(x, y + h - Math.max(3, Math.min(6, Math.round(h * 0.09))), w, h);
+    }
     if (o.lip !== false) {
-      ctx.save();
-      rr(ctx, x, y, w, h, r); ctx.clip();
-      ctx.fillStyle = o.lipColor || 'rgba(255,255,255,.16)';
-      ctx.fillRect(x, y, w, Math.max(2, Math.min(4, h * 0.08)));
-      ctx.restore();
+      ctx.fillStyle = o.lipColor || 'rgba(255,255,255,.22)';
+      ctx.fillRect(x, y, w, Math.max(1.5, Math.min(3, h * 0.05)));
+    }
+    ctx.restore();
+    if (o.outline !== false) {
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(40,20,4,.28)';
+      rr(ctx, x + 0.5, y + 0.5, w - 1, h - 1, r); ctx.stroke();
     }
     if (o.edge) {
       ctx.lineWidth = o.edgeW || 2;
@@ -717,24 +746,96 @@ var Gfx = (function () {
     }
   }
 
+  /* ---------------- desk props ----------------
+     The handful of stationery things the screens are built from. */
+
+  /** A strip of washi tape, centred on (x, y), `w` long, at `rot`. */
+  function tape(ctx, x, y, w, rot, color) {
+    var h = Math.max(14, w * 0.27);
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(rot || 0);
+    ctx.beginPath();
+    var teeth = 4, i;
+    ctx.moveTo(-w / 2, -h / 2);
+    ctx.lineTo(w / 2, -h / 2);
+    for (i = 1; i <= teeth; i++) ctx.lineTo(w / 2 + (i % 2 ? -3 : 0), -h / 2 + h * i / teeth);
+    ctx.lineTo(-w / 2, h / 2);
+    for (i = teeth - 1; i >= 0; i--) ctx.lineTo(-w / 2 + (i % 2 ? 3 : 0), -h / 2 + h * i / teeth);
+    ctx.closePath();
+    ctx.fillStyle = color || 'rgba(255,150,180,.8)';
+    ctx.fill();
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 5;
+    for (i = -w; i < w; i += 12) { ctx.beginPath(); ctx.moveTo(i, h); ctx.lineTo(i + h * 1.2, -h); ctx.stroke(); }
+    ctx.restore();
+  }
+
+  /** A pushpin head seen from above, at (x, y). */
+  function pin(ctx, x, y, color, r) {
+    r = r || 7;
+    ctx.fillStyle = 'rgba(46,24,6,.4)';
+    ctx.beginPath(); ctx.arc(x + 2, y + 3, r, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = color || '#c2412f';
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.beginPath(); ctx.arc(x - r * 0.3, y - r * 0.35, r * 0.32, 0, 6.2832); ctx.fill();
+  }
+
+  /** An index card: cream, a red margin line, blue rules. */
+  function indexCard(ctx, x, y, w, h, o) {
+    o = o || {};
+    ctx.fillStyle = 'rgba(46,24,6,.38)';
+    ctx.fillRect(x + 3, y + 6, w, h);
+    ctx.fillStyle = o.fill || '#fffdf6';
+    ctx.fillRect(x, y, w, h);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+    if (o.rules !== false) {
+      ctx.fillStyle = o.ruleColor || 'rgba(140,175,220,.55)';
+      for (var ry = y + (o.top || 30); ry < y + h - 4; ry += (o.gap || 26)) ctx.fillRect(x, ry, w, 1.2);
+      ctx.fillStyle = o.marginColor || 'rgba(224,120,120,.75)';
+      ctx.fillRect(x + (o.margin || 26), y, 1.6, h);
+    }
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(120,96,60,.35)'; ctx.lineWidth = 1;
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  }
+
+  /** A rubber stamp: a double ring, words in the middle, at a tilt. */
+  function rubberStamp(ctx, x, y, r, top, under, color, rot) {
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(rot || -0.18);
+    ctx.strokeStyle = color; ctx.lineWidth = Math.max(3, r * 0.11);
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.2832); ctx.stroke();
+    ctx.lineWidth = Math.max(1.5, r * 0.05);
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.8, 0, 6.2832); ctx.stroke();
+    textNow(ctx, top, 0, under ? -r * 0.12 : 0, { font: 'arcade', size: r * 0.4, color: color });
+    if (under) textNow(ctx, under, 0, r * 0.42, { font: 'mono', size: r * 0.17, color: color });
+    ctx.restore();
+  }
+
   /** A soft round light, drawn additively. Glows are what make a dark
       screen feel lit from somewhere. */
+  var glows = {};
   function glow(ctx, x, y, r, color, a) {
     if (r <= 0) return;
-    /* A radial gradient built every call was the second-dearest thing in
-       a frame. One soft dot per colour, baked once, stretched to size. */
-    var b = bake('glow|' + color, 64, 64, function (c) {
-      var g = c.createRadialGradient(32, 32, 0, 32, 32, 32);
-      g.addColorStop(0, rgba(color, 1));
-      g.addColorStop(0.45, rgba(color, 0.42));
-      g.addColorStop(1, rgba(color, 0));
-      c.fillStyle = g;
-      c.fillRect(0, 0, 64, 64);
-    });
-    var prevA = ctx.globalAlpha, prevOp = ctx.globalCompositeOperation;
+    /* A soft pool of lamp light, faint: on a desk, light is something
+       that falls on things, not something they give off. One soft dot
+       per colour, baked once, stretched to size. */
+    var g = glows[color];
+    if (!g) {
+      g = glows[color] = document.createElement('canvas');
+      g.width = g.height = 64;
+      var c = g.getContext('2d');
+      var rg = c.createRadialGradient(32, 32, 0, 32, 32, 32);
+      rg.addColorStop(0, rgba(color, 1)); rg.addColorStop(0.45, rgba(color, 0.4)); rg.addColorStop(1, rgba(color, 0));
+      c.fillStyle = rg; c.fillRect(0, 0, 64, 64);
+    }
+    var prevA = ctx.globalAlpha, prevOp = ctx.globalCompositeOperation, prevS = ctx.imageSmoothingEnabled;
     ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = prevA * (a === undefined ? 0.6 : a);
-    ctx.drawImage(b.cv, x - r, y - r, r * 2, r * 2);
+    ctx.globalAlpha = prevA * (a === undefined ? 0.6 : a) * 0.5;
+    ctx.drawImage(g, x - r, y - r, r * 2, r * 2);
+    ctx.imageSmoothingEnabled = prevS;
     ctx.globalAlpha = prevA;
     ctx.globalCompositeOperation = prevOp;
   }
@@ -752,13 +853,15 @@ var Gfx = (function () {
   /* ---------------- text ---------------- */
 
   function font(o) {
-    var size = Math.round(o.size || 16);
-    if (o.font === 'arcade') return size + 'px ' + FONT_ARCADE;
-    return (o.weight || 600) + ' ' + size + 'px ' + FONT_ROUND;
+    var size = o.size || 16;
+    if (o.font === 'arcade') return Math.round(size * SCALE.arcade) + 'px ' + FONT_ARCADE;
+    if (o.font === 'mono') return '600 ' + Math.round(size * SCALE.mono) + 'px ' + FONT_MONO;
+    /* Kalam comes in two weights; anything 600 and up is the bold one. */
+    return ((o.weight || 600) >= 600 ? 700 : 400) + ' ' + Math.round(size * SCALE.round) + 'px ' + FONT_ROUND;
   }
 
   /** One line of text. Options:
-        font    'arcade' (Press Start 2P, the loud things) or 'round'
+        font    'arcade' (Bungee, the loud things), 'mono' (Plex Mono) or 'round' (Kalam)
         size, weight, color, align, base
         stroke, strokeW   an outline, so it reads over anything
         shadow, shadowY   a hard drop shadow, the panel look again
@@ -784,8 +887,9 @@ var Gfx = (function () {
     var key = 't|' + s + '|' + f + '|' + (o.color || '#fff') + '|' + (o.stroke || '') + '|' + sw + '|' + (o.shadow || '') + '|' + sy;
     var w = measure(ctx, s, { font: o.font, size: size, weight: o.weight });
     var pad = Math.ceil(sw / 2) + 2;
-    var bw = Math.ceil(w) + pad * 2, bh = Math.ceil(size * 1.5) + pad * 2 + Math.ceil(sy);
-    var mid = pad + size * 0.75;
+    var em = size * (SCALE[o.font === 'arcade' ? 'arcade' : o.font === 'mono' ? 'mono' : 'round']);
+    var bw = Math.ceil(w) + pad * 2, bh = Math.ceil(em * 1.6) + pad * 2 + Math.ceil(sy);
+    var mid = pad + em * 0.8;
     var b = bake(key, bw, bh, function (c) {
       textNow(c, s, pad, mid, { font: o.font, size: size, weight: o.weight, color: o.color, align: 'left',
                                 stroke: o.stroke, strokeW: sw, shadow: o.shadow, shadowY: sy });
@@ -886,8 +990,9 @@ var Gfx = (function () {
     petImage: petImage, drawPet: drawPet, petScale: petScale,
     petFrames: petFrameCount, petFps: petFps,
     rr: rr, star: star, panel: panel, glow: glow, vignette: vignette,
+    tape: tape, pin: pin, indexCard: indexCard, rubberStamp: rubberStamp,
     text: text, textNow: textNow, measure: measure, wrap: wrap, fit: fit, font: font,
     bake: bake, stamp: stamp, setScale: setScale,
-    FONT_ARCADE: FONT_ARCADE, FONT_ROUND: FONT_ROUND
+    FONT_ARCADE: FONT_ARCADE, FONT_ROUND: FONT_ROUND, FONT_MONO: FONT_MONO
   };
 })();

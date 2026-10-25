@@ -19,13 +19,6 @@ var MyList = (function () {
 
   var MAX = 30, MAX_LEN = 60;
   var ORDER = [null, 'now', 'later', 'give', 'drop'];
-  var HINT = {
-    null: 'Not sorted yet',
-    now: 'Matters, and it is due. Start with these.',
-    later: 'Matters, not yet. Pick a day for each one.',
-    give: 'Urgent, but not yours. Who could do it?',
-    drop: 'Let these go. Really.'
-  };
   var lastPlan = false;
 
   function all() { return Progress.get('myTasks') || []; }
@@ -74,7 +67,7 @@ var MyList = (function () {
       var sec = document.createElement('div');
       sec.className = 'mine-group' + (g.box ? ' box-' + g.box : ' is-unsorted');
       var h = document.createElement('h4');
-      h.innerHTML = '<b>' + (g.box ? BOXES[g.box].label : 'To sort') + '</b><small>' + HINT[g.box] + '</small>';
+      h.innerHTML = '<b>' + (g.box ? BOXES[g.box].label : 'To sort') + '</b>';
       sec.appendChild(h);
       g.items.forEach(function (t, i) {
         var row = document.createElement('div');
@@ -107,12 +100,8 @@ var MyList = (function () {
     var n = toSort().length;
     var btn = $('mine-sort');
     btn.disabled = n === 0;
-    btn.textContent = n === 0 ? 'Add something to sort' : list.some(function (t) { return !t.box && !t.done; })
-      ? 'Sort ' + n + (n === 1 ? ' task' : ' tasks') : 'Sort the week again';
+    btn.textContent = n === 0 ? 'Sort' : 'Sort ' + n;
     $('mine-clear').hidden = !list.some(function (t) { return t.done; });
-    $('mine-lead').textContent = lastPlan
-      ? 'Your plan. Tick things off as you do them.'
-      : 'Type what is really on your plate this week. Then sort it with the four corners.';
   }
 
   function init() {

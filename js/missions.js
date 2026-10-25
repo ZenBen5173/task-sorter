@@ -30,49 +30,49 @@ var Missions = (function () {
   var ACTIVE = 3;
 
   var POOL = [
-    { id: 'perfects', kind: 'round', targets: [5, 8, 12], rewards: [40, 60, 90],
+    { id: 'perfects', kind: 'round', icon: 'bolt', targets: [5, 8, 12], rewards: [40, 60, 90],
       text: function (n) { return 'Get ' + n + ' Perfects in one round'; },
       value: function (s) { return s.perfects; } },
-    { id: 'combo', kind: 'round', targets: [5, 8, 8], rewards: [40, 60, 70],
+    { id: 'combo', kind: 'round', icon: 'fire', targets: [5, 8, 8], rewards: [40, 60, 70],
       text: function (n) { return 'Reach a x' + n + ' combo'; },
       value: function (s) { return s.bestStreak; } },
-    { id: 'sort', kind: 'total', targets: [30, 60, 120], rewards: [40, 70, 110],
+    { id: 'sort', kind: 'total', icon: 'list', targets: [30, 60, 120], rewards: [40, 70, 110],
       text: function (n) { return 'Sort ' + n + ' cards right'; },
       value: function (s) { return s.mode === 'mine' ? 0 : s.correct; } },
     /* The corner the whole game argues is the one that changes your
        life - so it gets a mission of its own. */
-    { id: 'later', kind: 'total', targets: [6, 12, 20], rewards: [40, 60, 90],
+    { id: 'later', kind: 'total', icon: 'cal', targets: [6, 12, 20], rewards: [40, 60, 90],
       text: function (n) { return 'Sort ' + n + ' Do Later cards right'; },
       value: function (s) { return s.laterRight; } },
-    { id: 'gold', kind: 'total', targets: [3, 5, 8], rewards: [40, 60, 90],
+    { id: 'gold', kind: 'total', icon: 'coin', targets: [3, 5, 8], rewards: [40, 60, 90],
       text: function (n) { return 'Sort ' + n + ' golden cards'; },
       value: function (s) { return s.golds; } },
-    { id: 'ice', kind: 'total', targets: [3, 6, 10], rewards: [40, 60, 90],
+    { id: 'ice', kind: 'total', icon: 'ice', targets: [3, 6, 10], rewards: [40, 60, 90],
       text: function (n) { return 'Crack ' + n + ' frozen cards'; },
       value: function (s) { return s.ices; },
       open: function () { return Progress.unlocked() >= 2; } },
-    { id: 'gradeA', kind: 'round', targets: [1, 1, 1], rewards: [50, 50, 50],
+    { id: 'gradeA', kind: 'round', icon: 'star', targets: [1, 1, 1], rewards: [50, 50, 50],
       text: function () { return 'Get an A or better on a level'; },
       value: function (s) { return s.mode === 'level' && s.passed && (s.grade === 'A' || s.grade === 'S') ? 1 : 0; } },
-    { id: 'gradeS', kind: 'round', targets: [1, 1, 1], rewards: [90, 90, 90],
+    { id: 'gradeS', kind: 'round', icon: 'crown', targets: [1, 1, 1], rewards: [90, 90, 90],
       text: function () { return 'Get an S on any level'; },
       value: function (s) { return s.mode === 'level' && s.passed && s.grade === 'S' ? 1 : 0; },
       open: function () { return Progress.unlocked() >= 2; } },
-    { id: 'flawless', kind: 'round', targets: [1, 1, 1], rewards: [60, 60, 60],
+    { id: 'flawless', kind: 'round', icon: 'shield', targets: [1, 1, 1], rewards: [60, 60, 60],
       text: function () { return 'Finish a round with no mistakes'; },
       value: function (s) { return s.flawless ? 1 : 0; } },
-    { id: 'boss', kind: 'round', targets: [1, 1, 1], rewards: [50, 50, 50],
+    { id: 'boss', kind: 'round', icon: 'battle', targets: [1, 1, 1], rewards: [50, 50, 50],
       text: function () { return 'Beat a boss'; },
       value: function (s) { return s.mode === 'battle' && s.passed ? 1 : 0; } },
-    { id: 'bossHp', kind: 'round', targets: [40, 60, 75], rewards: [60, 80, 110],
+    { id: 'bossHp', kind: 'round', icon: 'battle', targets: [40, 60, 75], rewards: [60, 80, 110],
       text: function (n) { return 'Beat a boss with ' + n + '+ health left'; },
       value: function (s) { return s.mode === 'battle' && s.passed ? s.hpLeft : 0; },
       open: function () { return Progress.rivalsBeaten() >= 1; } },
-    { id: 'daily', kind: 'round', targets: [1, 1, 1], rewards: [40, 40, 40],
+    { id: 'daily', kind: 'round', icon: 'cal', targets: [1, 1, 1], rewards: [40, 40, 40],
       text: function () { return 'Play the Daily Challenge'; },
       value: function (s) { return s.mode === 'daily' ? 1 : 0; },
       open: function () { return Daily.isOpen(); } },
-    { id: 'score', kind: 'round', targets: [6000, 15000, 30000], rewards: [40, 70, 110],
+    { id: 'score', kind: 'round', icon: 'star', targets: [6000, 15000, 30000], rewards: [40, 70, 110],
       text: function (n) { return 'Score ' + n.toLocaleString() + ' in one round'; },
       value: function (s) { return s.score; } }
   ];
@@ -118,7 +118,7 @@ var Missions = (function () {
       var v = d.value(s) || 0;
       m.prog = d.kind === 'total' ? m.prog + v : Math.max(m.prog, v);
       if (m.prog >= m.target) {
-        done.push({ text: d.text(m.target), reward: m.reward });
+        done.push({ text: d.text(m.target), reward: m.reward, icon: d.icon || 'target' });
         next.push(null);
       } else next.push(m);
     });
@@ -140,7 +140,7 @@ var Missions = (function () {
   function view() {
     return active().map(function (m) {
       var d = def(m.id);
-      return { text: d.text(m.target), prog: Math.min(m.prog, m.target), target: m.target, reward: m.reward };
+      return { text: d.text(m.target), prog: Math.min(m.prog, m.target), target: m.target, reward: m.reward, icon: d.icon || 'target' };
     });
   }
 

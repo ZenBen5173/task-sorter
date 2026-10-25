@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#0a0e1a">
+<meta name="theme-color" content="#7a4f2a">
 <!-- The icon is the game: four corners and a card. It is also the one
      request a browser makes whether you declare it or not, and an error
      in the console of a game being judged is an error in the console of
@@ -50,15 +50,13 @@
                autocomplete="off" spellcheck="false"
                placeholder="Name me" aria-label="Your character's name">
       </label>
-      <p class="hero-worn" id="hero-worn"></p>
-    </div>
+      </div>
     <div class="hero-set" id="hero-set"></div>
     <nav class="shop-tabs" role="tablist">
       <button type="button" data-shop-tab="pet" role="tab">PETS</button>
       <button type="button" data-shop-tab="armour" role="tab">ARMOUR</button>
       <button type="button" data-shop-tab="weapon" role="tab">WEAPONS</button>
     </nav>
-    <p class="shop-blurb" id="shop-blurb"></p>
     <div class="sheet-scroll">
       <div class="shop-grid" id="shop-grid"></div>
       <h3 class="sheet-h">What your gear does</h3>
@@ -85,7 +83,6 @@
           <button class="gbtn gbtn-dark gbtn-sm" id="btn-signout" type="button">Sign out</button>
         </div>
         <div class="acct-out" id="acct-out">
-          <p class="acct-lead">Make an account and your levels, coins and gear follow you to any phone.</p>
           <div class="acct-fields">
             <input id="acct-user" type="text" maxlength="14" autocomplete="username"
                    autocapitalize="none" spellcheck="false" placeholder="Username">
@@ -96,7 +93,6 @@
             <button class="gbtn gbtn-gold" id="btn-signin" type="button">Sign in</button>
             <button class="gbtn gbtn-blue" id="btn-signup" type="button">Create account</button>
           </div>
-          <p class="acct-privacy">No email needed. Just a name you make up.</p>
         </div>
         <p class="acct-msg" id="acct-msg" hidden></p>
       </div>
@@ -111,11 +107,11 @@
       <div class="block">
         <h3 class="sheet-h">Feel</h3>
         <button class="row-btn" id="btn-sound" type="button">
-          <span><b>Sound</b><small>Music, and the chimes when you sort</small></span>
+          <span><b>Sound</b></span>
           <span class="switch" id="sound-switch"><span class="knob"></span></span>
         </button>
         <button class="row-btn" id="btn-haptics" type="button">
-          <span><b>Vibration</b><small>A buzz in your hand when a card lands</small></span>
+          <span><b>Vibration</b></span>
           <span class="switch" id="haptics-switch"><span class="knob"></span></span>
         </button>
       </div>
@@ -125,11 +121,11 @@
       <div class="block">
         <h3 class="sheet-h">Easier to play</h3>
         <button class="row-btn" id="btn-bigtext" type="button">
-          <span><b>Bigger text</b><small>Larger words on the cards and the trays</small></span>
+          <span><b>Bigger text</b></span>
           <span class="switch" id="bigtext-switch"><span class="knob"></span></span>
         </button>
         <button class="row-btn" id="btn-calmfx" type="button">
-          <span><b>Calm screen</b><small>No shaking, no flashes, no freeze-frames</small></span>
+          <span><b>Calm screen</b></span>
           <span class="switch" id="calmfx-switch"><span class="knob"></span></span>
         </button>
       </div>
@@ -137,7 +133,7 @@
       <div class="block">
         <h3 class="sheet-h">The rules</h3>
         <button class="row-btn" id="btn-guide" type="button">
-          <span><b>Guide Book</b><small>The four corners, and how to pass</small></span>
+          <span><b>Guide Book</b></span>
           <span class="go">&rarr;</span>
         </button>
       </div>
@@ -216,7 +212,7 @@
           <li><span class="sp-chip sp-swap">SWAP</span> <b>The trays move.</b> Every so often two of them change places. From Level 4.</li>
         </ul>
         <h3 class="guide-h">When you miss</h3>
-        <p>The tray it belonged in lights up, and the reason shows for a moment while you keep going. Every miss is also kept for the end of the round, under <b>What you missed</b>.</p>
+        <p>The tray it belonged in lights up while you keep going. Every miss, with its reason, is also kept for the end of the round, under <b>What you missed</b>.</p>
       </article>
 
       <article class="page">
@@ -276,7 +272,6 @@
       <h2 id="review-head">WHAT YOU MISSED</h2>
       <button class="sheet-x" type="button" data-close aria-label="Close">&times;</button>
     </header>
-    <p class="review-note">The corner is never given away. Read the reason, work it out, and go again.</p>
     <div class="sheet-scroll">
       <ul class="review-list" id="review-list"></ul>
     </div>
@@ -291,7 +286,6 @@
       <button class="sheet-x" type="button" data-close aria-label="Close">&times;</button>
     </header>
     <div class="sheet-scroll">
-      <p class="mission-lead">Finish one and it pays out at the end of that round. A new one takes its place.</p>
       <ul class="mission-list" id="mission-list"></ul>
       <h3 class="sheet-h">Badges <span class="badge-count" id="badge-count"></span></h3>
       <div class="badge-grid" id="badge-grid"></div>
@@ -306,14 +300,13 @@
       <h2>MY LIST</h2>
       <button class="sheet-x" type="button" data-close aria-label="Close">&times;</button>
     </header>
-    <p class="mine-lead" id="mine-lead"></p>
     <form class="mine-add" id="mine-add" autocomplete="off">
       <input id="mine-text" type="text" maxlength="60" spellcheck="true"
              placeholder="e.g. Science project due Friday" aria-label="A task to add">
       <button class="gbtn gbtn-blue gbtn-sm" type="submit">Add</button>
     </form>
     <div class="sheet-scroll">
-      <p class="mine-empty" id="mine-empty">Nothing here yet. Add three or four real things - homework, chores, messages you owe - then sort them.</p>
+      <p class="mine-empty" id="mine-empty"></p>
       <div class="mine-plan" id="mine-plan"></div>
       <button class="gbtn gbtn-dark gbtn-sm mine-clear" id="mine-clear" type="button" hidden>Clear the done ones</button>
     </div>
@@ -337,18 +330,6 @@
     </div>
   </div>
 
-  <!-- ==================== THE FIRST-TIME NOTE ====================
-       The first time you arrive somewhere, your character tells you what
-       it is - a speech bubble at the bottom, not a box in your face. -->
-  <div class="coach" id="coach" hidden>
-    <span class="coach-who" id="coach-who"></span>
-    <div class="coach-bubble">
-      <b class="coach-title" id="coach-title"></b>
-      <ul class="coach-lines" id="coach-lines"></ul>
-      <button class="gbtn gbtn-gold gbtn-sm" id="coach-ok" type="button">Got it</button>
-    </div>
-  </div>
-
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
@@ -367,11 +348,11 @@
 <script src="js/pets.js"></script>
 <script src="js/themes.js"></script>
 <script src="js/cloud.js"></script>
-<script src="js/tips.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/music.js"></script>
 <script src="js/sfx.js"></script>
 <script src="js/gfx.js"></script>
+<script src="js/desk.js"></script>
 <script src="js/stage.js"></script>
 <script src="js/world.js"></script>
 <script src="js/actors.js"></script>

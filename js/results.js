@@ -47,16 +47,26 @@
     /* Below the coin pill, which the coins fly up into - not level with
        it, where a long title ran straight into it. */
     L.titleY = sf.t + 82 * k;
-    L.subY = L.titleY + 32 * k;
+    L.subY = L.titleY + 8 * k;
     L.gr = Math.round(Gfx.clamp(W * 0.16, 44, 70) * k);
     L.gradeY = L.subY + 28 * k + L.gr;
     L.starY = L.gradeY + L.gr + 30 * k;
-    L.unlockY = L.starY + (R && R.mode === 'level' ? 38 : 4) * k;
+    L.unlockY = L.starY + (R && R.mode === 'level' ? 26 : 0) * k;
     L.panelX = 20; L.panelW = W - 40;
     L.rowH = Math.round(29 * k);
     L.panelY = L.unlockY + 22 * k;
-    L.panelH = L.rowH * 6 + 18;
+    L.panelH = L.rowH * ((R ? R.stats.length : 5) + 1) + 18;
     L.btnY = L.panelY + L.panelH + 16 * k;
+    /* On a tall phone everything above ended two thirds of the way down,
+       leaving a slab of nothing under the buttons. The whole column is
+       moved down into the middle of the room it has instead. */
+    var bottom = L.btnY + (56 + 48 + 44) * k + 20;
+    var spare = H - sf.b - 24 - bottom;
+    if (spare > 0) {
+      var dy = Math.round(spare * 0.45);
+      L.titleY += dy; L.subY += dy; L.gradeY += dy; L.starY += dy;
+      L.unlockY += dy; L.panelY += dy; L.btnY += dy;
+    }
     buildButtons(W, H);
   }
 
@@ -151,14 +161,15 @@
     });
     at += r.stats.length * 120 + 100;
     beat(at, function () {
-      Tween.to(st.rows, { 5: 1 }, 280, { ease: Ease.outCubic, real: true, tag: 'results' });
+      var cr = {}; cr[r.stats.length] = 1;
+      Tween.to(st.rows, cr, 280, { ease: Ease.outCubic, real: true, tag: 'results' });
       Tween.to(st, { coins: 1 }, 800, { ease: Ease.outCubic, real: true, tag: 'results', done: throwCoins });
     });
     /* the extras, one card each, then the buttons */
     var extras = [];
-    (r.missionsDone || []).forEach(function (m) { extras.push({ head: 'MISSION COMPLETE', text: m.text, sub: '+' + m.reward + ' coins', icon: 'target', col: Gfx.C.gold }); });
-    (r.badgesNew || []).forEach(function (b) { extras.push({ head: 'BADGE EARNED', text: b.name, sub: b.desc, icon: badgeIcon(b.id), col: '#ff7ad9' }); });
-    if (r.dailyOpened) extras.push({ head: 'NEW ON THE HOME SCREEN', text: 'Daily Challenge', sub: 'A new round every day. Same cards for everyone.', icon: 'cal', col: '#9fd4ff' });
+    (r.missionsDone || []).forEach(function (m) { extras.push({ head: 'MISSION', text: m.text, sub: '+' + m.reward + ' coins', icon: m.icon || 'target', col: Gfx.C.gold }); });
+    (r.badgesNew || []).forEach(function (b) { extras.push({ head: 'BADGE', text: b.name, sub: '', icon: badgeIcon(b.id), col: '#ff7ad9' }); });
+    if (r.dailyOpened) extras.push({ head: 'NEW', text: 'Daily Challenge', sub: '', icon: 'cal', col: '#9fd4ff' });
     cel = extras.length ? { list: extras, i: -1, t: 0, a: 0 } : null;
     if (cel) Tween.wait(at + 1050, nextCel, { tag: 'cel', real: true });
     else beat(at + 1050, showButtons);
@@ -277,9 +288,8 @@
     c.save();
     c.globalAlpha = ta;
     c.translate(W / 2, L.titleY - (1 - ta) * 40);
-    Gfx.text(c, R.title.toUpperCase(), 0, 0, { font: 'arcade', size: Math.round(20 * k), color: R.passed ? '#ffffff' : '#ffb4ae', stroke: '#0a0e1a', strokeW: 6, maxW: W - 120 });
+    Gfx.text(c, R.title.toUpperCase(), 0, 0, { font: 'arcade', size: Math.round(18 * k), color: R.passed ? '#fff4dd' : '#ffc4b8', shadow: 'rgba(46,24,6,.75)', shadowY: 4, maxW: W - 120 });
     c.restore();
-    Gfx.text(c, R.sub, W / 2, L.subY, { size: Math.round(16 * k), weight: 600, color: Gfx.C.tx, alpha: ta, maxW: W - 40 });
 
     drawGrade(c, W);
     if (R.mode === 'level') drawStars(c, W);
@@ -290,16 +300,6 @@
       c.scale(st.best, st.best);
       Gfx.panel(c, -48, -14, 96, 28, { fill: '#e0524a', fill2: '#b03a33', depth: 3, r: 8 });
       Gfx.text(c, 'NEW BEST', 0, 1, { font: 'arcade', size: 9, color: '#fff' });
-      c.restore();
-    }
-
-    if (st.unlock > 0 && R.unlock) {
-      c.save();
-      c.globalAlpha = st.unlock;
-      var ul = R.unlock;
-      var w = Math.min(W - 40, Gfx.measure(c, ul.text, { size: 15, weight: 700 }) + 40);
-      Gfx.panel(c, (W - w) / 2, L.unlockY - 15, w, 30, { fill: ul.good ? 'rgba(40,110,60,.85)' : 'rgba(120,40,36,.8)', depth: 2, r: 10, lip: false });
-      Gfx.text(c, ul.text, W / 2, L.unlockY, { size: 15, weight: 700, color: '#fff', maxW: w - 20 });
       c.restore();
     }
 
@@ -315,20 +315,18 @@
     var out = cel.t > 1450 ? Math.max(0, 1 - (cel.t - 1450) / 250) : 1;
     c.save();
     c.globalAlpha = Math.min(1, cel.t / 160) * out;
-    c.fillStyle = 'rgba(4,6,14,.82)'; c.fillRect(0, 0, W, H);
+    c.fillStyle = 'rgba(30,16,4,.7)'; c.fillRect(0, 0, W, H);
     var w = Math.min(W - 40, 330), h = 188, cy = H * 0.47;
     c.translate(W / 2, cy);
     c.rotate((1 - Math.min(1, k)) * -0.2);
     c.scale(k, k);
     Gfx.glow(c, 0, 0, w * 0.8, e.col, 0.3 + 0.1 * Math.sin(t / 200));
-    Gfx.panel(c, -w / 2, -h / 2, w, h, { fill: '#2a3a62', fill2: '#18234a', depth: 7, r: 20, edge: Gfx.rgba(e.col, 0.9), edgeW: 3 });
-    Gfx.text(c, e.head, 0, -h / 2 + 24, { font: 'arcade', size: 10, color: e.col, maxW: w - 30 });
+    /* a certificate pinned up: cream card, a coloured band, a pin */
+    Desk.note(c, -w / 2, -h / 2, w, h, { band: e.col === Gfx.C.gold ? '#e8a33a' : e.col, pinColor: '#c2412f' });
+    Gfx.text(c, e.head, 0, -h / 2 + 26, { font: 'arcade', size: 9.5, color: e.col === Gfx.C.gold ? '#a8641a' : e.col === '#9fd4ff' ? '#2f6fb0' : '#b0306a', maxW: w - 30 });
     Gfx.drawSprite(c, e.icon, 0, -10 + Math.sin(t / 260) * 3, 44, 44);
-    Gfx.text(c, e.text, 0, 36, { size: 19, weight: 700, color: '#ffffff', maxW: w - 30 });
-    Gfx.text(c, e.sub, 0, 60, { size: 14, weight: 600, color: e.sub.charAt(0) === '+' ? Gfx.C.gold : Gfx.C.tx, maxW: w - 30 });
-    if (cel.list.length > 1) {
-      Gfx.text(c, (cel.i + 1) + ' / ' + cel.list.length + '  -  TAP FOR NEXT', 0, h / 2 - 14, { font: 'arcade', size: 7, color: Gfx.C.txDim });
-    }
+    Gfx.text(c, e.text, 0, 36, { size: 20, weight: 700, color: '#1f2a44', maxW: w - 30 });
+    Gfx.text(c, e.sub, 0, 60, { size: 14, weight: 700, color: e.sub.charAt(0) === '+' ? '#a8641a' : '#5a4630', maxW: w - 30 });
     c.restore();
   }
 
@@ -383,7 +381,9 @@
     if (!any) return;
     c.save();
     c.globalAlpha = Math.min(1, st.rows[0] * 1.5);
-    Gfx.panel(c, x, y, w, h, { fill: 'rgba(20,28,56,.9)', depth: 5, r: 16, edge: 'rgba(255,255,255,.1)' });
+    /* the numbers, on a report card */
+    Gfx.indexCard(c, x, y, w, h, { top: 9 + L.rowH, gap: L.rowH, margin: 12 });
+    Gfx.tape(c, x + w * 0.5, y + 1, 90, 0.04, 'rgba(160,210,240,.85)');
     c.restore();
     var rows = R.stats.slice();
     rows.push({ k: 'Coins earned', v: R.coins, count: true, prefix: '+', coin: true });
@@ -395,17 +395,15 @@
       c.save();
       c.globalAlpha = Math.min(1, a);
       c.translate((1 - Math.min(1, a)) * 30, 0);
-      Gfx.text(c, row.k, x + 18, ry, { size: Math.round(15 * L.k), weight: 600, color: Gfx.C.txDim, align: 'left' });
+      Gfx.text(c, row.k, x + 22, ry, { size: Math.round(15 * L.k), weight: 700, color: '#5a4630', align: 'left' });
       var val;
       if (row.coin) {
         val = '+' + Math.round(R.coins * Math.min(1, st.coins)).toLocaleString();
-        if (st.coins >= 1 && R.fullSet) val += '  FULL SET';
         Gfx.drawSprite(c, 'coin', x + w - 18 - Gfx.measure(c, val, { font: 'arcade', size: 12 }) - 16, ry, 18, 18);
       } else if (row.count) {
         val = Math.round(row.v * Math.min(1, st.shown[i])).toLocaleString() + (row.suffix || '');
       } else val = String(row.v);
-      Gfx.text(c, val, x + w - 18, ry + 1, { font: 'arcade', size: 12, color: row.coin ? Gfx.C.gold : '#ffffff', align: 'right', maxW: w * 0.55 });
-      if (i < rows.length - 1) { c.fillStyle = 'rgba(255,255,255,.06)'; c.fillRect(x + 14, ry + L.rowH / 2, w - 28, 1); }
+      Gfx.text(c, val, x + w - 18, ry + 1, { font: 'arcade', size: 11, color: row.coin ? '#a8641a' : Desk.INK, align: 'right', maxW: w * 0.55 });
       c.restore();
     }
   }

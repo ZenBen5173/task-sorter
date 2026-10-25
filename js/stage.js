@@ -472,15 +472,54 @@ var Stage = (function () {
        dark   quiet
        red    destructive
        icon   a round button with a picture and no words */
+  /* DESK DAY. Every button is a piece of stationery lying on the desk:
+       gold   a ticket stub, notched at both ends - PLAY, NEXT
+       blue   a blue index card
+       green  a green one
+       wood   a manila folder, with its tab - the home screen's doors
+       dark   plain kraft card - the quiet choice
+       red    red card
+       icon   a square tab, the kind pinned to a board - back, settings
+     `shape` says how it is cut. */
   var STYLE = {
-    gold: { fill: '#ffd76a', fill2: '#f0a93a', sink: '#8a5a16', text: '#3a2208', edge: '#fff3c4' },
-    blue: { fill: '#5b8fd8', fill2: '#3b64a8', sink: '#1a2f55', text: '#ffffff', edge: '#a8c8f4' },
-    green: { fill: '#76d483', fill2: '#3e9d52', sink: '#1d4d28', text: '#0f2a14', edge: '#c8f2cf' },
-    wood: { fill: '#a06a36', fill2: '#74481f', sink: '#3a220e', text: '#fff6e6', edge: '#d4a26c' },
-    dark: { fill: '#2b3a5c', fill2: '#1c2742', sink: '#060a14', text: '#e6eefc', edge: '#4a5d86' },
-    red: { fill: '#e8685f', fill2: '#b03a33', sink: '#4a1210', text: '#ffffff', edge: '#ffb4ae' },
-    icon: { fill: '#2b3a5c', fill2: '#1c2742', sink: '#060a14', text: '#e6eefc', edge: '#4a5d86' }
+    gold: { fill: '#ffd76a', fill2: '#e8a33a', text: '#2a1e12', shape: 'ticket' },
+    blue: { fill: '#4a86c4', fill2: '#2f5f96', text: '#ffffff', shape: 'card' },
+    green: { fill: '#76c483', fill2: '#3e9d52', text: '#12301a', shape: 'card' },
+    wood: { fill: '#e7c07a', fill2: '#c99a4e', text: '#2a1e12', shape: 'folder' },
+    dark: { fill: '#e2d2ae', fill2: '#bba57a', text: '#2a1e12', shape: 'card' },
+    red: { fill: '#e0524a', fill2: '#a8322b', text: '#ffffff', shape: 'card' },
+    icon: { fill: '#f1e8d2', fill2: '#cbbd98', text: '#2a1e12', shape: 'card' }
   };
+  /* The colour of ink on paper: what an icon drawn on a button uses. */
+  var INK = '#2a1e12';
+
+  /** How a button is cut out, as a path. */
+  function cut(c, shape, w, h) {
+    if (shape === 'ticket') {
+      var n = Math.min(10, h * 0.16);
+      c.beginPath();
+      c.moveTo(0, 0); c.lineTo(w, 0); c.lineTo(w, h / 2 - n);
+      c.arc(w, h / 2, n, -Math.PI / 2, Math.PI / 2, true);
+      c.lineTo(w, h); c.lineTo(0, h); c.lineTo(0, h / 2 + n);
+      c.arc(0, h / 2, n, Math.PI / 2, -Math.PI / 2, true);
+      c.closePath();
+    } else if (shape === 'folder') {
+      var tab = Math.min(14, h * 0.13), tw = w * 0.42;
+      c.beginPath();
+      c.moveTo(0, tab); c.lineTo(tw, tab); c.lineTo(tw + tab, 0); c.lineTo(w, 0);
+      c.lineTo(w, h); c.lineTo(0, h); c.closePath();
+    } else {
+      Gfx.rr(c, 0, 0, w, h, 6);
+    }
+  }
+
+  /** A small fixed tilt per button, from its words, so a row of them
+      looks laid down by hand rather than placed by a grid. */
+  function tiltOf(b) {
+    var s = (b.id || '') + (b.label || ''), h = 0;
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return ((Math.abs(h) % 100) / 100 - 0.5) * 0.04;
+  }
 
   function Button(o) {
     this.x = o.x || 0; this.y = o.y || 0; this.w = o.w || 100; this.h = o.h || 48;
@@ -514,27 +553,37 @@ var Stage = (function () {
   Button.prototype.draw = function (c) {
     if (!this.visible || this.appear <= 0.001) return;
     var s = STYLE[this.style] || STYLE.dark;
-    var depth = this.style === 'icon' ? 4 : 6;
-    var down = this.pressed ? depth * 0.7 : 0;
+    var depth = this.style === 'icon' ? 3 : 5;
+    var down = this.pressed ? depth * 0.8 : 0;
     var a = Math.min(1, this.appear);
     var k = this.scale.x * (0.6 + 0.4 * Ease.outBack(a));
+    /* A button that wants pressing breathes: it lifts off the desk and
+       settles, a hair, over and over. */
+    var lift = this.pulse && this.enabled && !this.pressed ? Math.round((0.5 + 0.5 * Math.sin(this.t / 300)) * 2) : 0;
     c.save();
     c.globalAlpha *= this.enabled ? a : a * 0.5;
     c.translate(this.x + this.w / 2, this.y + this.h / 2);
+    c.rotate(tiltOf(this) * (this.pressed ? 0.3 : 1));
     c.scale(k, k);
-    c.translate(-this.w / 2, -this.h / 2 + down);
-    if (this.pulse && this.enabled) {
-      var g = 0.35 + 0.25 * Math.sin(this.t / 260);
-      Gfx.glow(c, this.w / 2, this.h / 2, Math.max(this.w, this.h) * 0.75, s.fill, g * 0.5);
-    }
-    var r = this.style === 'icon' ? this.h / 2 : Math.min(16, this.h * 0.32);
-    /* The plastic body is baked - one bitmap for up, one for pressed. */
-    var bw = this.w, bh = this.h, dd = depth - down;
-    var body = Gfx.bake('btn|' + this.style + '|' + bw + '|' + bh + '|' + dd.toFixed(1), bw, bh + depth + 1, function (k) {
-      Gfx.panel(k, 0, 0, bw, bh, {
-        fill: s.fill, fill2: s.fill2, sink: s.sink, depth: dd, r: r,
-        edge: Gfx.rgba(s.edge, 0.55), edgeW: 2
-      });
+    c.translate(-this.w / 2 + down * 0.4, -this.h / 2 + down - lift);
+    /* The card is baked - one bitmap per size and per how pressed. */
+    var bw = this.w, bh = this.h, dd = depth - down + lift;
+    var body = Gfx.bake('btn|' + this.style + '|' + bw + '|' + bh + '|' + dd.toFixed(1), bw + 6, bh + depth + 6, function (k2) {
+      k2.fillStyle = 'rgba(46,24,6,.42)';
+      k2.save(); k2.translate(Math.min(3, dd * 0.6), dd); cut(k2, s.shape, bw, bh); k2.fill(); k2.restore();
+      cut(k2, s.shape, bw, bh);
+      k2.fillStyle = s.fill; k2.fill();
+      k2.save(); k2.clip();
+      k2.fillStyle = s.fill2; k2.fillRect(0, bh - Math.max(3, Math.min(5, bh * 0.08)), bw, bh);
+      k2.fillStyle = 'rgba(255,255,255,.28)'; k2.fillRect(0, 0, bw, 2);
+      if (s.shape === 'ticket') {
+        /* the perforation a ticket tears along */
+        k2.fillStyle = 'rgba(42,30,18,.28)';
+        for (var py = 6; py < bh - 6; py += 7) k2.fillRect(bw * 0.86, py, 2, 4);
+      }
+      k2.restore();
+      k2.lineWidth = 1; k2.strokeStyle = 'rgba(40,20,4,.3)';
+      k2.save(); k2.translate(0.5, 0.5); cut(k2, s.shape, bw - 1, bh - 1); k2.stroke(); k2.restore();
     });
     c.drawImage(body.cv, 0, 0, body.w, body.h);
     if (this.custom) this.custom(c, this, s);
@@ -566,8 +615,12 @@ var Stage = (function () {
       }
     }
     if (this.badge) {
-      Gfx.panel(c, this.w - 22, -8, 30, 22, { fill: Gfx.C.now, sink: '#4a1210', depth: 2, r: 11, lip: false });
-      Gfx.text(c, this.badge, this.w - 7, 3, { size: 12, weight: 700, color: '#fff' });
+      /* a red sticker dot on the corner */
+      c.fillStyle = 'rgba(46,24,6,.4)';
+      c.beginPath(); c.arc(this.w - 4, 4, 11, 0, 6.2832); c.fill();
+      c.fillStyle = '#c2412f';
+      c.beginPath(); c.arc(this.w - 6, 1, 11, 0, 6.2832); c.fill();
+      Gfx.text(c, this.badge, this.w - 6, 2, { font: 'arcade', size: 9, color: '#fff' });
     }
     c.restore();
   };
@@ -674,6 +727,6 @@ var Stage = (function () {
     stats: function () { return { fps: Math.round(stats.fps * 10) / 10, workMs: Math.round(stats.work * 100) / 100, dpr: dpr, particles: Particles.count() }; },
     block: function (on) { inputBlocked += on ? 1 : -1; if (inputBlocked < 0) inputBlocked = 0; },
     canvas: function () { return cv; },
-    Button: Button, Buttons: Buttons, STYLE: STYLE, stagger: stagger
+    Button: Button, Buttons: Buttons, STYLE: STYLE, INK: INK, stagger: stagger
   };
 })();

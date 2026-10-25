@@ -895,10 +895,8 @@ var Game = (function () {
       dailyOpened: dailyNow,
       stats: [
         { k: 'Score', v: score, count: true },
-        { k: 'Needed to pass', v: bar + '%' },
         { k: 'Accuracy', v: Math.round(acc * 100), count: true, suffix: '%' },
-        { k: 'Best streak', v: 'x' + Math.min(bestStreak, TUNING.MAX_MULTIPLIER) },
-        { k: 'Cards sorted', v: total }
+        { k: 'Best streak', v: 'x' + Math.min(bestStreak, TUNING.MAX_MULTIPLIER) }
       ],
       coins: coins, fullSet: Shop.hasFullSet(),
       misses: reviewRows(),
@@ -929,8 +927,7 @@ var Game = (function () {
         { k: 'Score', v: score, count: true },
         { k: 'Best today', v: d.best, count: true },
         { k: 'Accuracy', v: Math.round(acc * 100), count: true, suffix: '%' },
-        { k: 'Best streak', v: 'x' + Math.min(bestStreak, TUNING.MAX_MULTIPLIER) },
-        { k: 'Cards sorted', v: total }
+        { k: 'Best streak', v: 'x' + Math.min(bestStreak, TUNING.MAX_MULTIPLIER) }
       ],
       coins: coins, fullSet: Shop.hasFullSet(),
       misses: reviewRows(),
@@ -969,15 +966,11 @@ var Game = (function () {
       grade: grade,
       stars: 0,
       unlock: unlock,
-      /* A duel has no score and no pass mark, so those rows say what they
-         are actually showing: the health you finished on, and who you were
-         fighting. */
+      /* A duel has no score, so the first row is the health you kept. */
       stats: [
         { k: 'Health left', v: Math.max(0, hpYou) + ' HP' },
-        { k: 'Boss', v: foe.name },
         { k: 'Accuracy', v: Math.round(acc * 100), count: true, suffix: '%' },
-        { k: 'Best streak', v: 'x' + Math.min(bestStreak, TUNING.MAX_MULTIPLIER) },
-        { k: 'Cards sorted', v: total }
+        { k: 'Best streak', v: 'x' + Math.min(bestStreak, TUNING.MAX_MULTIPLIER) }
       ],
       coins: coins, fullSet: Shop.hasFullSet(),
       misses: reviewRows(),

@@ -180,10 +180,17 @@ var Actors = (function () {
     if (this.pet && this.pet.x >= this.x) this.pet.draw(c);
 
     if (o.nameTag && this.name) {
-      var ty = this.y + 22;
-      var tw = Gfx.measure(c, this.name, { size: 15, weight: 700 }) + 22;
-      Gfx.panel(c, this.x - tw / 2, ty - 13, tw, 26, { fill: 'rgba(8,12,26,.72)', depth: 0, r: 13, lip: false, edge: 'rgba(255,255,255,.18)' });
-      Gfx.text(c, this.name, this.x, ty, { size: 15, weight: 700, color: '#fff' });
+      /* a HELLO MY NAME IS sticker, stuck on a little crooked */
+      var ty = this.y + 30;
+      var tw = Math.max(96, Gfx.measure(c, this.name, { size: 18, weight: 700 }) + 28);
+      c.save();
+      c.translate(this.x, ty); c.rotate(-0.05);
+      c.fillStyle = 'rgba(46,24,6,.35)'; c.fillRect(-tw / 2 + 2, -18, tw, 40);
+      c.fillStyle = '#fffdf6'; c.fillRect(-tw / 2, -20, tw, 40);
+      c.fillStyle = '#c2412f'; c.fillRect(-tw / 2, -20, tw, 12);
+      Gfx.text(c, 'HELLO, MY NAME IS', 0, -14, { font: 'mono', size: 6.5, color: '#fff' });
+      Gfx.text(c, this.name, 0, 7, { size: 18, weight: 700, color: '#1f2a44', maxW: tw - 12 });
+      c.restore();
     }
   };
 

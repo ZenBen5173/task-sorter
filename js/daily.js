@@ -121,12 +121,7 @@ var Daily = (function () {
       Panels.dialog({
         icon: 'cal',
         title: 'Daily #' + t.number,
-        lines: [
-          'One round, <b>the same cards for everyone today</b>. Golden, frozen and burning cards - and the trays swap.',
-          played ? 'Your best today: <b>' + this.bestToday().toLocaleString() + '</b>. Beat it - the bonus is already yours.'
-                 : 'Finish it today for <b>+' + this.nextBonus() + ' coins</b>' + (s ? ' and a <b>' + (s + 1) + '-day streak</b>.' : '.'),
-          s ? 'Streak: <b>' + s + (s === 1 ? ' day' : ' days') + '</b>. Miss a day and it starts again.' : 'Play every day to build a streak. The bonus grows with it.'
-        ],
+        lines: [played ? '<b>' + this.bestToday().toLocaleString() + '</b>' : '<b>+' + this.nextBonus() + '</b> coins'],
         okText: played ? 'Play again' : 'Play',
         onOk: function () { Stage.go('round', { daily: true }, 'iris'); }
       });

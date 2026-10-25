@@ -3,5 +3,5 @@
     <!-- The bg-0 custom property in css/style.css. Kept in step by hand;
          it is one value, and it only matters for the half second between
          tapping the icon and the page painting itself. -->
-    <color name="backdrop">#0a0e1a</color>
+    <color name="backdrop">#7a4f2a</color>
 </resources>

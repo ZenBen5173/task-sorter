@@ -8,7 +8,6 @@
      missions   three goals on the go, and your badges
      mine       your own to-do list, as a plan in four piles
      dialog     a question ("delete everything?") or a note
-     coach      the first time you reach a place, a word about it
      toast      one line that comes and goes
 
    ONE BACK BUTTON FOR ALL OF IT. Android's back closes the top sheet
@@ -22,7 +21,6 @@ var Panels = (function () {
   var stack = [];
   var dialogOk = null;
   var toastTimer = null;
-  var coachName = null;
   var page = 0;
 
   function $(id) { return document.getElementById(id); }
@@ -62,7 +60,6 @@ var Panels = (function () {
   /** Closes whatever is on top. Returns true if there was something. */
   function back() {
     if (!$('dialog').hidden) { closeDialog(); return true; }
-    if (coachName) { dismissCoach(); return true; }
     var t = top();
     if (!t || t === 'gear') return false;     // gear closes with its scene
     close(t);
@@ -122,7 +119,7 @@ var Panels = (function () {
         '<small>' + m.prog.toLocaleString() + ' / ' + m.target.toLocaleString() + '</small></span>' +
         '<span class="mission-reward"><span class="shop-coin"></span>' + m.reward + '</span>';
       li.querySelector('b').textContent = m.text;
-      Sprites.apply(li.querySelector('.mission-ico'), 'target');
+      Sprites.apply(li.querySelector('.mission-ico'), m.icon);
       Sprites.apply(li.querySelector('.shop-coin'), 'coin');
       list.appendChild(li);
     });
@@ -196,7 +193,7 @@ var Panels = (function () {
       var hidden = document.createElement('button');
       hidden.type = 'button';
       hidden.className = 'review-chip is-hidden';
-      hidden.textContent = 'so what was it? tap';
+      hidden.textContent = 'Tap to see the answer';
       if (r.chose === null) mine.textContent = 'It burnt out';
       hidden.addEventListener('click', function () {
         if (!r.box || hidden.classList.contains('is-shown')) return;
@@ -249,34 +246,6 @@ var Panels = (function () {
     toastTimer = setTimeout(function () { el.className = 'toast'; }, 1800);
   }
 
-  /* ---------------- the first-time note ----------------
-     The first time you reach a place, your character tells you what it
-     is. Once only: it is remembered in the save. */
-  function coachOnce(name) {
-    if (!window.TIPS || !TIPS[name] || Progress.hasSeenTip(name)) return;
-    /* A beat after arriving, not on the same frame as the transition. */
-    setTimeout(function () {
-      if (Progress.hasSeenTip(name) || coachName) return;
-      var tip = TIPS[name];
-      coachName = name;
-      Sprites.apply($('coach-who'), 'hero');
-      $('coach-title').textContent = tip.title;
-      $('coach-lines').innerHTML = tip.lines.map(function (l) { return '<li>' + l + '</li>'; }).join('');
-      var c = $('coach');
-      c.classList.remove('is-out');
-      c.hidden = false;
-      Sfx.play('pop');
-    }, 650);
-  }
-  function dismissCoach() {
-    if (!coachName) return;
-    Progress.markTipSeen(coachName);
-    coachName = null;
-    var c = $('coach');
-    c.classList.add('is-out');
-    Sfx.play('close');
-    setTimeout(function () { c.hidden = true; }, 240);
-  }
 
   /* ---------------- wiring ---------------- */
 
@@ -308,7 +277,6 @@ var Panels = (function () {
     $('dialog-ok').addEventListener('click', function () { closeDialog(true); });
     $('dialog-no').addEventListener('click', function () { closeDialog(false); });
     $('dialog').addEventListener('click', function (e) { if (e.target === $('dialog')) closeDialog(false); });
-    $('coach-ok').addEventListener('click', dismissCoach);
 
     /* Every picture in the sheets that names a sprite gets it. */
     var pics = document.querySelectorAll('#ui [data-sprite]');
@@ -322,7 +290,6 @@ var Panels = (function () {
     any: function () { return stack.length > 0 || !$('dialog').hidden; },
     sheetTop: sheetTop,
     dialog: dialog, toast: toast,
-    coachOnce: coachOnce, dismissCoach: dismissCoach,
     paintSwitches: paintSwitches
   };
 })();

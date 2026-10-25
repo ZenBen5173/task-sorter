@@ -49,16 +49,29 @@ var Wallet = (function () {
 /* ---------------- the pills in the top corner ---------------- */
 var TopBar = (function () {
   var coinPos = { x: 0, y: 0 }, starPos = { x: 0, y: 0 }, leftEdge = 0;
+  /** Coins and stars, each on a price tag: a card cut to a point on its
+      left, with the hole a string would go through. */
   function pill(c, x, y, w, icon, text, k) {
     c.save();
     c.translate(x + w / 2, y + 19);
     c.scale(k, k);
-    Gfx.panel(c, -w / 2, -19, w, 38, { fill: 'rgba(16,24,48,.92)', sink: 'rgba(0,0,0,.5)', depth: 3, r: 19, edge: 'rgba(255,255,255,.14)' });
+    c.rotate(icon === 'star' ? -0.03 : 0.03);
+    var l = -w / 2, n = 12;
+    var tag = function (dx, dy) {
+      c.beginPath();
+      c.moveTo(l + n + dx, -17 + dy); c.lineTo(w / 2 + dx, -17 + dy); c.lineTo(w / 2 + dx, 17 + dy); c.lineTo(l + n + dx, 17 + dy); c.lineTo(l + dx, dy);
+      c.closePath();
+    };
+    tag(2, 3); c.fillStyle = 'rgba(46,24,6,.4)'; c.fill();
+    tag(0, 0); c.fillStyle = '#fffdf6'; c.fill();
+    c.lineWidth = 1; c.strokeStyle = 'rgba(120,96,60,.45)'; c.stroke();
+    c.fillStyle = '#b9895a'; c.beginPath(); c.arc(l + n - 2, 0, 3, 0, 6.2832); c.fill();
     if (icon === 'star') {
       c.fillStyle = Gfx.C.gold;
-      Gfx.star(c, -w / 2 + 20, 0, 10, 4.5, 5, 0); c.fill();
-    } else Gfx.drawSprite(c, icon, -w / 2 + 20, 0, 22, 22);
-    Gfx.text(c, text, -w / 2 + 38, 1, { font: 'arcade', size: 12, color: '#fff', align: 'left', maxW: w - 46 });
+      Gfx.star(c, l + n + 16, 0, 9, 4, 5, 0); c.fill();
+      c.lineWidth = 1.5; c.strokeStyle = '#7a4f0a'; c.stroke();
+    } else Gfx.drawSprite(c, icon, l + n + 16, 0, 20, 20);
+    Gfx.text(c, text, l + n + 30, 1, { font: 'arcade', size: 11, color: Desk.INK, align: 'left', maxW: w - n - 36 });
     c.restore();
   }
   return {
@@ -88,7 +101,7 @@ var TopBar = (function () {
         draw(), which is what measures the pills. */
     title: function (c, text) {
       var lx = Math.max(12, Stage.safe.l) + 52, rx = leftEdge - 8;
-      Gfx.text(c, text, (lx + rx) / 2, Stage.safe.t + 32, { font: 'arcade', size: 14, color: '#fff', stroke: '#0a0e1a', strokeW: 5, maxW: rx - lx });
+      Gfx.text(c, text, (lx + rx) / 2, Stage.safe.t + 32, { font: 'arcade', size: 13, color: '#fff4dd', shadow: 'rgba(46,24,6,.75)', shadowY: 3, maxW: rx - lx });
     }
   };
 })();
@@ -105,7 +118,7 @@ var Scenes = (function () {
       draw: function (c, b) {
         c.save();
         c.translate(b.w / 2, b.h / 2);
-        c.fillStyle = '#e6eefc'; c.strokeStyle = '#e6eefc';
+        c.fillStyle = Desk.INK; c.strokeStyle = Desk.INK;
         if (kind === 'back') {
           c.lineWidth = 4; c.lineCap = 'round'; c.lineJoin = 'round';
           c.beginPath(); c.moveTo(4, -9); c.lineTo(-5, 0); c.lineTo(4, 9); c.stroke();
@@ -117,7 +130,7 @@ var Scenes = (function () {
             c.save(); c.rotate(i * Math.PI / 4); c.fillRect(-3, -13, 6, 6); c.restore();
           }
           c.beginPath(); c.arc(0, 0, 9, 0, Math.PI * 2); c.fill();
-          c.fillStyle = '#1c2742';
+          c.fillStyle = '#f1e8d2';
           c.beginPath(); c.arc(0, 0, 4, 0, Math.PI * 2); c.fill();
         }
         c.restore();
@@ -131,9 +144,8 @@ var Scenes = (function () {
   function doorDraw(icon) {
     return function (c, b, st) {
       var bounce = b.pressed ? 0 : Math.sin(b.t / 400) * 1.2;
-      Gfx.drawSprite(c, icon, b.w / 2, b.h * 0.34 + bounce, Math.min(30, b.h * 0.4));
-      Gfx.text(c, b.label, b.w / 2, b.h * 0.67, { font: 'arcade', size: 10, color: st.text, maxW: b.w - 12 });
-      if (b.sub) Gfx.text(c, b.sub, b.w / 2, b.h * 0.85, { size: 11, weight: 600, color: Gfx.rgba(st.text === '#ffffff' ? '#ffffff' : st.text, 0.72), maxW: b.w - 10 });
+      Gfx.drawSprite(c, icon, b.w / 2, b.h * 0.42 + bounce, Math.min(34, b.h * 0.44));
+      Gfx.text(c, b.label, b.w / 2, b.h * 0.8, { font: 'arcade', size: 10, color: st.text, maxW: b.w - 12 });
     };
   }
 
@@ -182,49 +194,65 @@ var Scenes = (function () {
       update: function (dt) { t += dt; },
       draw: function (c, W, H) {
         drawWorld(c, W, H, t, { dim: 0.12 });
-        var sz = Math.min(W * 0.52, 210), cx = W / 2, cy = Math.max(H * 0.33, safe().t + sz * 0.7);
-        var cell = sz * 0.34, gap = sz * 0.06;
-        /* the dark plate behind the tiles, as on the app's own icon */
+        /* THE LOGO, put together in front of you: a cork tile, four
+           coloured tabs flying in to its corners, an index card dropping
+           onto them with a red tick on it, and a strip of tape to hold it. */
+        var sz = Math.min(W * 0.56, 230), cx = W / 2, cy = Math.max(H * 0.32, safe().t + sz * 0.7);
         if (plate.s > 0) {
-          c.save(); c.translate(cx, cy); c.scale(plate.s, plate.s);
-          Gfx.panel(c, -sz / 2, -sz / 2, sz, sz, { fill: '#121a2e', fill2: '#0a0e1a', depth: 8, r: sz * 0.2, edge: 'rgba(255,255,255,.12)' });
+          c.save(); c.translate(cx, cy); c.scale(plate.s, plate.s); c.rotate(-0.02);
+          c.fillStyle = 'rgba(46,24,6,.45)'; Gfx.rr(c, -sz / 2 + 4, -sz / 2 + 7, sz, sz, 12); c.fill();
+          c.fillStyle = '#7a4f2a'; Gfx.rr(c, -sz / 2, -sz / 2, sz, sz, 12); c.fill();
+          c.fillStyle = '#c4946a'; c.fillRect(-sz / 2 + 9, -sz / 2 + 9, sz - 18, sz - 18);
+          c.fillStyle = 'rgba(74,42,14,.35)';
+          for (var sp = 0; sp < 140; sp++) c.fillRect(-sz / 2 + 9 + (sp * 47) % (sz - 18), -sz / 2 + 9 + (sp * 29) % (sz - 18), 1.5, 1.5);
           c.restore();
         }
-        var spots = [[-1, -1], [1, -1], [-1, 1], [1, 1]];
+        var spots = [[-1, -1], [1, -1], [-1, 1], [1, 1]], rots = [-0.24, 0.21, 0.17, -0.2];
+        var tabW = sz * 0.3, tabH = sz * 0.2;
         tiles.forEach(function (tl, i) {
           var p = tl.p;
           if (p <= 0) return;
-          var tx = cx + spots[i][0] * (cell / 2 + gap / 2), ty = cy + spots[i][1] * (cell / 2 + gap / 2);
-          var fx = spots[i][0] < 0 ? -cell : W + cell, fy = spots[i][1] < 0 ? -cell : H + cell;
+          var tx = cx + spots[i][0] * sz * 0.23, ty = cy + spots[i][1] * sz * 0.2;
+          var fx = spots[i][0] < 0 ? -tabW : W + tabW, fy = spots[i][1] < 0 ? -tabH : H + tabH;
           var x = Gfx.lerp(fx, tx, p), y = Gfx.lerp(fy, ty, p);
-          c.save(); c.translate(x, y); c.rotate((1 - p) * 2.4 * (i % 2 ? 1 : -1));
-          Gfx.panel(c, -cell / 2, -cell / 2, cell, cell, { fill: Gfx.C[tl.k], fill2: Gfx.shade(Gfx.C[tl.k], -0.25), depth: 4, r: cell * 0.18 });
+          c.save(); c.translate(x, y); c.rotate(rots[i] + (1 - p) * 2.4 * (i % 2 ? 1 : -1));
+          c.fillStyle = 'rgba(46,24,6,.4)'; c.fillRect(-tabW / 2 + 2, -tabH / 2 + 4, tabW, tabH);
+          c.fillStyle = Gfx.C[tl.k]; c.fillRect(-tabW / 2, -tabH / 2, tabW, tabH);
+          c.fillStyle = Gfx.shade(Gfx.C[tl.k], -0.25); c.fillRect(-tabW / 2, tabH / 2 - 5, tabW, 5);
           c.restore();
         });
         if (card.y > -1) {
-          var cw = sz * 0.62, ch = sz * 0.36;
+          var cw = sz * 0.62, ch = sz * 0.44;
           var yy = cy + card.y * (cy + sz);
-          c.save(); c.translate(cx, yy); c.rotate(card.y * 0.6);
-          Gfx.panel(c, -cw / 2, -ch / 2, cw, ch, { fill: Gfx.C.paper, fill2: Gfx.C.paper2, depth: 5, sink: 'rgba(0,0,0,.4)', r: ch * 0.22, lip: false });
-          c.fillStyle = 'rgba(60,40,20,.25)';
-          c.fillRect(-cw * 0.32, -ch * 0.1, cw * 0.64, ch * 0.1);
-          c.fillRect(-cw * 0.32, ch * 0.12, cw * 0.44, ch * 0.1);
+          c.save(); c.translate(cx, yy); c.rotate(-0.06 + card.y * 0.6);
+          Gfx.indexCard(c, -cw / 2, -ch / 2, cw, ch, { top: ch * 0.2, gap: ch * 0.19, margin: cw * 0.14 });
+          if (card.y >= 0) {
+            c.strokeStyle = '#c2412f'; c.lineWidth = Math.max(6, sz * 0.05); c.lineCap = 'round'; c.lineJoin = 'round';
+            c.beginPath(); c.moveTo(-cw * 0.16, ch * 0.02); c.quadraticCurveTo(-cw * 0.06, ch * 0.12, -cw * 0.02, ch * 0.24); c.quadraticCurveTo(cw * 0.12, -ch * 0.12, cw * 0.32, -ch * 0.28); c.stroke();
+          }
+          Gfx.tape(c, 0, -ch / 2 + 2, cw * 0.42, 0.06);
           c.restore();
         }
         if (words.a > 0) {
           var ty2 = cy + sz * 0.72 + words.y;
           c.save(); c.globalAlpha = words.a;
-          var fs = Math.min(30, W * 0.075);
-          var tw = Gfx.measure(c, 'TASK', { font: 'arcade', size: fs }), sw = Gfx.measure(c, 'SORTER', { font: 'arcade', size: fs });
-          var left = cx - (tw + sw + fs * 0.4) / 2;
-          Gfx.text(c, 'TASK', left, ty2, { font: 'arcade', size: fs, color: '#ffffff', align: 'left', stroke: '#0a0e1a', strokeW: 7, shadow: 'rgba(0,0,0,.5)', shadowY: 5 });
-          Gfx.text(c, 'SORTER', left + tw + fs * 0.4, ty2, { font: 'arcade', size: fs, color: Gfx.C.gold, align: 'left', stroke: '#0a0e1a', strokeW: 7, shadow: 'rgba(0,0,0,.5)', shadowY: 5 });
-          Gfx.text(c, 'Sort the pile before it buries you.', cx, ty2 + fs * 1.4, { size: 16, weight: 600, color: Gfx.C.tx });
+          var fs = Math.min(34, W * 0.085);
+          var tw = Gfx.measure(c, 'TASK', { font: 'arcade', size: fs }), sw = Gfx.measure(c, 'SORTER', { font: 'arcade', size: fs * 0.82 });
+          var gapW = fs * 0.5, left = cx - (tw + sw + gapW + 16) / 2;
+          Gfx.text(c, 'TASK', left, ty2, { font: 'arcade', size: fs, color: '#fff4dd', align: 'left', shadow: 'rgba(46,24,6,.75)', shadowY: 4 });
+          /* SORTER, rubber-stamped in a box */
+          var bx0 = left + tw + gapW, bw0 = sw + 16, bh0 = fs * 1.45;
+          c.save(); c.translate(bx0 + bw0 / 2, ty2); c.rotate(-0.08);
+          c.strokeStyle = '#c2412f'; c.lineWidth = 3.5; c.strokeRect(-bw0 / 2, -bh0 / 2, bw0, bh0);
+          c.lineWidth = 1.5; c.strokeRect(-bw0 / 2 + 4, -bh0 / 2 + 4, bw0 - 8, bh0 - 8);
+          Gfx.text(c, 'SORTER', 0, 1, { font: 'arcade', size: fs * 0.82, color: '#c2412f' });
+          c.restore();
+
           c.restore();
         }
         if (cue) {
           var a = 0.45 + 0.55 * Math.abs(Math.sin(t / 520));
-          Gfx.text(c, 'TAP TO START', cx, H - safe().b - Math.max(70, H * 0.12), { font: 'arcade', size: 14, color: '#ffffff', alpha: a, stroke: '#0a0e1a', strokeW: 5 });
+          Gfx.text(c, 'TAP TO START', cx, H - safe().b - Math.max(70, H * 0.12), { font: 'arcade', size: 13, color: '#fff4dd', alpha: a, shadow: 'rgba(46,24,6,.75)', shadowY: 3 });
         }
       },
       pointer: function (type) { if (type === 'down') go(); },
@@ -250,13 +278,12 @@ var Scenes = (function () {
       mb.x += 52;
       mb.badge = Progress.get('missionsDone') > (Progress.get('missionsSeen') || 0) ? '!' : '';
       var bw = Math.min(W - 40, 360), bx = (W - bw) / 2;
-      groundY = Math.round(Gfx.clamp(H * 0.5, sf.t + 250, H - sf.b - 290));
-      rankY = groundY + 46;
-      var playY = rankY + 44;
-      var next = LEVELS[Math.min(Progress.unlocked(), LEVELS.length) - 1];
-      var allDone = Object.keys(Progress.all().best).length >= LEVELS.length;
+      groundY = Math.round(Gfx.clamp(H * 0.5, sf.t + 250, H - sf.b - 302));
+      /* room under the shelf for the name sticker before the ruler */
+      rankY = groundY + 62;
+      var playY = rankY + 40;
       buttons.add({ x: bx, y: playY, w: bw, h: 76, label: 'PLAY', style: 'gold', size: 24, pulse: true, id: 'play',
-                    sub: allDone ? 'EVERY LEVEL BEATEN' : 'LEVEL ' + next.n + ' · ' + next.name.toUpperCase(),
+
                     onTap: goPlay });
       /* FOUR DOORS. The Guide Book used to be the third; it lives in
          Settings and behind the map's "?" now, because a rulebook is
@@ -264,39 +291,21 @@ var Scenes = (function () {
          a round to come back for every day, and your own list. */
       var gap = 8, dw = (bw - gap * 3) / 4, dy = playY + 76 + 16, dh = 82;
       var beaten = Progress.rivalsBeaten();
-      var pets = SHOP.pet.items.filter(function (it) { return it.cost !== 0 && Progress.owns(it.id); }).length;
       buttons.add({ x: bx, y: dy, w: dw, h: dh, label: 'BOSS', style: 'wood', id: 'boss',
-                    sub: beaten >= OPPONENTS.length ? 'All beaten' : OPPONENTS[beaten].name, draw: doorDraw('battle'),
+                    draw: doorDraw('battle'),
                     onTap: function () { Stage.go('bosses', {}, 'cards'); } });
-      var dOpen = Daily.isOpen(), dDone = Daily.playedToday(), dStreak = Daily.streak();
+      var dOpen = Daily.isOpen(), dDone = Daily.playedToday();
       buttons.add({ x: bx + (dw + gap), y: dy, w: dw, h: dh, label: 'DAILY', style: dOpen && !dDone ? 'gold' : 'wood', id: 'daily',
-                    sub: !dOpen ? 'Pass Level 1' : dDone ? (dStreak > 1 ? dStreak + '-day streak' : 'Done today') : '#' + Daily.today().number + ' is out',
+
                     badge: dOpen && !dDone ? '!' : '', draw: doorDraw('cal'),
                     onTap: function () { Daily.open(); } });
       buttons.add({ x: bx + (dw + gap) * 2, y: dy, w: dw, h: dh, label: 'GEAR', style: 'wood', id: 'gear',
-                    sub: pets + '/' + (SHOP.pet.items.length - 1) + ' pets', draw: doorDraw('shield'),
+                    badge: canAfford() ? '!' : '', draw: doorDraw('shield'),
                     onTap: function () { Stage.go('gear', {}, 'fade'); } });
-      var todo = MyList.count();
       buttons.add({ x: bx + (dw + gap) * 3, y: dy, w: dw, h: dh, label: 'MY LIST', style: 'wood', id: 'mine',
-                    sub: todo ? todo + ' to do' : 'Your real week', draw: doorDraw('list'),
+                    draw: doorDraw('list'),
                     onTap: function () { Panels.open('mine'); } });
 
-      /* THE NEXT THING TO WORK TOWARD, in the space under the doors. A
-         home screen that only says "PLAY" gives you a reason to play this
-         round; one that says "40 more coins for the Kitten" gives you a
-         reason to play the one after it. */
-      var goal = nextGoal();
-      var gy = dy + dh + 14;
-      if (goal && H - sf.b - gy > 58) {
-        buttons.add({ x: bx, y: gy, w: bw, h: 50, style: goal.ready ? 'green' : 'dark', id: 'goal', pulse: goal.ready,
-          draw: function (c, b, st) {
-            if (goal.pet) Gfx.drawPet(c, goal.sprite, 30, b.h - 9, 30, (b.t / 90) | 0);
-            else Gfx.drawSprite(c, goal.sprite, 30, b.h / 2, 28, 28);
-            Gfx.text(c, goal.text, 56, b.h * 0.36, { size: 15, weight: 700, color: st.text, align: 'left', maxW: b.w - 70 });
-            Gfx.text(c, goal.sub, 56, b.h * 0.7, { size: 12, weight: 600, color: Gfx.rgba(st.text === '#ffffff' ? '#ffffff' : st.text, 0.72), align: 'left', maxW: b.w - 70 });
-          },
-          onTap: function () { Shop.setTab(goal.kind); Stage.go('gear', {}, 'fade'); } });
-      }
       Stage.stagger(buttons.list.slice(2), 70, 200);
 
       World.setFloor(groundY + 8);
@@ -320,28 +329,22 @@ var Scenes = (function () {
       });
     }
 
-    /** The cheapest thing in the shop you are allowed to buy and do not
-        own yet - and whether you can already afford it. */
-    function nextGoal() {
-      var best = null;
+    /** True when the shop has something you are allowed to buy, do not
+        own, and can pay for - the red dot on the GEAR door. */
+    function canAfford() {
       for (var kind in SHOP) {
-        SHOP[kind].items.forEach(function (it) {
-          if (it.cost > 0 && !Progress.owns(it.id) && Shop.isUnlocked(it) && (!best || it.cost < best.it.cost)) best = { it: it, kind: kind };
-        });
+        var list = SHOP[kind].items;
+        for (var i = 0; i < list.length; i++) {
+          var it = list[i];
+          if (it.cost > 0 && !Progress.owns(it.id) && Shop.isUnlocked(it) && it.cost <= Progress.coins()) return true;
+        }
       }
-      if (!best) return null;
-      var need = best.it.cost - Progress.coins();
-      return {
-        kind: best.kind, sprite: best.it.sprite, pet: best.kind === 'pet',
-        ready: need <= 0,
-        text: need <= 0 ? 'You can afford the ' + best.it.name + '!' : 'Next: the ' + best.it.name,
-        sub: need <= 0 ? 'Tap to go and get it' : need.toLocaleString() + ' more coins'
-      };
+      return false;
     }
 
     return {
       music: 'menu',
-      enter: function () { t = 0; build(); Panels.coachOnce('home'); },
+      enter: function () { t = 0; build(); },
       layout: function () { build(); },
       refresh: function () { build(); },
       update: function (dt, dtReal) {
@@ -366,12 +369,20 @@ var Scenes = (function () {
         front.forEach(function (p) { p.draw(c); });
 
         /* rank, and how far to the next one */
-        var stars = Progress.stars(), rank = rankFor(stars);
+        var stars = Progress.stars();
         var rw = Math.min(W - 60, 300), rx = (W - rw) / 2;
-        Gfx.text(c, rank.name.toUpperCase(), rx, rankY + 2, { font: 'arcade', size: 10, color: Gfx.C.gold, align: 'left', stroke: '#0a0e1a', strokeW: 4 });
-        Gfx.text(c, stars + ' / ' + STAR_MAX + ' ★', rx + rw, rankY + 2, { size: 14, weight: 700, color: '#fff', align: 'right' });
-        c.fillStyle = 'rgba(0,0,0,.5)'; Gfx.rr(c, rx, rankY + 13, rw, 10, 5); c.fill();
-        c.fillStyle = Gfx.C.gold; Gfx.rr(c, rx + 1, rankY + 14, Math.max(0, (rw - 2) * stars / STAR_MAX), 8, 4); c.fill();
+        /* your rank, measured on a wooden ruler: a tick per star, the
+           stars you have coloured in with a red pencil */
+        c.fillStyle = Gfx.C.gold; Gfx.star(c, rx + 8, rankY - 1, 8, 3.6, 5, 0); c.fill();
+        c.lineWidth = 1.5; c.strokeStyle = '#7a4f0a'; c.stroke();
+        Gfx.text(c, String(stars), rx + 22, rankY - 1, { font: 'arcade', size: 10, color: '#fff4dd', align: 'left', shadow: 'rgba(46,24,6,.75)', shadowY: 2 });
+        var ry = rankY + 11;
+        c.fillStyle = 'rgba(46,24,6,.4)'; c.fillRect(rx + 2, ry + 3, rw, 18);
+        c.fillStyle = '#f2dca0'; c.fillRect(rx, ry, rw, 18);
+        c.fillStyle = 'rgba(194,65,47,.6)'; c.fillRect(rx, ry, rw * stars / STAR_MAX, 18);
+        c.fillStyle = '#5a3e14';
+        for (var tk = 0; tk <= STAR_MAX; tk++) c.fillRect(rx + rw * tk / STAR_MAX - (tk === STAR_MAX ? 1 : 0), ry, 1.2, tk % 3 === 0 ? 9 : 5);
+        c.strokeStyle = '#7a5a24'; c.lineWidth = 1.2; c.strokeRect(rx + 0.5, ry + 0.5, rw - 1, 17);
         buttons.draw(c);
       },
       pointer: function (type, x, y) {
@@ -449,9 +460,7 @@ var Scenes = (function () {
       var s = S();
       buttons.clear();
       cornerButton(buttons, 'back', function () { Stage.go('home', {}, 'cards'); });
-      buttons.add({ x: s.W - Math.max(12, safe().r) - 44, y: safe().t + 60 + 4, w: 44, h: 44, style: 'icon', id: 'help',
-        draw: function (c, b) { Gfx.text(c, '?', b.w / 2, b.h / 2 + 1, { font: 'arcade', size: 18, color: '#e6eefc' }); },
-        onTap: function () { Panels.open('guide'); } });
+
       if (!hero) hero = new Actors.Hero({ k: 2.1 });
       hero.refresh();
       hero.name = '';
@@ -481,7 +490,7 @@ var Scenes = (function () {
       var s = S();
       cardButtons.clear();
       var cw = Math.min(s.W - 24, 380), cx = (s.W - cw) / 2;
-      var ch = 272, cy = s.H - safe().b - ch - 12;
+      var ch = 186, cy = s.H - safe().b - ch - 12;
       card.rect = { x: cx, y: cy, w: cw, h: ch };
       cardButtons.add({ x: cx + 18, y: cy + ch - 78, w: cw - 36, h: 62, label: 'PLAY', style: 'gold', size: 20, pulse: true, id: 'go',
         onTap: function () {
@@ -490,7 +499,7 @@ var Scenes = (function () {
         } });
       cardButtons.add({ x: cx + cw - 46, y: cy + 10, w: 36, h: 36, style: 'icon', id: 'close',
         draw: function (c, b) {
-          c.strokeStyle = '#e6eefc'; c.lineWidth = 3; c.lineCap = 'round';
+          c.strokeStyle = Desk.INK; c.lineWidth = 3; c.lineCap = 'round';
           c.beginPath(); c.moveTo(12, 12); c.lineTo(b.w - 12, b.h - 12); c.moveTo(b.w - 12, 12); c.lineTo(12, b.h - 12); c.stroke();
         },
         onTap: function () { closeCard(); } });
@@ -531,7 +540,7 @@ var Scenes = (function () {
         at = Gfx.clamp(last, 0, LEVELS.length - 1);
         if (p && p.fresh && at > 0) { fresh = { i: at, t: 0, burst: false, walked: false }; at = at - 1; }
         build();
-        Panels.coachOnce('levels');
+       
       },
       layout: function () { build(); },
       update: function (dt, dtReal) {
@@ -580,21 +589,21 @@ var Scenes = (function () {
         drawWorld(c, W, H, t, { dim: 0.18 });
         var sf = safe();
         TopBar.draw(c, W, { stars: false });
-        TopBar.title(c, (PACK.name || 'DAY TO DAY').toUpperCase());
 
-        /* the trail: a wide sandy band, a darker edge, a dashed centre */
+
+        /* the trail: red string from pin to pin, as on any pinboard that
+           plans something - grey string past where you have got to */
         var furthest = nodes[Math.min(Progress.unlocked(), nodes.length) - 1];
         c.save();
         c.lineCap = 'round'; c.lineJoin = 'round';
-        var trace = function () { c.beginPath(); pts.forEach(function (p, i) { if (i) c.lineTo(p.x, p.y); else c.moveTo(p.x, p.y); }); };
-        trace(); c.lineWidth = 34; c.strokeStyle = 'rgba(0,0,0,.35)'; c.stroke();
-        trace(); c.lineWidth = 28; c.strokeStyle = '#8a6a3a'; c.stroke();
-        trace(); c.lineWidth = 22; c.strokeStyle = '#c9a26a'; c.stroke();
-        c.setLineDash([2, 14]); c.lineDashOffset = -t / 60;
-        c.beginPath();
-        pts.forEach(function (p, i) { if (furthest && p.d > furthest.d) return; if (i) c.lineTo(p.x, p.y); else c.moveTo(p.x, p.y); });
-        c.lineWidth = 5; c.strokeStyle = 'rgba(255,240,200,.85)'; c.stroke();
-        c.setLineDash([]);
+        var trace = function (to) { c.beginPath(); pts.forEach(function (p, i) { if (to && p.d > to) return; if (i) c.lineTo(p.x, p.y); else c.moveTo(p.x, p.y); }); };
+        c.translate(2, 4); trace(); c.lineWidth = 5; c.strokeStyle = 'rgba(46,24,6,.35)'; c.stroke(); c.translate(-2, -4);
+        trace(); c.lineWidth = 4; c.strokeStyle = '#d8ccb4'; c.stroke();
+        c.setLineDash([6, 4]); trace(); c.lineWidth = 1.5; c.strokeStyle = 'rgba(120,100,70,.6)'; c.stroke(); c.setLineDash([]);
+        if (furthest) {
+          trace(furthest.d); c.lineWidth = 4.5; c.strokeStyle = '#c2412f'; c.stroke();
+          c.setLineDash([3, 5]); c.lineDashOffset = -t / 60; trace(furthest.d); c.lineWidth = 1.5; c.strokeStyle = 'rgba(255,200,190,.8)'; c.stroke(); c.setLineDash([]);
+        }
         c.restore();
 
         /* Painted back to front - the higher up the screen, the further
@@ -607,7 +616,6 @@ var Scenes = (function () {
           if (th.hero) hero.draw(c, { canFlip: true });
           else drawNode(c, th.node, th.i);
         });
-        drawFlags(c);
         buttons.draw(c);
         if (card.a > 0.01) drawCard(c);
       },
@@ -650,61 +658,45 @@ var Scenes = (function () {
       c.save();
       c.translate(n.x + sx, n.y);
       c.scale(popK, popK);
-      if (next) {
-        var pr = R + 8 + Math.sin(t / 300) * 4;
-        c.strokeStyle = Gfx.rgba(Gfx.C.gold, 0.6); c.lineWidth = 3;
-        c.beginPath(); c.arc(0, 0, pr, 0, Math.PI * 2); c.stroke();
-        Gfx.glow(c, 0, 0, R * 2.2, Gfx.C.gold, 0.25);
-      }
-      var fill = !open ? '#3a4258' : best ? '#f2c14e' : '#5b8fd8';
-      c.fillStyle = 'rgba(0,0,0,.4)';
-      c.beginPath(); c.ellipse(0, R * 0.32, R * 1.02, R * 0.85, 0, 0, Math.PI * 2); c.fill();
-      c.fillStyle = Gfx.shade(fill, -0.35);
-      c.beginPath(); c.arc(0, 5, R, 0, Math.PI * 2); c.fill();
+      /* A level is a round card disc pinned to the board: blue while it
+         waits, gold once passed with its grade inked on, grey and
+         padlocked until it opens. The next one to play is ringed in red
+         marker. */
+      var fill = !open ? '#b8b0a0' : best ? '#f2c14e' : '#4a86c4';
+      c.fillStyle = 'rgba(46,24,6,.42)';
+      c.beginPath(); c.arc(3, 5, R, 0, Math.PI * 2); c.fill();
       c.fillStyle = fill;
       c.beginPath(); c.arc(0, 0, R, 0, Math.PI * 2); c.fill();
-      c.lineWidth = 3; c.strokeStyle = Gfx.rgba('#ffffff', open ? 0.5 : 0.15);
-      c.beginPath(); c.arc(0, 0, R - 2, 0, Math.PI * 2); c.stroke();
+      c.lineWidth = 1.2; c.strokeStyle = 'rgba(40,20,4,.35)'; c.stroke();
+      c.fillStyle = Gfx.shade(fill, -0.2);
+      c.beginPath(); c.arc(0, 0, R, 0.2, Math.PI - 0.2); c.arc(0, 0, R - 5, Math.PI - 0.2, 0.2, true); c.closePath(); c.fill();
+      if (next) {
+        c.save(); c.rotate(t / 2400);
+        c.strokeStyle = '#c2412f'; c.lineWidth = 3; c.setLineDash([14, 6]);
+        c.beginPath(); c.ellipse(0, 0, R + 9 + Math.sin(t / 300) * 2, R + 6, 0.2, 0, Math.PI * 2); c.stroke();
+        c.setLineDash([]); c.restore();
+      }
       if (!open) {
         /* a padlock */
-        c.strokeStyle = '#9aa3b8'; c.lineWidth = 4;
+        c.strokeStyle = '#5a5246'; c.lineWidth = 4;
         c.beginPath(); c.arc(0, -4, 7, Math.PI, 0); c.stroke();
-        c.fillStyle = '#9aa3b8'; Gfx.rr(c, -10, -4, 20, 15, 3); c.fill();
-        c.fillStyle = '#3a4258'; c.fillRect(-1.5, 1, 3, 6);
+        c.fillStyle = '#5a5246'; Gfx.rr(c, -10, -4, 20, 15, 3); c.fill();
+        c.fillStyle = '#b8b0a0'; c.fillRect(-1.5, 1, 3, 6);
       } else if (best) {
-        Gfx.text(c, best.grade, 0, 1, { font: 'arcade', size: R * 0.75, color: '#4a2a08' });
+        Gfx.text(c, best.grade, 0, 2, { font: 'arcade', size: R * 0.62, color: '#5a3208' });
       } else {
-        Gfx.text(c, lv.n, 0, 2, { font: 'arcade', size: R * 0.72, color: '#ffffff', stroke: '#1a2f55', strokeW: 4 });
+        Gfx.text(c, lv.n, 0, 2, { font: 'arcade', size: R * 0.62, color: '#ffffff', shadow: 'rgba(15,34,56,.6)', shadowY: 2 });
       }
+      Gfx.pin(c, 0, -R + 3, open ? '#c2412f' : '#6f7784', 5);
       c.restore();
       if (best) {
         var got = Progress.starsFor(lv.n);
         for (var s = 0; s < 3; s++) {
-          c.fillStyle = s < got ? Gfx.C.gold : 'rgba(0,0,0,.45)';
+          c.fillStyle = s < got ? Gfx.C.gold : 'rgba(46,24,6,.4)';
           Gfx.star(c, n.x + (s - 1) * 16, n.y + R + 12 - (s === 1 ? 4 : 0), 7, 3.2, 5, 0); c.fill();
-          c.lineWidth = 1.5; c.strokeStyle = 'rgba(0,0,0,.5)'; c.stroke();
+          c.lineWidth = 1.5; c.strokeStyle = s < got ? '#7a4f0a' : 'rgba(46,24,6,.4)'; c.stroke();
         }
       }
-    }
-
-    /** The name on a little flag above each open level. Drawn after
-        everyone, and lifted over the hero's head on the level they are
-        standing on, or the flag disappears behind them. */
-    function drawFlags(c) {
-      nodes.forEach(function (n, i) {
-        var lv = LEVELS[i];
-        if (!Progress.isOpen(lv.n)) return;
-        if (fresh && fresh.i === i && !fresh.burst) return;
-        var best = Progress.best(lv.n);
-        var label = lv.name.toUpperCase();
-        var lw = Gfx.measure(c, label, { font: 'arcade', size: 8 }) + 16;
-        var ly = n.y - R - 20;
-        if (hero && Math.abs(hero.x - n.x) < R * 1.2 && Math.abs(hero.y - (n.y - R * 0.85)) < R) {
-          ly = hero.y - hero.k * 32 - 18;
-        }
-        Gfx.panel(c, n.x - lw / 2, ly - 10, lw, 20, { fill: 'rgba(10,14,30,.85)', depth: 2, r: 6, lip: false });
-        Gfx.text(c, label, n.x, ly, { font: 'arcade', size: 8, color: best ? Gfx.C.gold : '#ffffff' });
-      });
     }
 
     function drawCard(c) {
@@ -714,34 +706,19 @@ var Scenes = (function () {
       c.save();
       c.globalAlpha = Math.min(1, a);
       c.translate(0, (1 - Math.min(1, a)) * 80);
-      c.fillStyle = 'rgba(4,6,14,' + (0.45 * Math.min(1, a)).toFixed(3) + ')';
+      c.fillStyle = 'rgba(30,16,4,' + (0.4 * Math.min(1, a)).toFixed(3) + ')';
       c.fillRect(0, 0, S().W, S().H);
-      Gfx.panel(c, r.x, r.y, r.w, r.h, { fill: '#1f2c50', fill2: '#141d38', depth: 7, r: 20, edge: 'rgba(255,255,255,.16)' });
-      Gfx.text(c, 'LEVEL ' + lv.n, r.x + 20, r.y + 26, { font: 'arcade', size: 10, color: Gfx.C.gold, align: 'left' });
-      Gfx.text(c, lv.name, r.x + 20, r.y + 54, { size: 26, weight: 700, color: '#fff', align: 'left', maxW: r.w - 80 });
-      var lines = Gfx.wrap(c, lv.story, r.w - 40, { size: 15, weight: 500 }).slice(0, 2);
-      lines.forEach(function (ln, i) { Gfx.text(c, ln, r.x + 20, r.y + 84 + i * 19, { size: 15, weight: 500, color: Gfx.C.tx, align: 'left' }); });
-      var chips = [lv.seconds ? lv.seconds + ' SEC' : 'NO CLOCK', 'NEED ' + Math.round(lv.minAcc * 100) + '%'];
-      if (best) chips.push('BEST ' + best.grade);
-      var cx = r.x + 20;
-      chips.forEach(function (ch, i) {
-        var w = Gfx.measure(c, ch, { font: 'arcade', size: 8 }) + 18;
-        Gfx.panel(c, cx, r.y + 122, w, 24, { fill: i === 2 ? '#6a4a10' : '#2b3a5c', depth: 2, r: 8, lip: false });
-        Gfx.text(c, ch, cx + w / 2, r.y + 134, { font: 'arcade', size: 8, color: i === 2 ? Gfx.C.gold : '#e6eefc' });
-        cx += w + 8;
-      });
+      /* the level, written up on a big index card */
+      Gfx.indexCard(c, r.x, r.y, r.w, r.h, { top: 30, gap: 24, margin: 14 });
+      Gfx.tape(c, r.x + r.w / 2, r.y + 2, 110, -0.03);
+      Gfx.text(c, lv.name, r.x + 24, r.y + 40, { font: 'arcade', size: 18, color: Desk.INK, align: 'left', maxW: r.w - 80 });
       if (best) {
         var got = Progress.starsFor(lv.n);
         for (var s = 0; s < 3; s++) {
-          c.fillStyle = s < got ? Gfx.C.gold : 'rgba(255,255,255,.15)';
-          Gfx.star(c, r.x + r.w - 76 + s * 26, r.y + 134, 10, 4.5, 5, 0); c.fill();
+          c.fillStyle = s < got ? Gfx.C.gold : 'rgba(120,96,60,.25)';
+          Gfx.star(c, r.x + 34 + s * 28, r.y + 76, 11, 5, 5, 0); c.fill();
+          if (s < got) { c.lineWidth = 1.5; c.strokeStyle = '#7a4f0a'; c.stroke(); }
         }
-      }
-      if (lv.twist) {
-        /* What is different about this level - the twist - on a strip of its own. */
-        Gfx.panel(c, r.x + 14, r.y + 150, r.w - 28, 40, { fill: 'rgba(30,60,100,.75)', depth: 0, r: 10, lip: false, edge: 'rgba(159,212,255,.35)' });
-        Gfx.text(c, (best ? 'TWIST: ' : 'NEW HERE: ') + lv.twist.name, r.x + 26, r.y + 162, { font: 'arcade', size: 8, color: '#9fd4ff', align: 'left', maxW: r.w - 52 });
-        Gfx.text(c, lv.twist.text, r.x + 26, r.y + 179, { size: 13, weight: 600, color: '#e6eefc', align: 'left', maxW: r.w - 52 });
       }
       cardButtons.draw(c);
       c.restore();
@@ -778,7 +755,7 @@ var Scenes = (function () {
 
     function arrow(dir) {
       return function (c, b) {
-        c.strokeStyle = '#e6eefc'; c.lineWidth = 4; c.lineCap = 'round'; c.lineJoin = 'round';
+        c.strokeStyle = Desk.INK; c.lineWidth = 4; c.lineCap = 'round'; c.lineJoin = 'round';
         c.beginPath(); c.moveTo(b.w / 2 - dir * 5, b.h / 2 - 10); c.lineTo(b.w / 2 + dir * 5, b.h / 2); c.lineTo(b.w / 2 - dir * 5, b.h / 2 + 10); c.stroke();
       };
     }
@@ -823,7 +800,7 @@ var Scenes = (function () {
         t = 0;
         idx = Gfx.clamp(p && p.at ? p.at - 1 : Progress.rivalsBeaten(), 0, OPPONENTS.length - 1);
         build();
-        Panels.coachOnce('battle');
+       
       },
       layout: function () { build(); },
       update: function (dt, dtReal) {
@@ -836,67 +813,51 @@ var Scenes = (function () {
         drawWorld(c, W, H, t, { dim: 0.25 });
         var sf = safe();
         TopBar.draw(c, W, { stars: false });
-        TopBar.title(c, 'BOSSES');
+
 
         var cx = W / 2 + slide.x, cy = H * 0.36;
-        var size = Math.min(W * 0.44, 190);
-        /* spotlight and pedestal */
+        /* Capped by height as well, so a short phone still has room
+           under the boss for their speed, aim and trick. */
+        var size = Math.min(W * 0.44, 190, H * 0.24);
+        /* each boss on a WANTED poster pinned to the board */
+        var pw = size * 1.3, ph = size * 1.42, ptop = cy - size * 0.72;
         c.save();
-        c.globalCompositeOperation = 'lighter';
-        var g = c.createLinearGradient(cx, sf.t + 50, cx, cy + size * 0.6);
-        g.addColorStop(0, 'rgba(255,240,200,0)'); g.addColorStop(1, 'rgba(255,240,200,.16)');
-        c.fillStyle = g;
-        c.beginPath(); c.moveTo(cx - 24, sf.t + 50); c.lineTo(cx + 24, sf.t + 50); c.lineTo(cx + size * 0.75, cy + size * 0.62); c.lineTo(cx - size * 0.75, cy + size * 0.62); c.closePath(); c.fill();
+        c.translate(cx, ptop + ph / 2); c.rotate(-0.025 + slide.x * 0.0004);
+        c.fillStyle = 'rgba(46,24,6,.42)'; c.fillRect(-pw / 2 + 4, -ph / 2 + 7, pw, ph);
+        c.fillStyle = '#f1e3c0'; c.fillRect(-pw / 2, -ph / 2, pw, ph);
+        c.fillStyle = 'rgba(140,100,40,.12)';
+        for (var fi = 0; fi < 50; fi++) c.fillRect(-pw / 2 + (fi * 61) % pw, -ph / 2 + (fi * 37) % ph, 3, 2);
+        c.strokeStyle = 'rgba(90,60,20,.5)'; c.lineWidth = 2; c.strokeRect(-pw / 2 + 7, -ph / 2 + 7, pw - 14, ph - 14);
+        Gfx.text(c, 'WANTED', 0, -ph / 2 + 24, { font: 'arcade', size: Math.min(20, size * 0.12), color: '#5a3208' });
+        Gfx.pin(c, -pw / 2 + 16, -ph / 2 + 12, '#c2412f', 6); Gfx.pin(c, pw / 2 - 16, -ph / 2 + 12, '#c2412f', 6);
         c.restore();
-        c.fillStyle = '#2a2140';
-        c.beginPath(); c.ellipse(cx, cy + size * 0.62, size * 0.7, size * 0.16, 0, 0, Math.PI * 2); c.fill();
-        c.fillStyle = '#3e3260';
-        c.beginPath(); c.ellipse(cx, cy + size * 0.58, size * 0.66, size * 0.13, 0, 0, Math.PI * 2); c.fill();
 
         var nameY = cy + size * 0.95;
         if (isOnline(idx)) {
           var bob = Math.sin(t / 600) * 6;
           Gfx.drawSprite(c, 'globe', cx, cy + bob, size * 0.8, size * 0.8);
-          Gfx.text(c, '?', cx, cy + bob, { font: 'arcade', size: size * 0.3, color: '#fff', stroke: '#0a0e1a', strokeW: 8 });
-          Gfx.text(c, 'ONLINE BOSS', cx, nameY, { font: 'arcade', size: 18, color: '#fff', stroke: '#0a0e1a', strokeW: 5 });
-          Gfx.text(c, 'Out-sort a real player, anywhere in the world.', cx, nameY + 30, { size: 15, weight: 600, color: Gfx.C.tx, maxW: W - 40 });
+          Gfx.text(c, '?', cx, cy + bob, { font: 'arcade', size: size * 0.3, color: '#fff', stroke: '#2a1e12', strokeW: 8 });
+          Gfx.text(c, 'ONLINE BOSS', cx, nameY, { font: 'arcade', size: 18, color: '#fff', stroke: '#2a1e12', strokeW: 5 });
         } else {
           var def = OPPONENTS[idx], f = foes[idx];
           var open = Battle.isOpen(def.n), beaten = def.n <= Progress.rivalsBeaten();
           f.x = cx; f.y = cy; f.size = size;
           if (open) f.draw(c);
-          else Gfx.drawSprite(c, def.sprite, cx, cy, size, size, { tint: '#05070f', tintAmt: 0.92 });
+          else Gfx.drawSprite(c, def.sprite, cx, cy, size, size, { tint: '#3a2a18', tintAmt: 0.92 });
           if (!open) {
-            c.fillStyle = '#c9d4ec'; c.strokeStyle = '#c9d4ec'; c.lineWidth = 6;
+            c.fillStyle = '#f1e3c0'; c.strokeStyle = '#f1e3c0'; c.lineWidth = 6;
             c.beginPath(); c.arc(cx, cy - 8, 14, Math.PI, 0); c.stroke();
             Gfx.rr(c, cx - 20, cy - 8, 40, 30, 5); c.fill();
           }
           if (beaten) {
             c.save(); c.translate(cx, cy + size * 0.15); c.rotate(-0.22);
-            c.strokeStyle = '#5cc46a'; c.lineWidth = 5; Gfx.rr(c, -86, -22, 172, 44, 8); c.stroke();
-            Gfx.text(c, 'DEFEATED', 0, 2, { font: 'arcade', size: 16, color: '#5cc46a', stroke: '#0a0e1a', strokeW: 4 });
+            c.globalAlpha *= 0.9;
+            c.strokeStyle = '#3e9d52'; c.lineWidth = 4; c.strokeRect(-86, -22, 172, 44);
+            c.lineWidth = 1.5; c.strokeRect(-81, -17, 162, 34);
+            Gfx.text(c, 'CAUGHT', 0, 2, { font: 'arcade', size: 16, color: '#3e9d52' });
             c.restore();
           }
-          Gfx.text(c, open ? def.name.toUpperCase() : '???', cx, nameY, { font: 'arcade', size: 18, color: '#fff', stroke: '#0a0e1a', strokeW: 5, maxW: W - 40 });
-          Gfx.text(c, open ? def.taunt : 'Beat ' + OPPONENTS[def.n - 2].name + ' first.', cx, nameY + 30, { size: 15, weight: 600, color: Gfx.C.tx, maxW: W - 40 });
-          if (open) {
-            /* how fast they sort, and how often they are right */
-            var bw2 = Math.min(W - 80, 280), bx2 = W / 2 - bw2 / 2 + slide.x, by2 = nameY + 58;
-            [['SPEED', Gfx.clamp((3000 - def.speed) / 2200, 0.1, 1), '#ffb43a'], ['AIM', def.accuracy, '#e0524a']].forEach(function (row, i) {
-              var yy = by2 + i * 26;
-              Gfx.text(c, row[0], bx2, yy, { font: 'arcade', size: 8, color: Gfx.C.txDim, align: 'left' });
-              c.fillStyle = 'rgba(0,0,0,.5)'; Gfx.rr(c, bx2 + 56, yy - 6, bw2 - 56, 12, 6); c.fill();
-              c.fillStyle = row[2]; Gfx.rr(c, bx2 + 57, yy - 5, (bw2 - 58) * row[1], 10, 5); c.fill();
-            });
-            /* and the one trick they have */
-            if (def.powerName) {
-              var ty = by2 + 54;
-              if (ty + 28 < H - sf.b - 126) {
-                Gfx.text(c, 'TRICK: ' + def.powerName, cx, ty, { font: 'arcade', size: 9, color: '#ff8a7a', maxW: W - 40 });
-                Gfx.text(c, def.powerText, cx, ty + 20, { size: 14, weight: 600, color: Gfx.C.tx, maxW: W - 40 });
-              }
-            }
-          }
+          Gfx.text(c, open ? def.name.toUpperCase() : '???', cx, nameY, { font: 'arcade', size: 18, color: '#fff', stroke: '#2a1e12', strokeW: 5, maxW: W - 40 });
         }
         /* page dots */
         for (var i = 0; i < PAGES; i++) {
@@ -958,7 +919,7 @@ var Scenes = (function () {
         c.beginPath(); c.moveTo(0, 0); c.lineTo(W * 0.62, 0); c.lineTo(W * 0.38, H); c.lineTo(0, H); c.closePath(); c.fill();
         hero.x = W * 0.27; hero.y = H * 0.76;
         hero.draw(c);
-        Gfx.text(c, Hero.name().toUpperCase(), W * 0.27, H * 0.81, { font: 'arcade', size: 14, color: '#fff', stroke: '#0a0e1a', strokeW: 5, maxW: W * 0.45 });
+        Gfx.text(c, Hero.name().toUpperCase(), W * 0.27, H * 0.81, { font: 'arcade', size: 14, color: '#fff', stroke: '#2a1e12', strokeW: 5, maxW: W * 0.45 });
         c.restore();
         c.save();
         c.translate((1 - a.r) * W, 0);
@@ -971,15 +932,14 @@ var Scenes = (function () {
         foe.x = W * 0.72; foe.y = H * 0.24;
         foe.draw(c);
         var def = OPPONENTS[n - 1];
-        Gfx.text(c, def.name.toUpperCase(), W * 0.72, H * 0.24 + foe.size * 0.72, { font: 'arcade', size: 14, color: '#fff', stroke: '#0a0e1a', strokeW: 5, maxW: W * 0.5 });
-        Gfx.text(c, def.taunt, W * 0.72, H * 0.24 + foe.size * 0.72 + 24, { size: 13, weight: 600, color: '#ffd8d4', maxW: W * 0.5 });
+        Gfx.text(c, def.name.toUpperCase(), W * 0.72, H * 0.24 + foe.size * 0.72, { font: 'arcade', size: 14, color: '#fff', stroke: '#2a1e12', strokeW: 5, maxW: W * 0.5 });
         c.restore();
         if (a.v > 0) {
           c.save();
           c.translate(W / 2, H * 0.53);
           c.scale(a.v, a.v);
           Gfx.glow(c, 0, 0, 120, '#ffd76a', 0.6);
-          Gfx.text(c, 'VS', 0, 0, { font: 'arcade', size: 64, color: Gfx.C.gold, stroke: '#0a0e1a', strokeW: 12, shadow: 'rgba(0,0,0,.6)', shadowY: 7 });
+          Gfx.text(c, 'VS', 0, 0, { font: 'arcade', size: 64, color: Gfx.C.gold, stroke: '#2a1e12', strokeW: 12, shadow: 'rgba(0,0,0,.6)', shadowY: 7 });
           c.restore();
         }
       },
@@ -1010,7 +970,7 @@ var Scenes = (function () {
     }
     return {
       music: 'menu',
-      enter: function () { t = 0; Panels.open('gear'); build(); Panels.coachOnce('gear'); },
+      enter: function () { t = 0; Panels.open('gear'); build(); },
       exit: function () { Panels.close('gear', true); },
       layout: function () { build(); },
       /** Called by the shop whenever something is bought or put on. */
@@ -1034,22 +994,15 @@ var Scenes = (function () {
         drawWorld(c, W, H, t, { dim: 0.2 });
         var sf = safe();
         TopBar.draw(c, W, { stars: false });
-        TopBar.title(c, 'GEAR');
+
         if (hero) {
           var py = hero.y;
-          c.save();
-          c.globalCompositeOperation = 'lighter';
-          Gfx.glow(c, W / 2, py - hero.k * 12, hero.k * 26, '#7ab8ff', 0.18);
-          c.restore();
-          c.fillStyle = '#1c2742';
-          c.beginPath(); c.ellipse(W / 2, py + 6, hero.k * 20, hero.k * 5, 0, 0, Math.PI * 2); c.fill();
-          c.fillStyle = '#2b3a5c';
-          c.beginPath(); c.ellipse(W / 2, py + 2, hero.k * 19, hero.k * 4.2, 0, 0, Math.PI * 2); c.fill();
+          /* standing on a wooden block on the desk, like a figure in a shop window */
+          var bw3 = hero.k * 34, bh3 = hero.k * 4.5;
+          c.fillStyle = 'rgba(46,24,6,.4)'; c.fillRect(W / 2 - bw3 / 2 + 4, py + 6, bw3, bh3);
+          c.fillStyle = '#8a5a30'; c.fillRect(W / 2 - bw3 / 2, py + 2, bw3, bh3);
+          c.fillStyle = '#a8743f'; c.fillRect(W / 2 - bw3 / 2, py + 2, bw3, 3);
           hero.draw(c);
-          if (Shop.hasFullSet()) {
-            var pulse = 0.6 + 0.4 * Math.sin(t / 300);
-            Gfx.text(c, 'FULL SET  +25% COINS', W / 2, py + 26, { font: 'arcade', size: 9, color: Gfx.C.gold, alpha: pulse, stroke: '#0a0e1a', strokeW: 4 });
-          }
         }
         buttons.draw(c);
       },

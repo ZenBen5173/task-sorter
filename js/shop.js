@@ -224,8 +224,6 @@ var Shop = (function () {
     for (var i = 0; i < tabs.length; i++) {
       tabs[i].classList.toggle('is-on', tabs[i].getAttribute('data-shop-tab') === tab);
     }
-    var blurb = document.getElementById('shop-blurb');
-    if (blurb) blurb.textContent = SHOP[tab].blurb;
   }
 
   function setTab(kind) {

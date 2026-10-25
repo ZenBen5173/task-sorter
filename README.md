@@ -77,15 +77,13 @@ stray touch costs you nothing.
 
 ### When you miss
 
-The tray the card belonged in lights up with a moving dashed edge, and a strip
-under the top trays says **"It was Do Later"** and the card's reason, for a
-couple of seconds **while you keep playing**. The moment you miss is the moment
-you are most curious about why, so that is when the reason is shown. The round
-does not stop for it: the stun after a miss is still only the bounce.
+The tray the card belonged in lights up with a moving dashed edge for a
+moment **while you keep playing**. No words: the glow says where it went. The
+round does not stop for it: the stun after a miss is still only the bounce.
 
-The end-screen review still lists every miss with its reason. The right corner
-is there too now, **under a tap** - try to work it out from the reason first,
-then tap to check.
+The end-screen review lists every miss with its reason. The right corner is
+there too, **under a tap** - try to work it out from the reason first, then
+tap to check.
 
 ---
 
@@ -101,8 +99,8 @@ cards make a level harder; they do not make it different. So:
 | 3 Phone | **Burning cards** | A fuse runs along the top. Sort it before the spark reaches the end, or it chars and counts as a miss |
 | 4 Town | **Trays swap** | Every 18 seconds two trays slide into each other's corners. Every swipe follows them |
 
-A level you have not passed yet names its twist on the map card and in a
-banner before the clock starts. How often each card turns up is `specials` in
+Nothing announces a twist - the card looks different and you find out. How
+often each card turns up is `specials` in
 `js/levels.js`; the fixed numbers (triple, five coins, two taps, 3.4 seconds of
 fuse) are in `TUNING` in `js/game.js`.
 
@@ -110,9 +108,8 @@ fuse) are in `TUNING` in `js/game.js`.
 pet makes golden cards a little more likely (its coin bonus x 0.15). A shield
 covers a card that burns out, because a burnt card is a wrong answer.
 
-A special card says what it is in the strip where the place usually goes -
-GOLDEN x3, FROZEN - TAP IT, BURNING - BE QUICK - so nobody has to have read the
-Guide Book to know what is happening.
+A special card says what it is by how it looks - gold paper, ice, a fuse -
+never in words.
 
 ---
 
@@ -166,8 +163,7 @@ and press **Sort my list**. It plays like a round of your own cards: same four
 trays, same drag, no clock, **no score and no wrong answers**, because only you
 know whether your project is a Do Now.
 
-What you get is a **plan in four piles**, kept on the sheet, with a hint on each
-pile ("Urgent, but not yours. Who could do it?") and a tick box on every task.
+What you get is a **plan in four piles**, kept on the sheet, with a tick box on every task.
 Sort the week again whenever it changes. It is saved on the phone like the rest
 of your progress (`myTasks`), and never leaves it unless you made an account.
 
@@ -177,8 +173,7 @@ of your progress (`myTasks`), and never leaves it unless you made an account.
 
 Settings has two switches:
 
-- **Bigger text** - larger words on the cards, the trays, the miss strip and
-  every sheet.
+- **Bigger text** - larger words on the cards, the trays and every sheet.
 - **Calm screen** - no screen shake, no freeze-frames, no punch-zoom, softer
   red flashes. The phone's own "reduce motion" setting does the same.
 
@@ -211,7 +206,8 @@ orange.
 |---|---|
 | `js/gfx.js` | Easing, tweens, springs, particles, sprites, text, the panel look, baking |
 | `js/stage.js` | The canvas, the loop, scenes, transitions, hit-stop, shake, buttons |
-| `js/world.js` | **The four backgrounds** as living places |
+| `js/world.js` | **The four desk surfaces** you play on, and the shelf |
+| `js/desk.js` | **The props:** the four tray objects, the index card, the timer, notes |
 | `js/actors.js` | Your character, your pets and the bosses, with bodies that react |
 | `js/sfx.js` | **Every sound effect**, synthesised, and the haptics |
 | `js/music.js` | **The soundtrack**, played rather than loaded |
@@ -234,7 +230,6 @@ orange.
 | `js/sprites.js` | **The pixel art.** Grids, and the PNGs that replaced some of them |
 | `js/pets.js` | **The pet collection:** the thirteen sheets, and how they are played |
 | `js/themes.js` | **The backgrounds** you can pick |
-| `js/tips.js` | **The first-time notes**, one per place |
 | `js/cloud.js` | **Accounts** and saving your progress online |
 | `js/ui.js` | The one audio context, and the sound switch |
 | `js/main.js` | Boots the game, and wires the settings sheet |
@@ -335,21 +330,15 @@ that decides, and the Android app asks it rather than guessing.
 
 ### Home
 
-**A game's home is where you see what you have got.** Your character stands in
-the world - the sakura valley at dusk, the pine wood, wherever you have chosen
-- actually **wearing** what you chose: the shield on the off arm, the weapon in
+**A game's home is where you see what you have got.** Your character stands on
+a shelf on the board, a name sticker on, actually **wearing** what you chose: the shield on the off arm, the weapon in
 the near hand, and the pet you are walking with at their side. Every *other*
 pet you own potters about on the ground around them, so the collection lives
 on the home screen as creatures rather than as a row of icons. Tap your
 character and they jump; tap a pet and it hops.
 
-Under the doors is **the next thing to work toward**: the cheapest thing in the
-shop you are allowed to buy and do not own - *"Next: the Kitten, 40 more
-coins"*, or, glowing green, *"You can afford the Dagger!"*, which takes you
-straight to it. A home screen that only says PLAY gives you a reason to play
-this round; one that says what the coins are for gives you a reason to play
-the one after it. PLAY itself names where it is going - *"Level 3, On Your
-Phone"* is a reason to tap it; *"Play"* on its own is furniture.
+The doors carry no subtitles. A red **!** on GEAR means you can afford
+something; on DAILY it means today's round is waiting.
 
 The hero is drawn at **24x32**, chibi proportions on purpose - a big head and a
 short body, which is what the pets are, so the party looks like it came from
@@ -423,78 +412,41 @@ anything else ever needs to ask.
 
 ## Why it looks like this
 
-The structure was a game and the skin was a dashboard. Every picture in
-Task Sorter is pixel art and every surface around it was a flat 1px-bordered
-card in a muted navy, set in a UI sans - so a game full of sprites read as a
-settings screen with sprites in it.
+**Desk Day.** The game is played on a cork board, and everything on it is a
+real thing from a desk. The design was drawn first, on Claude's Design canvas
+(*Task Sorter game look*), and the game was built to match it.
 
-**Depth is a solid block, never a blur.** A panel sits on a flat slab of
-shadow a few pixels below it, with a light line along its top edge, and
-pressing it drops it onto the slab. That is what makes a surface feel stamped
-out of plastic rather than floated in a browser. The canvas draws every panel
-that way (`Gfx.panel`), and the HTML sheets copy it in CSS (`.gbtn`), so a
-button looks the same whether it is drawn or written.
+- **The four trays are objects, not boxes.** Do Now is a red metal in-tray
+  with hazard tape across the front. Do Later is a desk calendar with a day
+  ringed in red marker. Give Away is a stamped, addressed envelope. Drop is a
+  wire bin already full of crumpled paper. Each is a different *shape* as well
+  as a different colour, so the corners tell apart before you read a word - and
+  for anyone who cannot tell red from orange. Each shows its own pile as the
+  round goes on: more papers in the in-tray, days crossed off the calendar,
+  letters behind the envelope, balls of paper in the bin.
+- **A task is an index card**, handwritten (Kalam), taped down with washi tape:
+  cream card, red margin, blue rules. A golden card is golden card stock, a
+  frozen one is iced over, a burning one has a fuse along the top.
+- **The rest is stationery.** The score is on a strip of masking tape, the
+  clock is a kitchen timer, the combo is a rubber stamp that inks redder as it
+  climbs, the reason for a miss is a note pinned to the board, buttons are
+  tickets (PLAY), manila folders (the home doors) and kraft card, coins and
+  stars are on price tags, your name is a HELLO MY NAME IS sticker, your rank is
+  coloured in on a ruler, the map is red string between pinned discs, each boss
+  is on a WANTED poster, and the results are a report card.
+- **One light, one shadow.** Everything casts the same hard brown shadow down
+  and to the right, as if one lamp is above and to the left. No glows, no gloss,
+  no blur, no rounded app cards.
+- **Three typefaces, each with one job.** Bungee for anything loud, Kalam
+  handwriting for anything you read, IBM Plex Mono for typed labels. All three
+  ship with the game (`assets/fonts/`).
+- **The characters stay pixel art.** The hero, the pets and the bosses are
+  pixel figures standing on a real desk - like stickers on it - which is a
+  deliberate mix, not a leftover.
 
-**Two fonts, and the arcade one is a spice.** *Press Start 2P* is a real arcade
-face - eight pixels tall, no curves - and it matches the sprites. It went on
-everything first, and the score odometer came out as overlapping garbage: a
-sliding strip of digits needs every cell to be exactly one line tall, and this
-face does not have the metrics for it. The rest was merely hard to read at
-speed, which in a game about sorting cards against a clock is the same problem.
-
-So it keeps **three places nobody has to read under pressure** - the logo, the
-PLAY button, and the grade you are handed at the end. *Fredoka* carries
-everything else, and the in-round numbers get their weight from size and
-colour instead.
-
-**Both fonts ship with the game**, in `assets/fonts`, and the game makes no
-outbound request at all on boot. They used to be two `<link>` tags to Google
-Fonts, which made the game's own typography conditional on the wifi in the
-room - and this is a mobile game, demonstrated on a stranger's network and
-packaged into an app that has no reason to need one. Latin subsets only, and
-Fredoka is a variable font so its four weights are one file: 52 KB for the
-pair. Both are Open Font Licence; see `assets/fonts/CREDITS.md`.
-
-**The world is behind every screen**, not just a round - the same world, drawn
-once and kept running. Change the background in Settings and it changes behind
-the settings sheet while you watch.
-
-**Big moments land.** A Perfect freezes the screen for three frames, punches
-the camera toward you and throws sparks; a mistake shakes it and bleeds red in
-from the edges; the time running out goes into slow motion; a boss knocked out
-spins away. None of that is decoration on top of the game - it is how the game
-tells you what just happened without asking you to read anything.
-
-**Things arrive rather than appear.** Trays slide in from their own corners at
-the start of a round; the first card is picked up by your character and flipped
-up into the middle; screens hand over with a circle closing on the level you
-tapped, or the four corner colours sweeping across. At the end of a round the
-grade stamps down, the stars pop in one at a time, the numbers count up, and
-the coins you earned fly up into your wallet - which ticks up as each one
-lands. A payout that is simply there was never a moment.
-
-**And far fewer words.** A shop tile is a picture, a name and a number:
-`+8% coins - 6% time`, not *"+8% coins. Clock runs 6% faster."* Every group
-blurb is now three words. The long sentences were mine and they were the last
-thing making it read like documentation.
-
-Anyone who has asked their phone for less motion gets the layout and none of
-the show.
-
-### Two materials, not a panel per screen
-
-The shop was the first screen that read as a game, and the reason is plain:
-**warm wood instead of grey-blue, parchment instead of a flat chip, thick
-borders, a hard edge underneath, and colour with some heat in it.**
-
-So those two are the game's materials: **paper** for the things you read -
-every task card, the Guide Book's pages, the review - and **wood** for the
-doors off the home screen. The gold PLAY button sits between them and belongs
-to both.
-
-Adding a screen means reaching for one of those, not inventing a new panel.
-
----
+The props are drawn in `js/desk.js` (trays, index card, card back, timer, note)
+and `js/gfx.js` (tape, pins, the rubber stamp, the paper `panel` every box
+uses). The sheets get the same look in `css/game.css` (*Desk Day* block).
 
 ## Writing cards (the important part)
 
@@ -642,7 +594,7 @@ rebuilt around the clock and accuracy instead.
 ### The final rush
 
 The last stretch of a level pays double - the screen washes red, the music
-speeds up, and a FINAL RUSH banner says so. Its length
+speeds up, and the score tape reads RUSH x2. Its length
 is `min(RUSH_SECONDS, level length x RUSH_SHARE)` - capped at a quarter of the
 level. Without that cap a 45 second tutorial level would spend 20 of its 45
 seconds in rush mode, which is what made Level 1 unfairly brutal at first.
@@ -678,8 +630,8 @@ colours, icons and patterns stay. The first trick comes 4.5 seconds in, so you
 meet it in every fight, then every 9 to 11 seconds.
 
 **They talk.** A speech bubble under the boss: a line when the fight starts,
-when they use their trick, sometimes when you land a big hit or miss, and when
-one of you goes down. The lines are in `lines` on each boss.
+when they use their trick, sometimes when you land a big hit, and when one of
+you goes down. They keep quiet while the reason for a miss is on screen. The lines are in `lines` on each boss.
 
 The later bosses have **more health**, so their fights last long enough for the
 trick to matter - at full speed a player could take a 100 HP boss apart in six
@@ -716,8 +668,7 @@ redrew the shelf on a purchase and not the character, so the figure kept
 wearing last week's shield until you left the page - which read exactly like
 the purchase had not registered.)
 
-At the top of the sheet: your character's **name** (tap to type), a line saying
-what they have on, and the **full set** banner. At the bottom, what your gear
+At the top of the sheet: your character's **name** (tap to type) and the **full set** banner. At the bottom, what your gear
 actually does:
 
 - **Clock speed** — how fast your round runs out (from your pet)
@@ -1082,74 +1033,31 @@ APK workflow in the Actions tab. See `android/README.md`.
 
 ## Backgrounds
 
-Four places, picked in **Settings** or from the **pause** menu mid-round (where
-the clock is stopped while you choose). Your pick is remembered for everything
-after. Defined in `js/themes.js`, drawn by `js/world.js`.
+**Four desks to play on**, picked in Settings or from the pause menu, and
+painted in `js/world.js`:
 
-| Theme | What is there | What moves |
+| Id | Name | What it is |
 |---|---|---|
-| Deep Space | a nebula, a galaxy band, a ringed planet, a moon | stars twinkle and drift; a shooting star now and then |
-| Sakura | a valley at dusk, a big low sun, hills, cherry trees | petals that turn as they fall |
-| Forest | three ranks of stepped pines, fog between them, a pale moon | shafts of light breathing, fireflies, falling leaves |
-| Waterfalls | a gorge, three falls cut into a cliff, the pool below | the water actually falls, mist rises where it lands, rain |
+| `cork` | Cork Board | a pinboard in a wooden frame - the default |
+| `wood` | Wood Desk | planks and grain |
+| `mat` | Cutting Mat | green, ruled in centimetres |
+| `chalk` | Chalkboard | dark, half rubbed out |
 
-**Every one is at dusk or at night**, on purpose. A card has to win against
-whatever is behind it, and a world drawn dusky in the first place needs very
-little holding back - so it keeps its colour.
+Each is painted once into an off-screen canvas and stamped every frame, with a
+few specks of dust drifting in the lamp light. Saves from before the desk say
+`space`, `sakura`, `forest` or `falls`; `world.js` maps those onto the four
+surfaces, so nobody's choice is lost.
 
-**The scenery is drawn, not photographed**, for the reasons the old SVG
-scenery gave: a photograph is somebody's copyright and this repository is
-public, one good enough for a phone screen is bigger than the whole game, and a
-photograph behind pixel art is a join you can always see.
+## The first round
 
-**Still things are painted once; moving things are drawn every frame.** The
-sky, the mountains and the trees are painted into off-screen canvases when the
-theme or the screen size changes, and each frame is just those pictures stamped
-down. The petals, the fireflies and the water are a few dozen small shapes.
-
-**Depth is parallax.** The far picture and the near one are drawn wider than the
-screen and slide by different amounts as the camera moves - in a round, the
-camera leans gently toward wherever you are dragging the card - so the mountains
-move less than the trees.
-
-**Each scene tells the world where its floor is.** The home screen's ground is
-half way up the screen; painted for a floor at the bottom, the sakura valley
-put its sun and hills under the ground and left a flat purple sky above your
-character. So a scene says where it stands, the scenery is laid out above that
-line, and the last few paintings are kept so a trip home and back does not
-repaint them. Sky things - the planet, the nebula - stay put in the sky
-whatever the floor.
-
-Adding a fifth is an entry in `THEMES`, a swatch for the Settings chip, and a
-`paint` and `spawn` in `js/world.js`.
-
----
-
-## First-time notes, and the first round
-
-**The very first round teaches.** The first time anyone plays Level 1, the
-first four cards are one for each corner. Each comes with a note above it -
-*"1/4 DRAG IT TO DO NOW"* and the reason, the card's own `why` - the tray it
-belongs in glows, and a hand shows the drag. After the fourth it is a normal
-round. Level 1 was always "a lesson, not a test"; this makes it one you are
-walked through instead of told about on a page you scroll past. It is
+**The very first round teaches - without words.** The first time anyone plays
+Level 1, the first four cards are one for each corner; the tray each belongs in
+glows and a hand shows the drag. After the fourth it is a normal round. It is
 remembered as `tipsSeen.tutorial`, so it only happens once.
 
-**Everywhere else, your character says what the place is.** The first time you
-reach home, the map, the boss stage or the gear screen, your character pops up
-at the bottom in a speech bubble with three short lines about it. Dismiss it and
-it never shows again for that place. The words are in `js/tips.js`.
-
-| Place | What they say |
-|---|---|
-| Home | This is you, in the gear you buy; PLAY and BOSS; stars |
-| The map | Each circle is a place in your day; tap to walk there |
-| Gear | Tap to wear, tap a price to buy; what each kind does |
-| Boss | Same cards as the boss; right hits them; watch the bar |
-
-Adding one is an entry in `TIPS` and a `Panels.coachOnce('<name>')` in that
-scene's `enter()`. "Reset all progress" brings every one of them back, and the
-first-round walkthrough with them.
+There are no first-time notes anywhere else. Game screens carry names and
+numbers only - no hints, subtitles or "tap to..." lines. The Guide Book holds
+the reading, for anyone who opens it.
 
 ---
 

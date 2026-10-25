@@ -45,7 +45,7 @@ import androidx.webkit.WebViewAssetLoader;
 public class MainActivity extends AppCompatActivity {
 
     /** The game's own background, so there is no white flash on launch. */
-    private static final int BACKDROP = Color.parseColor("#0a0e1a");
+    private static final int BACKDROP = Color.parseColor("#7a4f2a");
 
     private WebView web;
 

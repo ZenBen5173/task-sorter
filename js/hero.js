@@ -95,7 +95,7 @@ var Hero = (function () {
 
     if (!names.length) {
       el.className = 'hero-worn is-empty';
-      el.textContent = 'Nothing on. Everything below is one tap away.';
+      el.textContent = '';
       return;
     }
     el.className = 'hero-worn';

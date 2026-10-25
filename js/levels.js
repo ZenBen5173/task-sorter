@@ -168,7 +168,7 @@ var Progress = (function () {
       equipped: { pet: 'pet0', armour: 'arm0', weapon: 'wep0' },
 
       /* which background you play against. See js/themes.js. */
-      theme: 'space',
+      theme: 'cork',
 
       /* whether the game makes any noise. Flipped on the Me screen. */
       sound: true,
@@ -343,7 +343,7 @@ var Progress = (function () {
     },
 
     /* ---- the background theme ---- */
-    theme: function () { return data.theme || 'space'; },
+    theme: function () { return data.theme || 'cork'; },
     setTheme: function (id) { data.theme = id; save(); },
 
     /* ---- sound ----
