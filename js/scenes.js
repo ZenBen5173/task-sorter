@@ -48,7 +48,7 @@ var Wallet = (function () {
 
 /* ---------------- the pills in the top corner ---------------- */
 var TopBar = (function () {
-  var coinPos = { x: 0, y: 0 }, starPos = { x: 0, y: 0 };
+  var coinPos = { x: 0, y: 0 }, starPos = { x: 0, y: 0 }, leftEdge = 0;
   function pill(c, x, y, w, icon, text, k) {
     c.save();
     c.translate(x + w / 2, y + 19);
@@ -70,16 +70,26 @@ var TopBar = (function () {
       var cx = W - pad - cw;
       pill(c, cx, y, cw, 'coin', coins, Wallet.punch());
       coinPos.x = cx + 20; coinPos.y = y + 19;
+      leftEdge = cx;
       if (o.stars !== false) {
         var st = String(Progress.stars());
         var sw = 52 + st.length * 12 + 8;
         var sx = cx - 10 - sw;
         pill(c, sx, y, sw, 'star', st, 1);
         starPos.x = sx + 20; starPos.y = y + 19;
+        leftEdge = sx;
       }
     },
     coin: function () { return coinPos; },
-    star: function () { return starPos; }
+    star: function () { return starPos; },
+    /** A screen's title, centred in the room left between the button in
+        the top-left corner and the pills - not on the screen's centre,
+        where a four-figure coin count ran straight into it. Call after
+        draw(), which is what measures the pills. */
+    title: function (c, text) {
+      var lx = Math.max(12, Stage.safe.l) + 52, rx = leftEdge - 8;
+      Gfx.text(c, text, (lx + rx) / 2, Stage.safe.t + 32, { font: 'arcade', size: 14, color: '#fff', stroke: '#0a0e1a', strokeW: 5, maxW: rx - lx });
+    }
   };
 })();
 
@@ -253,6 +263,23 @@ var Scenes = (function () {
       buttons.add({ x: bx + (dw + gap) * 2, y: dy, w: dw, h: dh, label: 'GUIDE', style: 'wood', id: 'guide',
                     sub: 'How to play', draw: doorDraw('book'),
                     onTap: function () { Panels.open('guide'); } });
+
+      /* THE NEXT THING TO WORK TOWARD, in the space under the doors. A
+         home screen that only says "PLAY" gives you a reason to play this
+         round; one that says "40 more coins for the Kitten" gives you a
+         reason to play the one after it. */
+      var goal = nextGoal();
+      var gy = dy + dh + 14;
+      if (goal && H - sf.b - gy > 58) {
+        buttons.add({ x: bx, y: gy, w: bw, h: 50, style: goal.ready ? 'green' : 'dark', id: 'goal', pulse: goal.ready,
+          draw: function (c, b, st) {
+            if (goal.pet) Gfx.drawPet(c, goal.sprite, 30, b.h - 9, 30, (b.t / 90) | 0);
+            else Gfx.drawSprite(c, goal.sprite, 30, b.h / 2, 28, 28);
+            Gfx.text(c, goal.text, 56, b.h * 0.36, { size: 15, weight: 700, color: st.text, align: 'left', maxW: b.w - 70 });
+            Gfx.text(c, goal.sub, 56, b.h * 0.7, { size: 12, weight: 600, color: Gfx.rgba(st.text === '#ffffff' ? '#ffffff' : st.text, 0.72), align: 'left', maxW: b.w - 70 });
+          },
+          onTap: function () { Shop.setTab(goal.kind); Stage.go('gear', {}, 'fade'); } });
+      }
       Stage.stagger(buttons.list.slice(1), 70, 200);
 
       World.setFloor(groundY + 8);
@@ -274,6 +301,25 @@ var Scenes = (function () {
         p.y = groundY + 6 + (i % 4) * 7;
         return p;
       });
+    }
+
+    /** The cheapest thing in the shop you are allowed to buy and do not
+        own yet - and whether you can already afford it. */
+    function nextGoal() {
+      var best = null;
+      for (var kind in SHOP) {
+        SHOP[kind].items.forEach(function (it) {
+          if (it.cost > 0 && !Progress.owns(it.id) && Shop.isUnlocked(it) && (!best || it.cost < best.it.cost)) best = { it: it, kind: kind };
+        });
+      }
+      if (!best) return null;
+      var need = best.it.cost - Progress.coins();
+      return {
+        kind: best.kind, sprite: best.it.sprite, pet: best.kind === 'pet',
+        ready: need <= 0,
+        text: need <= 0 ? 'You can afford the ' + best.it.name + '!' : 'Next: the ' + best.it.name,
+        sub: need <= 0 ? 'Tap to go and get it' : need.toLocaleString() + ' more coins'
+      };
     }
 
     return {
@@ -345,6 +391,11 @@ var Scenes = (function () {
     var hero = null, pts = [], nodes = [], at = 0, walkTo = -1, walkPos = 0, stepT = 0;
     var card = { a: 0, n: 0, open: false };
     var R = 30, shakeNode = { i: -1, a: 0 };
+    /* A level you JUST opened is unlocked in front of you: you arrive
+       standing on the one you passed, its padlock shakes, bursts, and
+       then you walk over to it. Being told "Level 3 unlocked" on the end
+       screen is a sentence; watching it open is the reward. */
+    var fresh = null;
     /* The trail from the old level map, in percent of the map area. */
     var PATH = [[26, 87], [45, 89], [64, 80], [70, 68], [76, 56], [42, 56], [28, 47], [15, 39], [52, 36], [66, 24]];
 
@@ -461,9 +512,10 @@ var Scenes = (function () {
     return {
       music: 'menu',
       enter: function (p) {
-        t = 0; card.a = 0; card.open = false; walkTo = -1;
+        t = 0; card.a = 0; card.open = false; walkTo = -1; fresh = null;
         var last = p && p.at ? p.at - 1 : Math.min(Progress.unlocked(), LEVELS.length) - 1;
         at = Gfx.clamp(last, 0, LEVELS.length - 1);
+        if (p && p.fresh && at > 0) { fresh = { i: at, t: 0, burst: false, walked: false }; at = at - 1; }
         build();
         Panels.coachOnce('levels');
       },
@@ -473,6 +525,19 @@ var Scenes = (function () {
         Wallet.update(dt);
         buttons.update(dtReal); cardButtons.update(dtReal);
         shakeNode.a = Math.max(0, shakeNode.a - dt / 400);
+        if (fresh) {
+          fresh.t += dt;
+          var fn = nodes[fresh.i];
+          if (!fresh.burst && fresh.t > 650 && fn) {
+            fresh.burst = true;
+            Sfx.play('unlock'); Haptics.win(); Stage.shake(6, 260); Stage.punch(0.5);
+            Particles.emit({ x: fn.x, y: fn.y, n: 26, colors: [Gfx.C.gold, '#ffffff', '#9aa3b8'], speed: [120, 380], life: [400, 900], size: [3, 8], gravity: 400 });
+            Particles.emit({ x: fn.x, y: fn.y, n: 1, shape: 'ring', colors: [Gfx.C.gold], speed: 0, life: 520, size: R * 0.5, shrink: false });
+            Particles.emit({ x: fn.x, y: fn.y - R - 30, n: 1, shape: 'text', text: 'NEW!', colors: [Gfx.C.gold], speed: 20, angle: [-1.6, -1.5], life: 1400, size: 14, gravity: -10 });
+          }
+          if (!fresh.walked && fresh.t > 1300) { fresh.walked = true; walkTo = fresh.i; hero.walk = 1; }
+          if (fresh.t > 1900) fresh = null;
+        }
         if (walkTo >= 0) {
           var target = nodes[walkTo].d;
           var dir = target > walkPos ? 1 : -1;
@@ -500,8 +565,8 @@ var Scenes = (function () {
       draw: function (c, W, H) {
         drawWorld(c, W, H, t, { dim: 0.18 });
         var sf = safe();
-        Gfx.text(c, (PACK.name || 'DAY TO DAY').toUpperCase(), W / 2, sf.t + 32, { font: 'arcade', size: 14, color: '#fff', stroke: '#0a0e1a', strokeW: 5 });
         TopBar.draw(c, W, { stars: false });
+        TopBar.title(c, (PACK.name || 'DAY TO DAY').toUpperCase());
 
         /* the trail: a wide sandy band, a darker edge, a dashed centre */
         var furthest = nodes[Math.min(Progress.unlocked(), nodes.length) - 1];
@@ -561,10 +626,16 @@ var Scenes = (function () {
     function drawNode(c, n, i) {
       var lv = LEVELS[i];
       var open = Progress.isOpen(lv.n), best = Progress.best(lv.n);
-      var next = open && !best;
+      var popK = 1;
       var sx = shakeNode.i === i ? Math.sin(t / 25) * 6 * shakeNode.a : 0;
+      if (fresh && fresh.i === i) {
+        if (!fresh.burst) { open = false; sx = Math.sin(t / 30) * 4 * Math.min(1, fresh.t / 600); }
+        else popK = 1 + 0.45 * Math.max(0, 1 - (fresh.t - 650) / 450);
+      }
+      var next = open && !best;
       c.save();
       c.translate(n.x + sx, n.y);
+      c.scale(popK, popK);
       if (next) {
         var pr = R + 8 + Math.sin(t / 300) * 4;
         c.strokeStyle = Gfx.rgba(Gfx.C.gold, 0.6); c.lineWidth = 3;
@@ -609,6 +680,7 @@ var Scenes = (function () {
       nodes.forEach(function (n, i) {
         var lv = LEVELS[i];
         if (!Progress.isOpen(lv.n)) return;
+        if (fresh && fresh.i === i && !fresh.burst) return;
         var best = Progress.best(lv.n);
         var label = lv.name.toUpperCase();
         var lw = Gfx.measure(c, label, { font: 'arcade', size: 8 }) + 16;
@@ -743,8 +815,8 @@ var Scenes = (function () {
       draw: function (c, W, H) {
         drawWorld(c, W, H, t, { dim: 0.25 });
         var sf = safe();
-        Gfx.text(c, 'BOSSES', W / 2, sf.t + 32, { font: 'arcade', size: 14, color: '#fff', stroke: '#0a0e1a', strokeW: 5 });
         TopBar.draw(c, W, { stars: false });
+        TopBar.title(c, 'BOSSES');
 
         var cx = W / 2 + slide.x, cy = H * 0.36;
         var size = Math.min(W * 0.44, 190);
@@ -933,8 +1005,8 @@ var Scenes = (function () {
       draw: function (c, W, H) {
         drawWorld(c, W, H, t, { dim: 0.2 });
         var sf = safe();
-        Gfx.text(c, 'GEAR', W / 2, sf.t + 32, { font: 'arcade', size: 14, color: '#fff', stroke: '#0a0e1a', strokeW: 5 });
         TopBar.draw(c, W, { stars: false });
+        TopBar.title(c, 'GEAR');
         if (hero) {
           var py = hero.y;
           c.save();

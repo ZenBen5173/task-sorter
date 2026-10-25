@@ -86,7 +86,8 @@
   }
   function home() {
     if (R.mode === 'battle') Stage.go('bosses', { at: R.foeN }, 'cards');
-    else Stage.go('map', { at: R.passed && R.hasNext ? R.levelN + 1 : R.levelN }, 'cards');
+    else Stage.go('map', { at: R.passed && R.hasNext ? R.levelN + 1 : R.levelN,
+                           fresh: !!(R.unlock && R.unlock.fresh && R.hasNext) }, 'cards');
   }
 
   /* ---------------- the sequence ---------------- */
