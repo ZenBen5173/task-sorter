@@ -78,6 +78,7 @@ var Stage = (function () {
 
   var trans = null;
   var inputBlocked = 0;
+  var frameNo = 0, groups = [];
 
   /* ---------------- setup ---------------- */
 
@@ -197,6 +198,7 @@ var Stage = (function () {
   }
 
   function paint() {
+    frameNo++;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, SW, SH);
 
@@ -617,8 +619,26 @@ var Stage = (function () {
     for (var i = 0; i < this.list.length; i++) this.list[i].update(dt);
   };
   Buttons.prototype.draw = function (c) {
+    if (this.drawnAt === undefined) groups.push(this);
+    this.drawnAt = frameNo;
     for (var i = 0; i < this.list.length; i++) this.list[i].draw(c);
   };
+
+  /** Every button drawn in the last frame, in SCREEN coordinates. The
+      canvas has no DOM to ask what is on it; this is what an automated
+      test - or the Android emulator driven with adb - asks instead. */
+  function visibleButtons() {
+    var out = [];
+    groups.forEach(function (g) {
+      if (g.drawnAt < frameNo - 1) return;
+      g.list.forEach(function (b) {
+        if (!b.visible || b.appear < 0.6) return;
+        out.push({ id: b.id, label: b.label, enabled: b.enabled,
+                   x: Math.round(colX + b.x + b.w / 2), y: Math.round(b.y + b.h / 2), w: b.w, h: b.h });
+      });
+    });
+    return out;
+  }
 
   /** Brings a row of buttons in one after another. */
   function stagger(buttons, gap, delay) {
@@ -645,6 +665,7 @@ var Stage = (function () {
     busy: function () { return !!trans; },
     shake: shake, hitstop: hitstop, slowmo: slowmo, punch: punch,
     pixelRatio: function () { return dpr; },
+    visibleButtons: visibleButtons,
     stats: function () { return { fps: Math.round(stats.fps * 10) / 10, workMs: Math.round(stats.work * 100) / 100, dpr: dpr, particles: Particles.count() }; },
     block: function (on) { inputBlocked += on ? 1 : -1; if (inputBlocked < 0) inputBlocked = 0; },
     canvas: function () { return cv; },

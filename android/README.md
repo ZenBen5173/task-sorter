@@ -55,13 +55,15 @@ is explained where it happens:
 
 - **Back means "go up one", not "quit".** A single-page game has no
   browser history, so the default back behaviour would drop you out of
-  the app entirely on the first press, mid-round. The page is asked to
-  press whichever of its own back controls is showing instead.
+  the app entirely on the first press, mid-round. The page's own
+  `Nav.back()` is asked instead: it closes a sheet, pauses a round, or
+  goes home, and only says "leave" from the home screen.
 
-- **`INTERNET` is the only permission.** Everything needed to play —
-  code, art, fonts, soundtrack — is inside the APK. The permission is
-  for the optional cloud save, and the game is fully playable with it
-  refused or with no signal at all.
+- **Two permissions, both granted at install, neither asked of the
+  player.** `INTERNET` is for the optional cloud save - everything needed
+  to play is inside the APK, and the game is fully playable with no
+  signal at all. `VIBRATE` is for the buzz when a card lands, and
+  Settings turns it off.
 
 ## Size
 

@@ -35,10 +35,16 @@ powershell -ExecutionPolicy Bypass -File serve.ps1
 
 It prints a `http://192.168.x.x:8080` address. Open that on the phone.
 
-On a laptop you can also play with the keyboard: **Q W A S** for the four corners.
+On a laptop you can also play with the keyboard: **Q W A S** for the four
+corners, **Escape** to pause or go back, **Enter** to go on.
 
-The **←** button in the top-left of a level leaves it and goes back to the map.
-Nothing is recorded when you leave: no grade, no coins, no failed attempt.
+The **pause** button in the top-left of a round stops the clock and offers
+Resume, Restart and Quit. Nothing is recorded when you quit: no grade, no
+coins, no failed attempt.
+
+Add **`?fps`** to the address - `http://192.168.x.x:8080/?fps` - and a strip
+in the bottom corner shows the frame rate and how many milliseconds the game's
+own code spends on each frame. That is the number to check on a real phone.
 
 ---
 
@@ -51,35 +57,68 @@ Nothing is recorded when you leave: no grade, no coins, no failed attempt.
 | Bottom-left | **Give Away** | urgent, but not yours to do |
 | Bottom-right | **Drop** | neither important nor urgent |
 
-Any swipe direction maps to a corner, so a sloppy flick still counts. A swipe
-shorter than `SWIPE_MIN_PX` snaps back instead of sorting, so a stray tap costs
-you nothing.
+Three ways to sort, for three kinds of player:
+
+- **Drag** the card into a corner. It rides a spring a hair behind your thumb
+  and leans into the drag, and the tray you are heading for swells and lights
+  up while the other three dim - you can see where it will land before you
+  let go.
+- **Flick** it. A quick throw that never travels the full distance still
+  sorts, in the direction you threw it.
+- **Tap a tray.** The card flies there.
+
+Any direction maps to a corner, so a sloppy flick still counts. A drag shorter
+than `SWIPE_MIN_PX` that is not a flick snaps back instead of sorting, so a
+stray touch costs you nothing.
 
 ---
 
 ## What is in the box
 
+**The rules** - what is true, regardless of what is on screen:
+
 | File | What it does |
 |---|---|
-| `index.html` | Every screen (title, map, guide, gear, me, play, end) |
-| `css/style.css` | Everything visual, including all the animation |
 | `js/cards.js` | **The task cards.** This is the file you will edit most |
-| `js/sprites.js` | **The pixel art.** Placeholders you will replace |
-| `js/themes.js` | **The backgrounds** you can switch between mid-round |
-| `js/tips.js` | **The first-time popups**, one per screen |
-| `js/game.js` | The round: swiping, scoring, grading |
-| `js/ui.js` | Score odometer, floating points, sound |
-| `js/levels.js` | **The levels** and your saved progress |
+| `js/levels.js` | **The levels**, the ranks, and your saved progress |
+| `js/game.js` | **The rules of a round:** scoring, the clock, grading, unlocks |
 | `js/shop.js` | **The shop:** pets, armour, weapons and coin rewards |
-| `js/hero.js` | **The Character screen:** gear slots and stat bars |
 | `js/battle.js` | **The bosses** you duel |
-| `js/main.js` | Boots the game, draws the level map, wires the buttons |
-| `js/pets.js` | **The pet collection:** the thirteen sheets, and how they are played |
-| `js/weather.js` | **The falling petals, leaves and rain** behind a round |
-| `js/scenery.js` | **The hills, trees and waterfalls** a round is played in front of |
-| `js/forest.js` | The wood on the level map |
+| `js/hero.js` | Your character's name, and the readout of what your gear does |
+
+**The engine** - how it is drawn, on one canvas (see *Why it is drawn now*):
+
+| File | What it does |
+|---|---|
+| `js/gfx.js` | Easing, tweens, springs, particles, sprites, text, the panel look, baking |
+| `js/stage.js` | The canvas, the loop, scenes, transitions, hit-stop, shake, buttons |
+| `js/world.js` | **The four backgrounds** as living places |
+| `js/actors.js` | Your character, your pets and the bosses, with bodies that react |
+| `js/sfx.js` | **Every sound effect**, synthesised, and the haptics |
 | `js/music.js` | **The soundtrack**, played rather than loaded |
+
+**The screens:**
+
+| File | What it does |
+|---|---|
+| `js/arena.js` | **The round itself** - the trays, the card, the fight |
+| `js/scenes.js` | Title, home, the map, the boss stage, the VS face-off, the gear stage |
+| `js/results.js` | The end of a round, as a sequence |
+| `js/panels.js` | The HTML sheets: the shop, settings, the Guide Book, the review, back |
+| `index.html` | The canvas, and the handful of sheets HTML is better at |
+| `css/game.css` | Those sheets, and the fonts |
+
+**Data and art:**
+
+| File | What it does |
+|---|---|
+| `js/sprites.js` | **The pixel art.** Grids, and the PNGs that replaced some of them |
+| `js/pets.js` | **The pet collection:** the thirteen sheets, and how they are played |
+| `js/themes.js` | **The backgrounds** you can pick |
+| `js/tips.js` | **The first-time notes**, one per place |
 | `js/cloud.js` | **Accounts** and saving your progress online |
+| `js/ui.js` | The one audio context, and the sound switch |
+| `js/main.js` | Boots the game, and wires the settings sheet |
 | `android/` | **The Android app.** One WebView around this same game |
 | `serve.ps1` | Local server for phone testing |
 
@@ -90,50 +129,114 @@ them failing.
 
 ---
 
+## Why it is drawn now
+
+**It used to be a website.** Eight HTML pages swapped with `display: none`, a
+tab bar along the bottom, every card and corner a `<div>` moved by a CSS
+transition. It was well made, and it felt like what it was: an app with a game
+on one of its pages. A transition knows where a thing starts and where it ends
+and nothing about the middle - it cannot follow a thumb with weight, bounce a
+card off the wrong corner, or freeze the screen for three frames when you land
+a Perfect.
+
+So the whole game is drawn on **one canvas, sixty times a second**. The rules
+did not move: `js/game.js` still decides what a card is worth, when a round
+ends, what a shield forgives and whether you passed, exactly as before. What
+changed is everything you see and feel while those rules run.
+
+**No engine, on purpose.** This repository has no package.json and no build
+step - plain `<script>` tags, which is also what lets the same files run offline
+inside the Android app. A game with one card and four corners needs a loop, a
+tween, a spring and a particle emitter, not Phaser. `js/gfx.js` and
+`js/stage.js` are those, written for this game, in the same ES5 as the rest of
+it, because the APK's floor is Android 7.
+
+**What is on the canvas and what is not.** The world, your character, the
+round, the map, the bosses, the results - all drawn. HTML is kept only for what
+it is genuinely better at: a shop you scroll, a box you type your name into, a
+rulebook, the list of what you missed. Those slide up as sheets *over* the
+living world rather than replacing it.
+
+**Two clocks.** The stage keeps its own clock, which a hit-stop stops and a
+slow-motion finish slows, so when the screen freezes on a Perfect everything in
+it freezes together. The rules do not use it: the round is still timed against
+`Date.now()`, so a hit-stop can never steal a second off the clock you are
+racing.
+
+**On a wide screen the game plays in a column.** A phone game stretched across
+a laptop put the four trays at the far corners of the window with a small card
+marooned between them. Wider than about 0.62 of its own height, the stage lays
+the game out in a portrait column in the middle and lets the world run
+full-bleed either side of it.
+
+### What a frame costs
+
+Every canvas call is a draw call, and on a phone the cost of a frame is mostly
+how many of those there are, not how many pixels they cover. Profiling the
+round showed text alone was half the frame. So anything that does not change
+from one frame to the next is **baked** - drawn once into a small off-screen
+bitmap and stamped down as one image after that: every line of text, every
+glow, each tray, each card face, each button's body. Only what moves is drawn
+live.
+
+On a GPU-accelerated canvas the round holds **60 fps at max combo with 120
+particles in the air, for about 3 ms of the game's own work per frame**. If a
+phone still cannot hold the frame rate, the stage steps its resolution down
+rather than stuttering.
+
+**The Android emulator is not a fair test of this.** On it, even a bare
+full-screen canvas that fills one rectangle and 60 squares a frame manages 23
+fps on the host GPU and 10 on SwiftShader, while the same test done in HTML gets
+55 to 58 - the emulator's graphics translation is the bottleneck, not the game.
+Real phones composite canvases natively. Check a real one with `?fps`.
+
+---
+
 ## How you get around
 
-It is a game, so it is built around the thing you came to do.
+**There is no tab bar.** HOME / BOSS / PLAY / GEAR / ME along the bottom is
+the single most "this is an app" thing a screen can have. Games are places you
+move between: home is the hub, every door off it leads somewhere, and back takes
+you home.
 
-**PLAY is the middle of the bottom bar**, raised and gold, and it is the only
-round button on the screen - a thumb finds it without looking. The level map
-is what it opens, so the map stopped being a tab of its own: it is a place you
-pass *through* on the way into a round, not a section of an app.
-
-| | What is on it |
+| | What is there |
 |---|---|
-| **Home** | Your character in the gear you chose, your rank, your stars, your collection - and PLAY |
-| **Boss** | The four bosses, and Online Boss marked coming soon |
-| **&#9654; PLAY** | The level map. The **?** in its corner opens the Guide Book |
-| **Gear** | Your character, the three slots, the whole shop, and your stats |
-| **Me** | Your account, the background, the sound, the rulebook, and Reset |
+| **Title** | The logo assembling itself, and **TAP TO START** - which is also the tap that wakes the sound |
+| **Home** | Your character standing in the world, your rank and stars, PLAY, and three doors |
+| **The map** | The trail. Tap a level and you walk there; it tells you about itself and you go in |
+| **Boss** | The four bosses on a stage, one at a time, and a VS face-off before each fight |
+| **Gear** | Your character up close on a pedestal, with the shop as a sheet underneath |
+| **Guide** | The rulebook, as pages you turn |
+| **Settings** | The cog on the home screen: account, background, sound, vibration, reset |
+
+**Back is one rule everywhere.** It closes whatever sheet is open; in a round it
+pauses, and from the pause it resumes; anywhere else it goes home; on the home
+screen it leaves the app. `Nav.back()` in `js/panels.js` is the single place
+that decides, and the Android app asks it rather than guessing.
 
 ### Home
 
-There used to be a title card: a logo, the four corners written out a second
-time, and one button. You passed through it once and never came back.
+**A game's home is where you see what you have got.** Your character stands in
+the world - the sakura valley at dusk, the pine wood, wherever you have chosen
+- actually **wearing** what you chose: the shield on the off arm, the weapon in
+the near hand, and the pet you are walking with at their side. Every *other*
+pet you own potters about on the ground around them, so the collection lives
+on the home screen as creatures rather than as a row of icons. Tap your
+character and they jump; tap a pet and it hops.
 
-**A game's home is where you see what you have got.** Your character stands on
-it actually **wearing** what you chose - the shield on the off arm, the weapon
-in the near hand - with the pet you bought pacing beside them, and around
-that: your rank, your stars, the pets you have caught, and what the next level
-is called.
+Under the doors is **the next thing to work toward**: the cheapest thing in the
+shop you are allowed to buy and do not own - *"Next: the Kitten, 40 more
+coins"*, or, glowing green, *"You can afford the Dagger!"*, which takes you
+straight to it. A home screen that only says PLAY gives you a reason to play
+this round; one that says what the coins are for gives you a reason to play
+the one after it. PLAY itself names where it is going - *"Level 3, On Your
+Phone"* is a reason to tap it; *"Play"* on its own is furniture.
 
-The hero is drawn at **24x32**. It was 16x16, and at 16x16 a person is a blob
-with two dots on it - fine for a tab icon, hopeless blown up to 104px on the
-home screen, where it stands next to pets drawn on real 48px sheets. Chibi
-proportions on purpose: a big head and a short body, which is what the pets
-are, so the party looks like it came from one game. `Sprites` reads a grid's
-size off its own rows now rather than assuming 16.
-
-The figure is a composite, not thirty drawings. The hero is a 16x16 sprite and
-so is every piece of gear, so `Hero.paintFigure` lays the shield and the
-weapon over the figure at the points its hands are, placed in **percent** so
-one set of numbers works at any size - big on the home screen, smaller on the
-Gear page. Both are scaled against the figure's HAND rather than its body: at
-half the rig the shield covered the character completely, which is a person
-hiding behind a shield rather than carrying one. An empty slot puts nothing
-there. PLAY names where it is going - *"Level 3, On Your Phone"* is a
-reason to tap it; *"Play"* on its own is furniture.
+The hero is drawn at **24x32**, chibi proportions on purpose - a big head and a
+short body, which is what the pets are, so the party looks like it came from
+one game. The figure is a composite, not thirty drawings: the shield and the
+weapon are laid over the figure at the points its hands are, in percent of the
+figure, so one set of numbers works at every size the game draws it.
 
 ### Stars and ranks
 
@@ -194,8 +297,8 @@ sure", which tells nobody anything. The button that does it is red and says
 already know what it does. Cancel, the tap outside, and every other way of
 dismissing it are all a no.
 
-`Tips.confirm()` in `js/tips.js` is the general version of that, if anything
-else ever needs to ask.
+`Panels.dialog()` in `js/panels.js` is the general version of that, if
+anything else ever needs to ask.
 
 ---
 
@@ -207,11 +310,11 @@ card in a muted navy, set in a UI sans - so a game full of sprites read as a
 settings screen with sprites in it.
 
 **Depth is a solid block, never a blur.** A panel sits on a flat slab of
-`--sink` two or three pixels below it, with a one-pixel light line along its
-top edge, and pressing it drops it onto the slab. That is what makes a surface
-feel stamped out of plastic rather than floated in a browser. The PLAY button
-was already built that way and was the only thing on screen that read as a
-game, so everything else is now built the way PLAY is.
+shadow a few pixels below it, with a light line along its top edge, and
+pressing it drops it onto the slab. That is what makes a surface feel stamped
+out of plastic rather than floated in a browser. The canvas draws every panel
+that way (`Gfx.panel`), and the HTML sheets copy it in CSS (`.gbtn`), so a
+button looks the same whether it is drawn or written.
 
 **Two fonts, and the arcade one is a spice.** *Press Start 2P* is a real arcade
 face - eight pixels tall, no curves - and it matches the sprites. It went on
@@ -233,20 +336,23 @@ packaged into an app that has no reason to need one. Latin subsets only, and
 Fredoka is a variable font so its four weights are one file: 52 KB for the
 pair. Both are Open Font Licence; see `assets/fonts/CREDITS.md`.
 
-**The dark is blue and lit from somewhere.** One radial gradient at the top of
-`#app` is the difference between a room and a page.
+**The world is behind every screen**, not just a round - the same world, drawn
+once and kept running. Change the background in Settings and it changes behind
+the settings sheet while you watch.
 
-**The weather runs behind every screen**, not just a round. Deep Space - the
-default, and the screen most people look at most - used to be flat black, and
-that was the single biggest thing making the menus feel like a website. It has
-a slow starfield now. Petals, leaves and rain fall behind the menus too.
+**Big moments land.** A Perfect freezes the screen for three frames, punches
+the camera toward you and throws sparks; a mistake shakes it and bleeds red in
+from the edges; the time running out goes into slow motion; a boss knocked out
+spins away. None of that is decoration on top of the game - it is how the game
+tells you what just happened without asking you to read anything.
 
-**Things arrive rather than appear.** Screens pop past where they are going and
-settle, lists land a tile at a time, buttons drop onto their shadow. At the end
-of a round the score, the accuracy and the coins **count up**, and when the
-count lands the coins burst out of the row and arc away. A payout that is
-simply there was never a moment; one that climbs while coins fly is what the
-round was for.
+**Things arrive rather than appear.** Trays slide in from their own corners at
+the start of a round; the first card is picked up by your character and flipped
+up into the middle; screens hand over with a circle closing on the level you
+tapped, or the four corner colours sweeping across. At the end of a round the
+grade stamps down, the stars pop in one at a time, the numbers count up, and
+the coins you earned fly up into your wallet - which ticks up as each one
+lands. A payout that is simply there was never a moment.
 
 **And far fewer words.** A shop tile is a picture, a name and a number:
 `+8% coins - 6% time`, not *"+8% coins. Clock runs 6% faster."* Every group
@@ -262,13 +368,10 @@ The shop was the first screen that read as a game, and the reason is plain:
 **warm wood instead of grey-blue, parchment instead of a flat chip, thick
 borders, a hard edge underneath, and colour with some heat in it.**
 
-So those surfaces are named once - `--wood`, `--parch` and the shades around
-them - and the rest of the game is built out of them. The boss screen is
-parchment and wood, the result screen puts the grade on a wooden disc and the
-numbers on paper, and the home panels are the same boards as the shop shelves,
-which also puts them in the same family as the gold PLAY button sitting
-between them. The home screen used to be a warm button marooned in a cold
-page.
+So those two are the game's materials: **paper** for the things you read -
+every task card, the Guide Book's pages, the review - and **wood** for the
+doors off the home screen. The gold PLAY button sits between them and belongs
+to both.
 
 Adding a screen means reaching for one of those, not inventing a new panel.
 
@@ -391,7 +494,7 @@ points = (100 + speed bonus + perfect bonus) x streak multiplier
 - **One wrong sort resets it to x1** — that is the real punishment
 - **Speed bonus** — up to +100, the faster you sort
 - **Perfect** — correct and under 1.2 seconds — +150 and a chime
-- **Final rush** — the last 20 seconds pay double, but cards land faster
+- **Final rush** — the last stretch of a level pays double
 
 **Grade** comes from accuracy and best streak only:
 
@@ -419,7 +522,8 @@ rebuilt around the clock and accuracy instead.
 
 ### The final rush
 
-The last stretch of a level pays double but throws cards 40%% faster. Its length
+The last stretch of a level pays double - the screen washes red, the music
+speeds up, and a FINAL RUSH banner says so. Its length
 is `min(RUSH_SECONDS, level length x RUSH_SHARE)` - capped at a quarter of the
 level. Without that cap a 45 second tutorial level would spend 20 of its 45
 seconds in rush mode, which is what made Level 1 unfairly brutal at first.
@@ -471,38 +575,36 @@ meant touching the scoring path to change nothing anybody can see.
 
 ## The Gear screen
 
-The third tab, and it holds **both halves of choosing what you carry**. Your character stands in the centre with three gear slots
-around them — **Pet**, **Weapon** and **Armour** — and three stat bars
-underneath showing what you are currently carrying:
+**Your character, large, standing on a pedestal**, with the shop as a sheet
+underneath. Tap anything and the figure above changes outfit in a puff of
+smoke - buy a shield and you watch it appear on their arm. (The old Gear page
+redrew the shelf on a purchase and not the character, so the figure kept
+wearing last week's shield until you left the page - which read exactly like
+the purchase had not registered.)
+
+At the top of the sheet: your character's **name** (tap to type), a line saying
+what they have on, and the **full set** banner. At the bottom, what your gear
+actually does:
 
 - **Clock speed** — how fast your round runs out (from your pet)
 - **Coins** — what you earn at the end of a round (pet + full set)
 - **Mistakes covered** — wrong answers that will not count (from your armour)
 - **Points** — what each card is worth (from your weapon)
 
-Tap a slot and a picker opens showing everything you own of that kind. Pick
-one and the stat bars update straight away.
-
-Everything you can buy is **on the same page**, straight underneath. It used
-to be two tabs - a Shop to buy on and a Character to equip on - showing the
-same list of items, so choosing your gear meant hopping between them. Tapping
-something you own already equips it and tapping a price already buys AND
-equips it, so the split was never doing any work.
-
-`js/hero.js` draws the character and the slots, `js/shop.js` draws what is for
-sale, and both read the same item list - so adding an item to `js/shop.js`
-makes it appear in every part of the screen at once.
+`js/shop.js` draws what is for sale, `js/hero.js` the readout, and
+`Scenes.gear` the character - all reading the same item list, so adding an item
+to `js/shop.js` makes it appear in every part of the screen at once.
 
 ---
 
 ## The shop
 
-On the **Gear** tab, under your character, laid out as an actual shop:
-**three items to a wooden shelf**, standing on the plank with a shadow
-pooled under each one, price on a little parchment tag, and a carved sign
-over each group. It was a two-column grid of cards, which is how a website
-lists products - a shop is a wall of shelves with things standing on them,
-and you cannot stand anything on a card.
+On the **Gear** screen, under your character: **one kind at a time, on
+tabs** - Pets, Armour, Weapons. All three used to be stacked down one long
+page, which is a catalogue; a game's shop shows you one shelf and lets you flip
+between them. Each item stands on its tile with a shadow under it; tiles you
+can afford wear a gold price tag, the one you are wearing goes green, and
+anything still locked is a silhouette that says what unlocks it.
 
 Three kinds of gear, and
 **every item changes how a round actually plays** — nothing is decoration.
@@ -644,16 +746,19 @@ Four sprites so far: `bang` (Do Now), `cal` (Do Later), `arrow` (Give Away),
 ## Animated pets
 
 The thirteen pets are the one thing in the game that is not drawn in code. Each
-is a **sprite sheet**: one long strip of frames, played by sliding
-`background-position` one cell to the left on a timer. No canvas, no redraw per
-frame, and it costs nothing on a screen that already has cards flying about.
+is a **sprite sheet**: one long strip of frames. On the stage they are sliced a
+frame at a time onto the canvas (`Gfx.drawPet`), and they walk: the one you
+equip trails your character at a pet's distance, the rest wander about the home
+screen and turn to face the way they are going. In the shop sheet, which is
+HTML, the same sheet is played by sliding `background-position` one cell to the
+left on a timer.
 
 **One timer for the whole game.** The shop shows fourteen pets at once, and
 fourteen separate intervals would be fourteen things to start, stop and leak.
-Every pet on screen goes into one list that a single ticker walks. It drops
-anything that has left the page, and **skips anything whose screen is not
-showing** - otherwise the shop's fourteen would keep running frame by frame
-behind a round you were in the middle of. It asks by CSS class rather than by
+Every pet in the shop goes into one list that a single ticker walks. It drops
+anything that has left the page, and **skips anything whose sheet is not open**
+- otherwise the shop's fourteen would keep running frame by frame behind a
+round you were in the middle of. It asks by CSS class rather than by
 measuring, because reading a position makes the browser lay the page out, and
 that is the one thing a 25-times-a-second timer must never do.
 
@@ -730,9 +835,11 @@ timer stays honest even if the app goes to the background.
       it clears a notch, 60 fps, works with the network off. Three bugs found
       and fixed. See `android/TESTING.md`
 - [ ] **Run it on a physical phone.** The emulator covered the logic; it cannot
-      tell you about a cheap chipset or how a swipe feels. An emulator will also
-      NOT do for the twenty IDs above; those say twenty different devices and
-      mean it
+      tell you about a cheap chipset or how a swipe feels - and since the game
+      became a canvas game, the emulator is no measure of its frame rate at all
+      (see *What a frame costs*). Open it with `?fps` on a real phone and check
+      the number. An emulator will also NOT do for the twenty IDs above; those
+      say twenty different devices and mean it
 - [ ] Final submission **1 November**, 11:59pm
 
 ---
@@ -740,8 +847,8 @@ timer stays honest even if the app goes to the background.
 ## The soundtrack
 
 **There is no music file.** Every note in `js/music.js` is an oscillator, the
-same bargain as the rest of the game - the sprites are colour grids, the
-forest is drawn maths, the weather is CSS keyframes.
+same bargain as the rest of the game - the sprites are colour grids and the
+worlds are drawn maths.
 
 That matters here more than it is clever. A borrowed loop in a public
 repository is a borrowed loop's licence to honour. A minute of even middling
@@ -757,13 +864,40 @@ Scheduling each note with its own `setTimeout` drifts audibly inside two bars.
 **Four chords - C, G, Am, F - and a melody built only from the C major
 pentatonic**, five notes that cannot land wrong on any of them. Chosen because
 this loops for as long as somebody is on the screen, and music that repeats
-must have nothing in it that grates on the ninth time round. Two arrangements
-of the same phrase: thin and slow for screens you read, faster with a hat for
-a round on a clock, so moving between them sounds like one game.
+must have nothing in it that grates on the ninth time round. Five arrangements
+of the same phrase, so moving between them sounds like one game:
 
-It follows the screen (`UI.showScreen` tells it), stops on the Me screen's
-sound switch along with the effects, and pauses on a hidden tab - on a phone
-that is battery spent behind a locked screen.
+| Tune | Where | How |
+|---|---|---|
+| `title` | the title screen | the menu's tempo with the arpeggio running |
+| `menu` | home, map, gear, bosses | slow and thin, for screens you read |
+| `play` | a round | faster, with a hat and a kick |
+| `rush` | the final rush | faster again, a kick on every beat |
+| `battle` | a boss fight | the same melody over Am F C G - every note of the C major pentatonic is also in A minor, so it fits unchanged and the whole thing turns tense |
+
+It follows the scene (the stage tells it), stops on the Settings sound switch
+along with the effects, and pauses on a hidden tab - on a phone that is battery
+spent behind a locked screen.
+
+**Nothing makes a sound until you have touched the screen.** A browser tab
+enforces that itself; an Android WebView does not, and for a while the game
+sang over the launcher animation. `UI.sound` keeps that gate itself now, and
+the title screen's TAP TO START is the tap that opens it.
+
+### The sound effects
+
+`js/sfx.js`. Still no files: each effect is built the way a sound designer
+would build it on a synth, from two or three layers - a click on the front so
+it has an edge, a body that carries the pitch, a tail of filtered noise so it
+sits in a room. A card landing in the right tray is a pluck *and* a soft thud
+of it arriving; a mistake is a low buzz *and* a dull knock. A compressor on the
+whole effects bus keeps twenty coins landing at once from clipping.
+
+**The right answers play a tune.** Each correct sort in a streak is the next
+note up the C major pentatonic, the same five notes the melody is built from,
+so they can never clash with it. A long streak climbs a scale you can hear;
+break it and it starts again from the bottom. That one idea does more for
+"keep the streak going" than any number on the screen.
 
 ---
 
@@ -790,6 +924,15 @@ every scrap of progress in `localStorage`. `WebViewAssetLoader` serves the
 same files from a real secure origin that never leaves the phone, so the app
 behaves exactly like the browser the game was tested in.
 
+**Back asks the game.** The system back button calls `Nav.back()` in the page
+and only closes the app when the game says there is nowhere left to go. It
+used to find whichever of four HTML back buttons was showing and click it; the
+game is drawn now and those buttons do not exist.
+
+**It buzzes.** `navigator.vibrate` works inside a WebView once the app holds
+the install-time VIBRATE permission - a short tap when a card lands, a double
+knock on a mistake. It asks the player nothing, and Settings turns it off.
+
 Build it with `./gradlew assembleDebug`, or take the artifact from the Build
 APK workflow in the Actions tab. See `android/README.md`.
 
@@ -797,155 +940,82 @@ APK workflow in the Actions tab. See `android/README.md`.
 
 ## Backgrounds
 
-The round button in the top right of a level opens the background picker.
-Four choices, defined in `js/themes.js`, and your pick is remembered for
-every round after.
+Four places, picked in **Settings** or from the **pause** menu mid-round (where
+the clock is stopped while you choose). Your pick is remembered for everything
+after. Defined in `js/themes.js`, drawn by `js/world.js`.
 
-| Theme | Falling | Scenery | Tint |
-|---|---|---|---|
-| Deep Space | drifting stars, and the default | none - the stars are the whole of it | dark navy |
-| Sakura | cherry blossom petals | hills and blossom trees | pale blossom pink |
-| Forest | leaves | hills and a pine wood | light leaf green |
-| Waterfalls | rain | a gorge, three falls and a pool | pale aqua |
+| Theme | What is there | What moves |
+|---|---|---|
+| Deep Space | a nebula, a galaxy band, a ringed planet, a moon | stars twinkle and drift; a shooting star now and then |
+| Sakura | a valley at dusk, a big low sun, hills, cherry trees | petals that turn as they fall |
+| Forest | three ranks of stepped pines, fog between them, a pale moon | shafts of light breathing, fireflies, falling leaves |
+| Waterfalls | a gorge, three falls cut into a cliff, the pool below | the water actually falls, mist rises where it lands, rain |
 
-**The scenery is drawn, not photographed.** Three of these once named a JPG -
-`sakura.jpg`, `forest.jpg`, `waterfalls.jpg` - and not one of them ever
-existed, so picking Sakura got you a flat pink page. `js/scenery.js` paints an
-SVG per theme instead, once, when the theme changes.
+**Every one is at dusk or at night**, on purpose. A card has to win against
+whatever is behind it, and a world drawn dusky in the first place needs very
+little holding back - so it keeps its colour.
 
-Three reasons that is better than finding photographs. A photograph is
-somebody's copyright and this repository is public. One good enough to fill a
-phone screen is about a megabyte, which is more than the entire game. And a
-photograph of somewhere real behind art made of pixels is a join you can
-always see.
+**The scenery is drawn, not photographed**, for the reasons the old SVG
+scenery gave: a photograph is somebody's copyright and this repository is
+public, one good enough for a phone screen is bigger than the whole game, and a
+photograph behind pixel art is a join you can always see.
 
-Two of the scenes are crowds and use the level map's trick: a shape drawn once
-and then scattered, each with its own height, width, lean and shade from a
-seeded generator. The waterfalls needed the opposite - a waterfall is not a
-crowd, and scattering cliff shapes gives grey blocks with white stripes down
-them. It reads from the arrangement, so that one is composed.
+**Still things are painted once; moving things are drawn every frame.** The
+sky, the mountains and the trees are painted into off-screen canvases when the
+theme or the screen size changes, and each frame is just those pictures stamped
+down. The petals, the fireflies and the water are a few dozen small shapes.
 
-`file` is still in `THEMES` and is `null` everywhere. A photograph would still
-layer in correctly if one ever turned up.
+**Depth is parallax.** The far picture and the near one are drawn wider than the
+screen and slide by different amounts as the camera moves - in a round, the
+camera leans gently toward wherever you are dragging the card - so the mountains
+move less than the trees.
 
-Adding a fifth is one line in `THEMES` - an `id`, a `name`, a `tint` and a
-`dim` between 0 and 1 - plus a scene in `js/scenery.js` if you want one.
+**Each scene tells the world where its floor is.** The home screen's ground is
+half way up the screen; painted for a floor at the bottom, the sakura valley
+put its sun and hills under the ground and left a flat purple sky above your
+character. So a scene says where it stands, the scenery is laid out above that
+line, and the last few paintings are kept so a trip home and back does not
+repaint them. Sky things - the planet, the nebula - stay put in the sky
+whatever the floor.
 
-### Why `dim` matters
-
-Cards and corner labels sit on top of the background, and the card has to win.
-Every theme with scenery darkens itself first. The corner boxes also gain a
-solid dark backing on any non-space theme - against the plain dark screen they
-can be nearly see-through, and over trees they cannot.
-
-**The dim is applied over the scenery, not under it.** `#screen-play` carries
-it on its own background, and an element's background paints under its
-children - so the drawn hills and trees sat on top of the very layer meant to
-hold them back, and a forest at full strength competed with the card. It is
-laid back over the top in CSS.
-
-The values are low - 0.26 to 0.30, down from 0.58 and 0.62. Those were set for
-photographs, which are full of contrast and detail and have to be held right
-back. Flat silhouettes in a narrow band of colour are already most of the way
-there, and at the old strength Sakura came out as dusk.
-
-### Why opening it pauses the clock
-
-Changing the background is decoration. If the clock kept running you would
-pay real seconds for using it, so `Themes.toggle()` calls `Game.pause()` and
-swiping is blocked until it closes. The clock is a wall clock reading
-`Date.now()` against `endsAt`, so pausing is just remembering how much was
-left and setting a fresh `endsAt` on the way out. The boss in a duel is
-frozen the same way, or a pause would be a free hit.
-
-### Why the tints are light
-
-The little swatch in the picker paints `tint` raw, with no `dim` over it.
-Dark tints made the swatches look like holes punched in the panel, so the
-three scenery themes use pale colours instead. The round itself still lands
-darker, because `dim` sits on top of the tint as well as the scenery.
-
-The Guide Book shows the same four swatches, read-only, built from this same
-list. Add a fifth theme and the Guide Book picks it up on its own.
+Adding a fifth is an entry in `THEMES`, a swatch for the Settings chip, and a
+`paint` and `spawn` in `js/world.js`.
 
 ---
 
-## Animated backgrounds
+## First-time notes, and the first round
 
-Sakura drops petals, Forest drops leaves, Waterfalls rains. Deep Space stays
-still, which is what makes it the plain default.
+**The very first round teaches.** The first time anyone plays Level 1, the
+first four cards are one for each corner. Each comes with a note above it -
+*"1/4 DRAG IT TO DO NOW"* and the reason, the card's own `why` - the tray it
+belongs in glows, and a hand shows the drag. After the fourth it is a normal
+round. Level 1 was always "a lesson, not a test"; this makes it one you are
+walked through instead of told about on a page you scroll past. It is
+remembered as `tipsSeen.tutorial`, so it only happens once.
 
-This is what the themes were always meant to be. The photographs never turned
-up, and **a flat pink screen is not a cherry tree** - so the motion carries the
-theme instead, and it needs no image files at all.
+**Everywhere else, your character says what the place is.** The first time you
+reach home, the map, the boss stage or the gear screen, your character pops up
+at the bottom in a speech bubble with three short lines about it. Dismiss it and
+it never shows again for that place. The words are in `js/tips.js`.
 
-**Nothing runs per frame.** Every speck is a span with a CSS keyframe on it and
-the browser animates it alone - the same bargain `js/pets.js` makes. The only
-JavaScript is the few lines in `js/weather.js` that create the specks and hand
-each one a random size, speed, colour and starting point. A round is a fast
-game on a cheap phone, and a background that costs frames is a background that
-costs you the round.
-
-**Two spans per speck**, and it has to be two: the outer one falls and spins,
-the inner one drifts sideways. `transform` is a single property, so one element
-cannot do both - the second animation would simply overwrite the first. Running
-them separately, at their own speeds, is what stops a screenful of petals
-moving like one sheet.
-
-**Rain does not spin.** Petals tumbling is the charm of them; a raindrop turned
-the same way spends half its fall lying on its side, which reads as a glitch
-rather than as weather. Drops keep one fixed lean, set in CSS on the speck
-itself rather than in the animation that owns `transform`.
-
-**The counts are deliberately small** - 18 petals, 14 leaves, 26 drops. Every
-speck is a real element the browser composites on every frame, behind a card
-you are dragging about. Twenty reads as weather; two hundred reads as a dropped
-frame.
-
-Adding weather to a theme is one `fall` in `js/themes.js`:
-
-```js
-fall: { kind: 'petal', count: 18,
-        colors: ['#ffd7e6', '#ffc0d8', '#ff9ec4', '#fff0f6'] },
-```
-
-`kind` is `'petal'`, `'leaf'` or `'drop'`. Anyone who has asked their phone for
-less motion gets a still background and none of it is built.
-
----
-
-## First-time popups
-
-The first time a player opens each screen, a short card pops up saying what
-that screen is for. Close it (the button, or tap outside the card) and it
-never shows again for that screen. The words are in `js/tips.js`.
-
-| Screen | Popup |
+| Place | What they say |
 |---|---|
-| Guide Book | This is the rulebook; scroll to read, tap Map to start |
-| Map | Each circle is a level and a place in your day; tap to play |
-| A round | Swipe into the right corner; the four corners in their colours |
-| Character | Tap a slot to change gear; +25% for a full set |
-| Boss | Same cards as your boss; right hits them, wrong hits you |
-| Shop | What each kind of gear does; some unlock by level |
+| Home | This is you, in the gear you buy; PLAY and BOSS; stars |
+| The map | Each circle is a place in your day; tap to walk there |
+| Gear | Tap to wear, tap a price to buy; what each kind does |
+| Boss | Same cards as the boss; right hits them; watch the bar |
 
-**The round popup pauses the clock.** It opens on top of a round that has
-already started, so it calls `Game.pause()` and the clock and swiping stay
-frozen until it closes. Without that the very first round of a new player's
-life would tick away while they read how to play it.
-
-It hooks into `UI.showScreen()`, which every route onto every screen passes
-through, so there is no way in that skips it. Adding a screen's tip is one
-entry in `TIPS`, keyed by the screen name. "Reset all progress" brings every
-popup back.
+Adding one is an entry in `TIPS` and a `Panels.coachOnce('<name>')` in that
+scene's `enter()`. "Reset all progress" brings every one of them back, and the
+first-round walkthrough with them.
 
 ---
 
 ## Online Boss (not built yet)
 
-The Boss screen shows a fifth card, **Online Boss**, with a dashed outline
-and a **Coming soon** badge. Tapping it opens a popup that says plainly it is
-not ready yet and why.
+The boss stage has a fifth page after Deadline Dan, **Online Boss**, marked
+**Coming soon**. Tapping it opens a note that says plainly it is not ready yet
+and why.
 
 It is not a working feature. Playing a real person needs a server on the
 internet to pair two players and pass their moves between the phones, and
