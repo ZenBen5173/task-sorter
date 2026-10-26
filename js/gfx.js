@@ -1,0 +1,1022 @@
+/* ============================================================
+   gfx.js  -  the drawing kit everything on the stage is made of
+   ------------------------------------------------------------
+   WHY THIS EXISTS. The game used to be a web page: every card,
+   corner and coin was a <div>, and every movement was a CSS
+   transition. That is why it felt like a website. A transition
+   knows where a thing starts and where it ends and nothing about
+   what is happening in between - it cannot follow a thumb with
+   weight, bounce a card back off the wrong corner, or freeze the
+   whole screen for two frames when you land a Perfect.
+
+   So the game is drawn now, onto one canvas, sixty times a second
+   (js/stage.js). This file is the box of tools that drawing uses:
+
+     Ease       the curves things move along
+     Tween      "move this from here to there over this long"
+     Spring     movement with weight: overshoots, settles
+     Particles  sparks, confetti, coins, dust
+     Gfx        sprites, pets, text, panels, colours
+
+   No library. The repository has no build step and no package.json
+   on purpose - plain script tags are what lets the same files run
+   offline inside the Android app - and a game with one card and four
+   corners needs a loop, a tween and a particle emitter, not an
+   engine.
+
+   ES5 THROUGHOUT, like the rest of the game. The APK's floor is
+   Android 7, and a WebView that old does not speak arrow functions.
+   ============================================================ */
+
+/* ---------------- easing ----------------
+   Every one takes 0..1 and returns roughly 0..1. The Back and
+   Elastic curves overshoot past 1 on purpose: that overshoot is
+   the difference between a thing that arrives and a thing that
+   lands. */
+var Ease = {
+  linear:    function (t) { return t; },
+  inQuad:    function (t) { return t * t; },
+  outQuad:   function (t) { return t * (2 - t); },
+  inOutQuad: function (t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; },
+  inCubic:   function (t) { return t * t * t; },
+  outCubic:  function (t) { var u = t - 1; return u * u * u + 1; },
+  inOutCubic: function (t) {
+    return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+  },
+  outQuart:  function (t) { var u = t - 1; return 1 - u * u * u * u; },
+  outExpo:   function (t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); },
+  inBack:    function (t) { var s = 1.70158; return t * t * ((s + 1) * t - s); },
+  outBack:   function (t) {
+    var s = 1.70158, u = t - 1;
+    return u * u * ((s + 1) * u + s) + 1;
+  },
+  /* A bigger overshoot, for things that should SLAM in: a grade, a
+     banner, a button appearing. */
+  outBackBig: function (t) {
+    var s = 3.2, u = t - 1;
+    return u * u * ((s + 1) * u + s) + 1;
+  },
+  outElastic: function (t) {
+    if (t === 0 || t === 1) return t;
+    return Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * (2 * Math.PI / 3)) + 1;
+  },
+  outBounce: function (t) {
+    var n = 7.5625, d = 2.75;
+    if (t < 1 / d) return n * t * t;
+    if (t < 2 / d) { t -= 1.5 / d; return n * t * t + 0.75; }
+    if (t < 2.5 / d) { t -= 2.25 / d; return n * t * t + 0.9375; }
+    t -= 2.625 / d; return n * t * t + 0.984375;
+  }
+};
+
+/* ---------------- tweens ----------------
+   Tween.to(obj, { x: 100, alpha: 0 }, 300, { ease, delay, done })
+   moves the named numbers on `obj` from wherever they are now to
+   the values given.
+
+   TWO CLOCKS. Gameplay runs on the STAGE clock, which stops dead
+   for a hit-stop and slows down for a slow-motion finish - a card
+   in mid-flight should freeze with everything else when the screen
+   freezes. A button bouncing under your finger should not, so
+   anything passed `real: true` runs on the wall clock instead. */
+var Tween = (function () {
+  var list = [];
+
+  function to(obj, props, ms, opts) {
+    opts = opts || {};
+    var t = {
+      obj: obj, props: props, from: {},
+      ms: Math.max(1, ms || 1),
+      t: -(opts.delay || 0),
+      ease: opts.ease || Ease.outCubic,
+      done: opts.done || null,
+      update: opts.update || null,
+      tag: opts.tag || null,
+      real: !!opts.real,
+      started: false, dead: false
+    };
+    list.push(t);
+    return t;
+  }
+
+  /** Calls `fn` after `ms` of stage time. A timer that honours the
+      hit-stop, which setTimeout cannot. */
+  function wait(ms, fn, opts) {
+    opts = opts || {};
+    return to({ k: 0 }, { k: 1 }, ms, {
+      ease: Ease.linear, done: fn, tag: opts.tag, real: opts.real
+    });
+  }
+
+  function update(dt, dtReal) {
+    /* Read the length once. A `done` that starts another tween adds to
+       the end of this list; that one starts next frame rather than
+       being run a frame early by this loop. */
+    var n = list.length, i, t, p, e, k;
+    for (i = 0; i < n; i++) {
+      t = list[i];
+      if (t.dead) continue;
+      t.t += t.real ? dtReal : dt;
+      if (t.t < 0) continue;
+      if (!t.started) {
+        for (k in t.props) t.from[k] = t.obj[k];
+        t.started = true;
+      }
+      p = Math.min(1, t.t / t.ms);
+      e = t.ease(p);
+      for (k in t.props) t.obj[k] = t.from[k] + (t.props[k] - t.from[k]) * e;
+      if (t.update) t.update(e, p);
+      if (p >= 1) {
+        t.dead = true;
+        if (t.done) t.done();
+      }
+    }
+    if (list.length > 48) {
+      var keep = [];
+      for (i = 0; i < list.length; i++) if (!list[i].dead) keep.push(list[i]);
+      list = keep;
+    }
+  }
+
+  function kill(obj) {
+    for (var i = 0; i < list.length; i++) if (list[i].obj === obj) list[i].dead = true;
+  }
+  function killTag(tag) {
+    for (var i = 0; i < list.length; i++) if (list[i].tag === tag) list[i].dead = true;
+  }
+  function clear() { list = []; }
+  function count() {
+    var n = 0;
+    for (var i = 0; i < list.length; i++) if (!list[i].dead) n++;
+    return n;
+  }
+
+  return { to: to, wait: wait, update: update, kill: kill, killTag: killTag, clear: clear, count: count };
+})();
+
+/* ---------------- springs ----------------
+   A spring is { x, v }: where it is and how fast it is going. Each
+   frame it is pulled toward a target and slowed by damping. Low
+   damping wobbles, high damping glides.
+
+   This is what makes a held card feel like it has weight. A card that
+   sits exactly under your thumb is a cursor; a card on a stiff spring
+   lags a hair behind and leans into the drag. */
+var Spring = {
+  make: function (x) { return { x: x || 0, v: 0 }; },
+  step: function (s, target, dtMs, stiff, damp) {
+    /* Sub-stepped, so a long frame on a slow phone cannot fling a
+       stiff spring off to infinity. */
+    var dt = Math.min(dtMs, 64) / 1000;
+    var steps = Math.ceil(dt / 0.008);
+    var h = dt / steps;
+    for (var i = 0; i < steps; i++) {
+      var f = (target - s.x) * stiff - s.v * damp;
+      s.v += f * h;
+      s.x += s.v * h;
+    }
+    return s.x;
+  },
+  /** Kicks a spring: the punch on a score, the bounce on a tray. */
+  kick: function (s, v) { s.v += v; }
+};
+
+/* ---------------- particles ----------------
+   One pool for the whole game. A burst of thirty sparks is thirty
+   objects; making and throwing away thirty objects every time a card
+   lands is how a game stutters on a cheap phone, so dead ones go back
+   in the pool and get handed out again. */
+var Particles = (function () {
+  var live = [];
+  var pool = [];
+  var CAP = 700;
+  var budget = 1;     // turned down for reduced motion
+
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+  function range(v, dflt) {
+    if (v === undefined) v = dflt;
+    if (typeof v === 'number') return [v, v];
+    return v;
+  }
+
+  /** Throws `n` particles from (x, y).
+
+      shape     'square' | 'circle' | 'spark' | 'star' | 'ring' |
+                'petal' | 'coin' | 'text'
+      colors    picked from at random
+      speed     px per second, [min, max]
+      angle     radians, [min, max] - default is all the way round
+      gravity   px per second per second
+      drag      0..1 per second of speed lost
+      life      ms, [min, max]
+      size      px, [min, max]
+      layer     'world' draws with the scene, 'top' over the HUD and
+                over the DOM panels (on the fx canvas) */
+  function emit(o) {
+    var n = Math.round((o.n || 10) * budget);
+    var sp = range(o.speed, [60, 240]);
+    var an = range(o.angle, [0, Math.PI * 2]);
+    var lf = range(o.life, [400, 900]);
+    var sz = range(o.size, [3, 6]);
+    var colors = o.colors || ['#ffffff'];
+    for (var i = 0; i < n; i++) {
+      if (live.length >= CAP) return;
+      var p = pool.pop() || {};
+      var a = rnd(an[0], an[1]);
+      var s = rnd(sp[0], sp[1]);
+      p.x = o.x + (o.spreadX ? rnd(-o.spreadX, o.spreadX) : 0);
+      p.y = o.y + (o.spreadY ? rnd(-o.spreadY, o.spreadY) : 0);
+      p.vx = Math.cos(a) * s + (o.vx || 0);
+      p.vy = Math.sin(a) * s + (o.vy || 0);
+      p.g = o.gravity || 0;
+      p.drag = o.drag === undefined ? 1.6 : o.drag;
+      p.life = rnd(lf[0], lf[1]);
+      p.age = 0;
+      p.size = rnd(sz[0], sz[1]);
+      p.color = colors[(Math.random() * colors.length) | 0];
+      p.shape = o.shape || 'square';
+      p.rot = Math.random() * Math.PI * 2;
+      p.spin = o.spin === undefined ? rnd(-8, 8) : rnd(-o.spin, o.spin);
+      p.layer = o.layer || 'world';
+      p.add = !!o.additive;
+      p.shrink = o.shrink === undefined ? true : o.shrink;
+      p.text = o.text || '';
+      p.wobble = o.wobble || 0;
+      p.phase = Math.random() * 6.28;
+      live.push(p);
+    }
+  }
+
+  function update(dt) {
+    var s = dt / 1000;
+    for (var i = live.length - 1; i >= 0; i--) {
+      var p = live[i];
+      p.age += dt;
+      if (p.age >= p.life) {
+        live[i] = live[live.length - 1];
+        live.pop();
+        pool.push(p);
+        continue;
+      }
+      var k = Math.max(0, 1 - p.drag * s);
+      p.vx *= k; p.vy *= k;
+      p.vy += p.g * s;
+      p.x += p.vx * s;
+      if (p.wobble) p.x += Math.sin(p.age / 180 + p.phase) * p.wobble * s * 60;
+      p.y += p.vy * s;
+      p.rot += p.spin * s;
+    }
+  }
+
+  function draw(ctx, layer) {
+    var t, a, sz, i, p;
+    for (i = 0; i < live.length; i++) {
+      p = live[i];
+      if (p.layer !== layer) continue;
+      t = p.age / p.life;
+      a = t < 0.7 ? 1 : 1 - (t - 0.7) / 0.3;
+      sz = p.shrink ? p.size * (1 - t * 0.6) : p.size;
+      ctx.globalAlpha = a;
+      ctx.globalCompositeOperation = p.add ? 'lighter' : 'source-over';
+      ctx.fillStyle = p.color;
+      ctx.strokeStyle = p.color;
+      switch (p.shape) {
+        /* Square, like a pixel: a round dot of colour is the one thing in
+           a pixel-art scene that gives away it was drawn by a computer. */
+        case 'circle':
+          ctx.fillRect(p.x - sz, p.y - sz, sz * 2, sz * 2);
+          break;
+        case 'ring': {
+          var rr2 = sz * (1 + t * 3);
+          ctx.lineWidth = Math.max(2, Math.round(sz * 0.3));
+          ctx.strokeRect(p.x - rr2, p.y - rr2 * 0.86, rr2 * 2, rr2 * 1.72);
+          break;
+        }
+        case 'spark': {
+          /* A streak drawn along its own velocity: the faster it is going,
+             the longer it is. */
+          var len = Math.min(26, Math.sqrt(p.vx * p.vx + p.vy * p.vy) * 0.05 + sz);
+          var ang = Math.atan2(p.vy, p.vx);
+          ctx.lineWidth = Math.max(1, sz * 0.5);
+          ctx.lineCap = 'butt';
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x - Math.cos(ang) * len, p.y - Math.sin(ang) * len);
+          ctx.stroke();
+          break;
+        }
+        case 'star':
+          Gfx.star(ctx, p.x, p.y, sz, sz * 0.45, 5, p.rot);
+          ctx.fill();
+          break;
+        case 'petal':
+          ctx.save();
+          ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+          ctx.scale(1, 0.55 + 0.45 * Math.sin(p.age / 120 + p.phase));
+          ctx.beginPath(); ctx.ellipse(0, 0, sz, sz * 0.6, 0, 0, 6.2832); ctx.fill();
+          ctx.restore();
+          break;
+        case 'coin':
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.scale(Math.abs(Math.cos(p.age / 90 + p.phase)) * 0.8 + 0.2, 1);
+          Gfx.drawSprite(ctx, 'coin', 0, 0, sz * 2, sz * 2);
+          ctx.restore();
+          break;
+        case 'text':
+          Gfx.text(ctx, p.text, p.x, p.y, { size: sz, color: p.color, font: 'arcade', stroke: '#2a1e12', strokeW: 3 });
+          break;
+        default:
+          ctx.save();
+          ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+          ctx.fillRect(-sz / 2, -sz / 2, sz, sz);
+          ctx.restore();
+      }
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  return {
+    emit: emit,
+    update: update,
+    draw: draw,
+    clear: function () { while (live.length) pool.push(live.pop()); },
+    count: function () { return live.length; },
+    has: function (layer) {
+      for (var i = 0; i < live.length; i++) if (live[i].layer === layer) return true;
+      return false;
+    },
+    setBudget: function (b) { budget = b; }
+  };
+})();
+
+/* ---------------- Gfx ---------------- */
+var Gfx = (function () {
+
+  /* The four corners are the game's language: the same red, blue,
+     orange and grey everywhere - the trays, the glow on a card you are
+     aiming, the points that fly out of a corner. */
+  var C = {
+    now: '#e0524a', later: '#4a86c4', give: '#f2a03d', drop: '#8a929e',
+    good: '#5cc46a', bad: '#e0524a', gold: '#f2c14e', gold2: '#e8a33a',
+    ink: '#0a0e1a', ink2: '#121a2e', ink3: '#1c2742', ink4: '#293755',
+    line: '#3a4a6d', sink: '#060a14',
+    paper: '#fbf3e0', paper2: '#efe1bf',
+    tx: '#fff4dd', txDim: '#e8d8b8', white: '#ffffff'
+  };
+
+  /* THE DESK DAY TYPE. Three faces, each with one job:
+       'arcade'  Bungee - sign-painted capitals for anything loud: scores,
+                 tray names, banners, buttons. (Still called 'arcade' so
+                 every caller written for the pixel font keeps working.)
+       round     Kalam - handwriting, for the cards and everything you
+                 read: it is how a task looks written on an index card.
+       'mono'    IBM Plex Mono - the typewriter on labels and tags.
+     Each is scaled so a size tuned for the old faces still lands about
+     the same height: Press Start 2P drew big for its size, Bungee
+     draws smaller. */
+  var FONT_ARCADE = 'Bungee, Impact, "Arial Black", sans-serif';
+  var FONT_MONO = '"IBM Plex Mono", "Courier New", monospace';
+  var SCALE = { arcade: 1.3, mono: 1.15, round: 1.08 };
+
+  /* ---------------- baking ----------------
+     WHY: every canvas call is a draw call, and on a phone the cost of
+     a frame is mostly how many of those there are - not how many pixels
+     they cover. A tray was sixteen of them (a shadow, a gradient body, a
+     lip, an edge, an icon, two lines of text, the cards piled in it),
+     every frame, for a picture that barely changes. A line of outlined
+     arcade text is a stroke and a fill of every glyph in it.
+
+     So anything that does not change from one frame to the next is
+     drawn ONCE into a small off-screen canvas and stamped down after
+     that as a single image. Measured on the emulator: text alone was
+     half the frame. */
+  var baked = {}, bakedKeys = [], BAKE_MAX = 260;
+  var renderScale = 2;
+
+  function bake(key, w, h, draw) {
+    var hit = baked[key];
+    if (hit) return hit;
+    var cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.ceil(w * renderScale));
+    cv.height = Math.max(1, Math.ceil(h * renderScale));
+    var c = cv.getContext('2d');
+    c.setTransform(renderScale, 0, 0, renderScale, 0, 0);
+    draw(c, w, h);
+    hit = { cv: cv, w: w, h: h };
+    baked[key] = hit;
+    bakedKeys.push(key);
+    if (bakedKeys.length > BAKE_MAX) delete baked[bakedKeys.shift()];
+    return hit;
+  }
+  function stamp(ctx, b, x, y) { ctx.drawImage(b.cv, x, y, b.w, b.h); }
+  function setScale(k) {
+    if (k === renderScale) return;
+    renderScale = k;
+    baked = {}; bakedKeys = [];
+  }
+  var FONT_ROUND = 'Kalam, "Comic Sans MS", "Trebuchet MS", cursive';
+
+  /* ---------------- maths ---------------- */
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function rand(a, b) { return a + Math.random() * (b - a); }
+  function pick(list) { return list[(Math.random() * list.length) | 0]; }
+  /** The same seeded generator the old level map used: a view that
+      reshuffles itself every time you come back to it is a screensaver,
+      not a place. */
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s * 1664525 + 1013904223) % 4294967296;
+      return s / 4294967296;
+    };
+  }
+
+  /* ---------------- colour ---------------- */
+  function hexToRgb(hex) {
+    var h = hex.replace('#', '');
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    var n = parseInt(h, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function rgba(hex, a) {
+    var c = hexToRgb(hex);
+    return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')';
+  }
+  /** Lighter (amt > 0) or darker (amt < 0), -1..1. */
+  function shade(hex, amt) {
+    var c = hexToRgb(hex);
+    for (var i = 0; i < 3; i++) {
+      c[i] = amt > 0 ? c[i] + (255 - c[i]) * amt : c[i] * (1 + amt);
+      c[i] = clamp(Math.round(c[i]), 0, 255);
+    }
+    return '#' + ((1 << 24) + (c[0] << 16) + (c[1] << 8) + c[2]).toString(16).slice(1);
+  }
+  function mix(a, b, t) {
+    var x = hexToRgb(a), y = hexToRgb(b);
+    var r = Math.round(lerp(x[0], y[0], t)), g = Math.round(lerp(x[1], y[1], t)), bl = Math.round(lerp(x[2], y[2], t));
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + bl).toString(16).slice(1);
+  }
+
+  /* ---------------- images ----------------
+     Two kinds of picture, same as before:
+
+     SPRITE GRIDS from js/sprites.js - 16x16 colour grids typed out by
+     hand, and the PNG overrides that replaced some of them. A grid is
+     rasterised once into a canvas exactly its own size (one canvas
+     pixel per art pixel) and drawn scaled up with smoothing OFF, so it
+     stays crisp at any size. It used to go through toDataURL and back
+     into an <img>; on a canvas that is a PNG encode and decode for
+     nothing.
+
+     PET SHEETS from js/pets.js - long strips of frames an artist drew,
+     loaded once and sliced per frame. */
+  var sprites = {};      // name -> canvas or Image
+  var tints = {};        // name|colour -> canvas, the white flash on a hurt foe
+  var pets = {};         // key -> Image
+  var loading = 0;
+  var readyFns = [];
+
+  function done() {
+    loading--;
+    if (loading <= 0) {
+      loading = 0;
+      var fns = readyFns; readyFns = [];
+      for (var i = 0; i < fns.length; i++) fns[i]();
+    }
+  }
+
+  function loadImage(src) {
+    var img = new Image();
+    loading++;
+    img.onload = done;
+    img.onerror = function () { console.warn('[gfx] missing ' + src); done(); };
+    img.src = src;
+    return img;
+  }
+
+  function rasterise(def) {
+    var h = def.px.length, w = def.px[0].length;
+    var cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    var c = cv.getContext('2d');
+    for (var y = 0; y < h; y++) {
+      var row = def.px[y] || '';
+      for (var x = 0; x < w; x++) {
+        var col = def.pal[row.charAt(x)];
+        if (!col) continue;
+        c.fillStyle = col;
+        c.fillRect(x, y, 1, 1);
+      }
+    }
+    return cv;
+  }
+
+  function sprite(name) {
+    if (sprites[name]) return sprites[name];
+    /* the characters and their gear are inked by js/doodle.js */
+    if (window.Doodle && Doodle.has(name)) {
+      sprites[name] = Doodle.get(name);
+    } else if (window.SPRITE_OVERRIDES && SPRITE_OVERRIDES[name]) {
+      sprites[name] = loadImage(SPRITE_OVERRIDES[name]);
+    } else if (window.SPRITE_DATA && SPRITE_DATA[name]) {
+      sprites[name] = rasterise(SPRITE_DATA[name]);
+    } else {
+      sprites[name] = null;
+    }
+    return sprites[name];
+  }
+
+  function petImage(key) {
+    if (!pets[key] && window.PET_SHEETS && PET_SHEETS[key]) pets[key] = loadImage(PET_SHEETS[key].src);
+    return pets[key];
+  }
+
+  /** Everything the stage will draw, loaded before the first frame that
+      needs it, so a pet never pops in half a second after its scene. */
+  function preload(cb) {
+    if (cb) readyFns.push(cb);
+    var k;
+    if (window.SPRITE_OVERRIDES) for (k in SPRITE_OVERRIDES) sprite(k);
+    if (window.SPRITE_DATA) for (k in SPRITE_DATA) sprite(k);
+    if (window.PET_SHEETS) for (k in PET_SHEETS) if (!(window.Doodle && Doodle.isPet(k))) petImage(k);
+    /* The fonts count as one more thing to wait for. Answered by
+       whichever comes first - the fonts arriving, or a timeout, because
+       a font that never answers must not hold the game hostage - and
+       only ever counted once, or a late answer would knock the counter
+       down while a pet sheet was still on its way. */
+    loading++;
+    var answered = false;
+    var fontsDone = function () { if (answered) return; answered = true; done(); };
+    try {
+      if (document.fonts && document.fonts.load) {
+        Promise.all([
+          document.fonts.load('16px Bungee'),
+          document.fonts.load('400 16px Kalam'),
+          document.fonts.load('700 16px Kalam'),
+          document.fonts.load('600 16px "IBM Plex Mono"')
+        ]).then(fontsDone, fontsDone);
+        setTimeout(fontsDone, 2500);
+      } else fontsDone();
+    } catch (e) { fontsDone(); }
+  }
+
+  function isReady(img) {
+    if (!img) return false;
+    if (img.tagName === 'CANVAS') return true;
+    return img.complete && img.naturalWidth > 0;
+  }
+
+  function natW(img) { return img.tagName === 'CANVAS' ? img.width : img.naturalWidth; }
+  function natH(img) { return img.tagName === 'CANVAS' ? img.height : img.naturalHeight; }
+
+  /** Draws a sprite CENTRED on (cx, cy), `w` across. Height follows the
+      picture's own shape unless `h` is given. */
+  function drawSprite(ctx, name, cx, cy, w, h, o) {
+    var img = sprite(name);
+    if (!isReady(img)) return;
+    o = o || {};
+    if (!h) h = w * natH(img) / natW(img);
+    ctx.save();
+    ctx.imageSmoothingEnabled = !!img.doodle;
+    if (o.alpha !== undefined) ctx.globalAlpha *= o.alpha;
+    ctx.translate(cx, cy);
+    if (o.rot) ctx.rotate(o.rot);
+    if (o.flipX) ctx.scale(-1, 1);
+    if (o.sx || o.sy) ctx.scale(o.sx || 1, o.sy || 1);
+    ctx.drawImage(img, -w / 2, -h / 2, w, h);
+    if (o.tint && o.tintAmt > 0) {
+      ctx.globalAlpha *= o.tintAmt;
+      ctx.drawImage(tinted(name, o.tint), -w / 2, -h / 2, w, h);
+    }
+    ctx.restore();
+  }
+
+  /** A solid silhouette of a sprite in one colour, cached. Laid over the
+      real sprite it is the white flash of a hit, the red of a hurt. */
+  function tinted(name, color) {
+    var key = name + '|' + color;
+    if (tints[key]) return tints[key];
+    var img = sprite(name);
+    if (!isReady(img)) return img;
+    var cv = document.createElement('canvas');
+    cv.width = natW(img); cv.height = natH(img);
+    var c = cv.getContext('2d');
+    c.drawImage(img, 0, 0);
+    c.globalCompositeOperation = 'source-in';
+    c.fillStyle = color;
+    c.fillRect(0, 0, cv.width, cv.height);
+    tints[key] = cv;
+    return cv;
+  }
+
+  /** How big a pet comes out for a box `box` pixels across. The same
+      sums js/pets.js does for the DOM - scaled off the creature's BODY,
+      not its cell, and capped - so a pet is the same size in the shop
+      tile as it is walking about on the stage. */
+  function petScale(sheet, box) {
+    var k = box / Math.max(sheet.body.w, sheet.body.h);
+    k = Math.min(k, 3);
+    var roomy = box * 2.2;
+    return Math.min(k, roomy / Math.max(sheet.cellW, sheet.cellH));
+  }
+
+  /** Draws frame `frame` of pet `key` standing with its feet on
+      (cx, footY). Pets are drawn facing left; `flipX` turns them round. */
+  function drawPet(ctx, key, cx, footY, box, frame, o) {
+    if (window.Doodle && Doodle.isPet(key)) { drawDoodlePet(ctx, key, cx, footY, box, frame, o || {}); return; }
+    var sheet = window.PET_SHEETS && PET_SHEETS[key];
+    if (!sheet) return;
+    var img = petImage(key);
+    if (!isReady(img)) return;
+    o = o || {};
+    var k = petScale(sheet, box);
+    var w = sheet.cellW * k, h = sheet.cellH * k;
+    var f = ((frame | 0) % sheet.frames + sheet.frames) % sheet.frames;
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    if (o.alpha !== undefined) ctx.globalAlpha *= o.alpha;
+    ctx.translate(cx, footY + (sheet.offset ? sheet.offset * k : 0));
+    if (o.sx || o.sy) ctx.scale(o.sx || 1, o.sy || 1);
+    if (o.flipX) ctx.scale(-1, 1);
+    /* Source in the sheet's own pixels: its drawn width and height may
+       not match the image (the Phoenixling is two rows tall), so the
+       cell is worked out from the image, not from the declared size. */
+    var sx = natW(img) / sheet.width, sy = natH(img) / sheet.height;
+    ctx.drawImage(img, f * sheet.cellW * sx, 0, sheet.cellW * sx, sheet.cellH * sy,
+                  -w / 2, -h, w, h);
+    ctx.restore();
+  }
+
+  /** A doodled pet has no frames to walk: it breathes and bobs on the
+      same frame counter a sheet would have used. Drawn facing left,
+      like the sheets were. */
+  function drawDoodlePet(ctx, key, cx, footY, box, frame, o) {
+    var img = Doodle.get(key);
+    var w = box * 1.05, h = w * img.height / img.width;
+    var n = petFrameCount(key), ph = ((frame || 0) % n) / n * Math.PI * 2;
+    var bob = Math.abs(Math.sin(ph)) * box * 0.05;
+    var br = 1 + Math.sin(ph * 2) * 0.025;
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    if (o.alpha !== undefined) ctx.globalAlpha *= o.alpha;
+    ctx.translate(cx, footY - bob);
+    ctx.scale((o.sx || 1) / br, (o.sy || 1) * br);
+    if (o.flipX) ctx.scale(-1, 1);
+    /* the canvas has a margin under the feet: sink it by that much */
+    ctx.drawImage(img, -w / 2, -h * 0.955, w, h);
+    ctx.restore();
+  }
+
+  function petFrameCount(key) {
+    var s = window.PET_SHEETS && PET_SHEETS[key];
+    return s ? s.frames : 1;
+  }
+  function petFps(key) {
+    var s = window.PET_SHEETS && PET_SHEETS[key];
+    return s ? s.fps : 12;
+  }
+
+  /* ---------------- shapes ---------------- */
+
+  /** A box cut from paper or card: sharp corners with the tip just
+      nicked off, the way a guillotine leaves card - not the smooth
+      rounded rectangle every app uses. `r` still says how big the corner
+      was meant to be (so every caller keeps working); it only decides
+      how big the nick is. May be one size or [tl, tr, br, bl]. */
+  function rr(ctx, x, y, w, h, r) {
+    var a, b, c, d;
+    if (typeof r === 'object') { a = r[0]; b = r[1]; c = r[2]; d = r[3]; }
+    else { a = b = c = d = r || 0; }
+    var m = Math.min(w, h) / 2;
+    a = nick(a, m); b = nick(b, m); c = nick(c, m); d = nick(d, m);
+    ctx.beginPath();
+    ctx.moveTo(x + a, y);
+    ctx.lineTo(x + w - b, y); ctx.lineTo(x + w, y + b);
+    ctx.lineTo(x + w, y + h - c); ctx.lineTo(x + w - c, y + h);
+    ctx.lineTo(x + d, y + h); ctx.lineTo(x, y + h - d);
+    ctx.lineTo(x, y + a);
+    ctx.closePath();
+  }
+  function nick(r, m) { return r ? Math.min(m, Math.max(1, Math.min(3, r * 0.18))) : 0; }
+
+  function star(ctx, x, y, outer, inner, points, rot) {
+    ctx.beginPath();
+    var step = Math.PI / points;
+    var a = (rot || 0) - Math.PI / 2;
+    for (var i = 0; i < points * 2; i++) {
+      var r = i % 2 ? inner : outer;
+      var px = x + Math.cos(a) * r, py = y + Math.sin(a) * r;
+      if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+      a += step;
+    }
+    ctx.closePath();
+  }
+
+  /** THE GAME'S PANEL. A body, a bright lip along the top edge, and a
+      hard block of shadow `depth` pixels underneath - stamped out of
+      plastic rather than floated on a blur. The old CSS did this with
+      box-shadow; it is the one look worth carrying across unchanged. */
+  /** The one look for every box: a piece of paper or card lying on the
+      desk. Flat colour, a fine darker edge where the card is cut, and a
+      hard brown shadow under it, offset down and to the right as if the
+      lamp is above and to the left. No gloss, no blur, no outline.
+
+      `fill2` is the colour of the card's thickness along the bottom
+      (buttons are thick card, paper is not). `outline: false` drops the
+      cut edge. `lip` is the faint light catching the top edge. */
+  function panel(ctx, x, y, w, h, o) {
+    o = o || {};
+    var r = o.r === undefined ? 14 : o.r;
+    var depth = o.depth === undefined ? 5 : o.depth;
+    var fill = o.fill || C.ink3;
+    if (depth > 0) {
+      ctx.fillStyle = o.sink && o.sink.indexOf('rgba(0,0,0') !== 0 ? o.sink : 'rgba(46,24,6,.42)';
+      rr(ctx, x + Math.min(3, depth * 0.5), y + depth, w, h, r); ctx.fill();
+    }
+    if (o.glow) {
+      ctx.save();
+      ctx.shadowColor = o.glow;
+      ctx.shadowBlur = o.glowBlur || 18;
+      ctx.fillStyle = fill;
+      rr(ctx, x, y, w, h, r); ctx.fill();
+      ctx.restore();
+    }
+    ctx.save();
+    rr(ctx, x, y, w, h, r);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.clip();
+    if (o.fill2) {
+      ctx.fillStyle = o.fill2;
+      ctx.fillRect(x, y + h - Math.max(3, Math.min(6, Math.round(h * 0.09))), w, h);
+    }
+    if (o.lip !== false) {
+      ctx.fillStyle = o.lipColor || 'rgba(255,255,255,.22)';
+      ctx.fillRect(x, y, w, Math.max(1.5, Math.min(3, h * 0.05)));
+    }
+    ctx.restore();
+    if (o.outline !== false) {
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(40,20,4,.28)';
+      rr(ctx, x + 0.5, y + 0.5, w - 1, h - 1, r); ctx.stroke();
+    }
+    if (o.edge) {
+      ctx.lineWidth = o.edgeW || 2;
+      ctx.strokeStyle = o.edge;
+      rr(ctx, x + ctx.lineWidth / 2, y + ctx.lineWidth / 2, w - ctx.lineWidth, h - ctx.lineWidth, r);
+      ctx.stroke();
+    }
+  }
+
+  /* ---------------- desk props ----------------
+     The handful of stationery things the screens are built from. */
+
+  /** A strip of washi tape, centred on (x, y), `w` long, at `rot`. */
+  function tape(ctx, x, y, w, rot, color) {
+    var h = Math.max(14, w * 0.27);
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(rot || 0);
+    ctx.beginPath();
+    var teeth = 4, i;
+    ctx.moveTo(-w / 2, -h / 2);
+    ctx.lineTo(w / 2, -h / 2);
+    for (i = 1; i <= teeth; i++) ctx.lineTo(w / 2 + (i % 2 ? -3 : 0), -h / 2 + h * i / teeth);
+    ctx.lineTo(-w / 2, h / 2);
+    for (i = teeth - 1; i >= 0; i--) ctx.lineTo(-w / 2 + (i % 2 ? 3 : 0), -h / 2 + h * i / teeth);
+    ctx.closePath();
+    ctx.fillStyle = color || 'rgba(255,150,180,.8)';
+    ctx.fill();
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 5;
+    for (i = -w; i < w; i += 12) { ctx.beginPath(); ctx.moveTo(i, h); ctx.lineTo(i + h * 1.2, -h); ctx.stroke(); }
+    ctx.restore();
+  }
+
+  /** A pushpin head seen from above, at (x, y). */
+  function pin(ctx, x, y, color, r) {
+    r = r || 7;
+    ctx.fillStyle = 'rgba(46,24,6,.4)';
+    ctx.beginPath(); ctx.arc(x + 2, y + 3, r, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = color || '#c2412f';
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.beginPath(); ctx.arc(x - r * 0.3, y - r * 0.35, r * 0.32, 0, 6.2832); ctx.fill();
+  }
+
+  /** An index card: cream, a red margin line, blue rules. */
+  function indexCard(ctx, x, y, w, h, o) {
+    o = o || {};
+    ctx.fillStyle = 'rgba(46,24,6,.38)';
+    ctx.fillRect(x + 3, y + 6, w, h);
+    ctx.fillStyle = o.fill || '#fffdf6';
+    ctx.fillRect(x, y, w, h);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+    if (o.rules !== false) {
+      ctx.fillStyle = o.ruleColor || 'rgba(140,175,220,.55)';
+      for (var ry = y + (o.top || 30); ry < y + h - 4; ry += (o.gap || 26)) ctx.fillRect(x, ry, w, 1.2);
+      ctx.fillStyle = o.marginColor || 'rgba(224,120,120,.75)';
+      ctx.fillRect(x + (o.margin || 26), y, 1.6, h);
+    }
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(120,96,60,.35)'; ctx.lineWidth = 1;
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  }
+
+  /** A rubber stamp: a double ring, words in the middle, at a tilt. */
+  function rubberStamp(ctx, x, y, r, top, under, color, rot) {
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(rot || -0.18);
+    ctx.strokeStyle = color; ctx.lineWidth = Math.max(3, r * 0.11);
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.2832); ctx.stroke();
+    ctx.lineWidth = Math.max(1.5, r * 0.05);
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.8, 0, 6.2832); ctx.stroke();
+    textNow(ctx, top, 0, under ? -r * 0.12 : 0, { font: 'arcade', size: r * 0.4, color: color });
+    if (under) textNow(ctx, under, 0, r * 0.42, { font: 'mono', size: r * 0.17, color: color });
+    ctx.restore();
+  }
+
+  /** A soft round light, drawn additively. Glows are what make a dark
+      screen feel lit from somewhere. */
+  var glows = {};
+  function glow(ctx, x, y, r, color, a) {
+    if (r <= 0) return;
+    /* A soft pool of lamp light, faint: on a desk, light is something
+       that falls on things, not something they give off. One soft dot
+       per colour, baked once, stretched to size. */
+    var g = glows[color];
+    if (!g) {
+      g = glows[color] = document.createElement('canvas');
+      g.width = g.height = 64;
+      var c = g.getContext('2d');
+      var rg = c.createRadialGradient(32, 32, 0, 32, 32, 32);
+      rg.addColorStop(0, rgba(color, 1)); rg.addColorStop(0.45, rgba(color, 0.4)); rg.addColorStop(1, rgba(color, 0));
+      c.fillStyle = rg; c.fillRect(0, 0, 64, 64);
+    }
+    var prevA = ctx.globalAlpha, prevOp = ctx.globalCompositeOperation, prevS = ctx.imageSmoothingEnabled;
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = prevA * (a === undefined ? 0.6 : a) * 0.5;
+    ctx.drawImage(g, x - r, y - r, r * 2, r * 2);
+    ctx.imageSmoothingEnabled = prevS;
+    ctx.globalAlpha = prevA;
+    ctx.globalCompositeOperation = prevOp;
+  }
+
+  /** Darkens the edges of the screen. A red one is how a miss feels. */
+  function vignette(ctx, W, H, color, a) {
+    if (a <= 0) return;
+    var g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.32, W / 2, H / 2, Math.max(W, H) * 0.75);
+    g.addColorStop(0, rgba(color, 0));
+    g.addColorStop(1, rgba(color, a));
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  /* ---------------- text ---------------- */
+
+  function font(o) {
+    var size = o.size || 16;
+    if (o.font === 'arcade') return Math.round(size * SCALE.arcade) + 'px ' + FONT_ARCADE;
+    if (o.font === 'mono') return '600 ' + Math.round(size * SCALE.mono) + 'px ' + FONT_MONO;
+    /* Kalam comes in two weights; anything 600 and up is the bold one. */
+    return ((o.weight || 600) >= 600 ? 700 : 400) + ' ' + Math.round(size * SCALE.round) + 'px ' + FONT_ROUND;
+  }
+
+  /** One line of text. Options:
+        font    'arcade' (Bungee, the loud things), 'mono' (Plex Mono) or 'round' (Kalam)
+        size, weight, color, align, base
+        stroke, strokeW   an outline, so it reads over anything
+        shadow, shadowY   a hard drop shadow, the panel look again
+        maxW              shrinks the text until it fits
+        alpha, tracking   letter spacing for the arcade face */
+  /** Text, baked. The words are drawn once into a bitmap the first time
+      they are needed, outline and shadow and all, and every frame after
+      that is one image. Only the 'middle' baseline is baked - it is the
+      only one the game uses; anything else is drawn directly. */
+  function text(ctx, s, x, y, o) {
+    o = o || {};
+    s = String(s);
+    if (o.nocache || (o.base && o.base !== 'middle')) return textNow(ctx, s, x, y, o);
+    var size = o.size || 16;
+    var f = font(o);
+    if (o.maxW) {
+      var mw = measure(ctx, s, o);
+      if (mw > o.maxW) size = Math.max(6, size * o.maxW / mw);
+      f = font({ font: o.font, size: size, weight: o.weight });
+    }
+    var sw = o.stroke ? (o.strokeW || Math.max(2, size * 0.18)) : 0;
+    var sy = o.shadow ? (o.shadowY || Math.max(2, size * 0.12)) : 0;
+    var key = 't|' + s + '|' + f + '|' + (o.color || '#fff') + '|' + (o.stroke || '') + '|' + sw + '|' + (o.shadow || '') + '|' + sy;
+    var w = measure(ctx, s, { font: o.font, size: size, weight: o.weight });
+    var pad = Math.ceil(sw / 2) + 2;
+    var em = size * (SCALE[o.font === 'arcade' ? 'arcade' : o.font === 'mono' ? 'mono' : 'round']);
+    var bw = Math.ceil(w) + pad * 2, bh = Math.ceil(em * 1.6) + pad * 2 + Math.ceil(sy);
+    var mid = pad + em * 0.8;
+    var b = bake(key, bw, bh, function (c) {
+      textNow(c, s, pad, mid, { font: o.font, size: size, weight: o.weight, color: o.color, align: 'left',
+                                stroke: o.stroke, strokeW: sw, shadow: o.shadow, shadowY: sy });
+    });
+    var ax = o.align === 'left' ? pad : o.align === 'right' ? pad + w : pad + w / 2;
+    if (o.alpha !== undefined) {
+      var pa = ctx.globalAlpha;
+      ctx.globalAlpha = pa * o.alpha;
+      ctx.drawImage(b.cv, x - ax, y - mid, b.w, b.h);
+      ctx.globalAlpha = pa;
+    } else ctx.drawImage(b.cv, x - ax, y - mid, b.w, b.h);
+    return size;
+  }
+
+  function textNow(ctx, s, x, y, o) {
+    o = o || {};
+    s = String(s);
+    ctx.save();
+    var size = o.size || 16;
+    ctx.font = font(o);
+    if (o.maxW) {
+      var w = ctx.measureText(s).width;
+      if (w > o.maxW) {
+        size = Math.max(6, size * o.maxW / w);
+        ctx.font = font({ font: o.font, size: size, weight: o.weight });
+      }
+    }
+    ctx.textAlign = o.align || 'center';
+    ctx.textBaseline = o.base || 'middle';
+    if (o.alpha !== undefined) ctx.globalAlpha *= o.alpha;
+    if (o.shadow) {
+      ctx.fillStyle = o.shadow;
+      ctx.fillText(s, x, y + (o.shadowY || Math.max(2, size * 0.12)));
+    }
+    if (o.stroke) {
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = o.strokeW || Math.max(2, size * 0.18);
+      ctx.strokeStyle = o.stroke;
+      ctx.strokeText(s, x, y);
+    }
+    ctx.fillStyle = o.color || '#fff';
+    ctx.fillText(s, x, y);
+    ctx.restore();
+    return size;
+  }
+
+  var measured = {}, measuredN = 0;
+  function measure(ctx, s, o) {
+    var f = font(o || {});
+    var key = f + '|' + s;
+    if (measured[key] !== undefined) return measured[key];
+    ctx.save();
+    ctx.font = f;
+    var w = ctx.measureText(String(s)).width;
+    ctx.restore();
+    if (++measuredN > 2000) { measured = {}; measuredN = 0; }
+    measured[key] = w;
+    return w;
+  }
+
+  /** Breaks `s` into lines no wider than `maxW`. */
+  function wrap(ctx, s, maxW, o) {
+    ctx.save();
+    ctx.font = font(o || {});
+    var words = String(s).split(/\s+/), lines = [], line = '';
+    for (var i = 0; i < words.length; i++) {
+      var test = line ? line + ' ' + words[i] : words[i];
+      if (ctx.measureText(test).width > maxW && line) {
+        lines.push(line);
+        line = words[i];
+      } else line = test;
+    }
+    if (line) lines.push(line);
+    ctx.restore();
+    return lines;
+  }
+
+  /** Wraps and shrinks until the whole thing fits in a box - the card
+      text, which runs from 23 to 56 characters and has to look settled
+      at both ends. Returns { lines, size }. */
+  function fit(ctx, s, maxW, maxH, o) {
+    var size = o.size;
+    var lines;
+    for (var guard = 0; guard < 24; guard++) {
+      lines = wrap(ctx, s, maxW, { font: o.font, size: size, weight: o.weight });
+      var lh = size * (o.lead || 1.18);
+      if (lines.length * lh <= maxH && lines.length <= (o.maxLines || 4)) break;
+      size *= 0.92;
+    }
+    return { lines: lines, size: size };
+  }
+
+  return {
+    C: C,
+    clamp: clamp, lerp: lerp, rand: rand, pick: pick, rng: rng,
+    rgba: rgba, shade: shade, mix: mix,
+    preload: preload, sprite: sprite, drawSprite: drawSprite, tinted: tinted,
+    petImage: petImage, drawPet: drawPet, petScale: petScale,
+    petFrames: petFrameCount, petFps: petFps,
+    rr: rr, star: star, panel: panel, glow: glow, vignette: vignette,
+    tape: tape, pin: pin, indexCard: indexCard, rubberStamp: rubberStamp,
+    text: text, textNow: textNow, measure: measure, wrap: wrap, fit: fit, font: font,
+    bake: bake, stamp: stamp, setScale: setScale,
+    FONT_ARCADE: FONT_ARCADE, FONT_ROUND: FONT_ROUND, FONT_MONO: FONT_MONO
+  };
+})();

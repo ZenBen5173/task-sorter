@@ -20,9 +20,10 @@ import androidx.webkit.WebViewAssetLoader;
  * Task Sorter, as an Android app.
  *
  * <p>The whole thing is one WebView holding the same game that runs on
- * the web. There is no second implementation and no bridge: the game
- * does not know it is inside an app, and nothing in js/ had to change
- * for this to exist.
+ * the web. There is no second implementation. The one bridge is
+ * {@link GameServices}, for HUAWEI's leaderboards and achievements, and
+ * the game treats it as optional: in a browser it is simply not there,
+ * and every call to it is a quiet no-op.
  *
  * <p><b>IT IS SERVED OVER HTTPS, NOT LOADED FROM file://.</b> The
  * obvious way to put a web game in a WebView is
@@ -44,7 +45,7 @@ import androidx.webkit.WebViewAssetLoader;
 public class MainActivity extends AppCompatActivity {
 
     /** The game's own background, so there is no white flash on launch. */
-    private static final int BACKDROP = Color.parseColor("#0a0e1a");
+    private static final int BACKDROP = Color.parseColor("#7a4f2a");
 
     private WebView web;
 
@@ -106,6 +107,10 @@ public class MainActivity extends AppCompatActivity {
         web.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
 
+        /* Badges and scores, for HUAWEI Game Service once it is connected.
+           See GameServices.java and js/services.js. */
+        web.addJavascriptInterface(new GameServices(), "HuaweiGames");
+
         setContentView(web);
         web.loadUrl("https://appassets.androidplatform.net/index.html");
 
@@ -133,15 +138,18 @@ public class MainActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
+                /* The page decides. Nav.back() closes an open sheet, pauses
+                   a round, or steps back to the home screen - and answers
+                   false only when there is nowhere left to go, which is
+                   the cue to leave the app.
+
+                   It used to guess: find whichever of four HTML back
+                   buttons was showing and click it. The game is drawn on
+                   a canvas now and those buttons no longer exist, so it
+                   asks the one function that knows. */
                 web.evaluateJavascript(
                         "(function(){"
-                      + "  var s = document.querySelector('.screen.is-on');"
-                      + "  if (!s || s.id === 'screen-home') return 'leave';"
-                      + "  var ids = ['#btn-exit','#btn-lv-back','#btn-guide-back','#tab-home'];"
-                      + "  for (var i = 0; i < ids.length; i++) {"
-                      + "    var b = document.querySelector(ids[i]);"
-                      + "    if (b && b.offsetParent) { b.click(); return 'handled'; }"
-                      + "  }"
+                      + "  if (window.Nav && Nav.back) return Nav.back() ? 'handled' : 'leave';"
                       + "  return 'leave';"
                       + "})()",
                         value -> {

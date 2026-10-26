@@ -14,6 +14,53 @@ This page is how to repeat the run without owning an Android phone.
 
 ---
 
+## Since then: the game is drawn on a canvas
+
+After the run below, the game was rebuilt so it plays like a game rather than a
+web page - one canvas, a real animation loop, no tab bar (see **Why it is drawn
+now** in the main README). The rules did not change. The canvas build was taken
+back through the device checks on the same emulator:
+
+- **Launch:** cold start in 2.4s to the title screen, on the game's own dark
+  backdrop - no white flash.
+- **Real input:** a real tap on TAP TO START, on PLAY, on a level on the map and
+  on its PLAY - all canvas-drawn buttons - and a real finger swipe that sorted
+  the first tutorial card (+100). A real tap on a shop tile bought the Duck:
+  coins 136 to 16, the pet appeared beside the character, the tile went green.
+- **Back:** in a round it pauses, pressed again it resumes; with the level card
+  open on the map it closes the card first, then goes home; from Gear it goes
+  home; on the home or title screen it leaves the app.
+- **The save:** byte-identical after `am force-stop` and a cold relaunch.
+- **Haptics:** `navigator.vibrate` exists in the WebView; the app now declares
+  the VIBRATE permission it needs.
+
+**Frame rate could not be judged on the emulator, and it is worth knowing why
+before anyone tries.** On it, a bare full-screen canvas that does nothing but
+fill one rectangle and 60 squares a frame - no game at all - manages 23 fps on
+the host GPU and 10 on SwiftShader, while the same test done in HTML gets 55
+to 58. The emulator's graphics translation is the bottleneck. In a desktop
+browser, where the canvas is GPU-accelerated as it is on a real phone, the round
+holds 60 fps at max combo for about 3 ms of the game's own work per frame.
+
+**So the frame rate check is now a real-phone check.** Open the game with `?fps`
+on the end of the address and a strip in the bottom corner shows the frame
+rate and the game's milliseconds per frame:
+
+```
+http://<the PC's LAN address>:8080/?fps      (run serve.ps1 on the PC)
+https://task-sorter-one.vercel.app/?fps
+```
+
+The game also steps its own resolution down if it cannot hold the frame rate,
+and the strip shows that too (`x2`, `x1.75`...).
+
+**Running the emulator for these checks: use `-no-audio`.** It plays the
+soundtrack through the PC's speakers otherwise. Note that with `-no-audio`, the
+emulator's WebView stalls on Web Audio, so measure frame rate with the sound
+switched off in Settings, or not at all.
+
+---
+
 ## ⚠️ Read this first: an emulator will not get you the 20 HUAWEI IDs
 
 An emulator is fine for **testing the app**. Do not plan on it for the
@@ -204,15 +251,20 @@ they are not, nothing else on this list matters.
 
 This is where the web version was broken before, so it is worth being thorough.
 
-- **Scroll the Gear screen** with a finger, all the way to the bottom.
-- Scroll **Me** and **Boss** too.
-- **Swipe a card** into each of the four corners.
-- Confirm the page does **not** slide about underneath you while you swipe.
+- **Drag a card** into each of the four corners. The tray you are heading for
+  should light up before you let go.
+- **Flick** one - a short fast throw should still sort.
+- **Tap a tray** with a card showing: the card should fly there.
+- Scroll the **shop** on the Gear screen, the **Settings** sheet, and turn the
+  **Guide Book**'s pages by swiping.
+- Confirm nothing slides about underneath you while you drag.
 
 ### The back button
 
-- Mid-round → should leave the level, not close the app.
-- On the map, Gear, Me, Guide → should go back one screen.
+- Mid-round → should **pause**, not leave and not close the app. Again → resume.
+- With a sheet open (Settings, the Guide Book, What you missed) → closes it.
+- On the map with a level card showing → closes the card; again → home.
+- On the map, Gear, Boss → home.
 - On the home screen → *now* it should close the app.
 
 ### Sound
@@ -224,8 +276,10 @@ This is where the web version was broken before, so it is worth being thorough.
 - **Press the home button.** The music must stop, not keep playing in your
   pocket.
 - Come back: it should resume.
-- Turn the switch off on the **Me** screen: music and effects both stop, and
-  stay off after closing and reopening the app.
+- Turn the switch off in **Settings** (the cog on the home screen): music and
+  effects both stop, and stay off after closing and reopening the app.
+- **Vibration**: a short buzz when a card lands, a double knock on a mistake.
+  The Settings switch turns it off.
 
 ### The screen itself
 
@@ -236,12 +290,15 @@ This is where the web version was broken before, so it is worth being thorough.
 
 ### Speed
 
-- Do cards fly in smoothly, or does it stutter?
-- Watch the falling petals and the pet animation — those are the most likely to
-  cost frames on a slow device.
+- Open the game with **`?fps`** and play a round fast. The number should sit at
+  or near 60, and the milliseconds well under 16.
+- Watch a Perfect (the screen freezes for a moment on purpose - that is the
+  hit-stop, not a stall), the confetti at the end, and the coins flying into
+  the wallet on the results screen.
+- If the `x` number drops below 2 during play, the game has stepped its
+  resolution down to keep up - worth writing down which phone did that.
 
-An emulator is *slower* than a real phone for graphics, so a stutter here is
-not proof of a problem — but smooth here almost certainly means smooth there.
+Do not judge this one on the emulator; see the top of this page.
 
 ### With no internet
 
@@ -252,6 +309,33 @@ Denied**, and Wi-Fi off).
 music, art, all of it. That is the whole reason the fonts are bundled and the
 soundtrack is generated. If the typography changes with the network off,
 something is still being fetched.
+
+### The new things (special cards, bosses, daily, missions, My List)
+
+All checked in a desktop browser with real taps and drags; these want a real
+finger on a real phone.
+
+- **Frozen card** (Level 2): tap the card itself twice and it cracks free;
+  tapping a tray first only says TAP TO CRACK.
+- **Burning card** (Level 3): the fuse runs down and the card shakes near the
+  end; leave one and it chars, and the reason shows.
+- **Trays swap** (Level 4, about 18 seconds in): drag a card while they slide -
+  it should follow the tray that ends up in that corner.
+- **A miss**: the right tray gets a moving dashed edge and the reason shows
+  under the top trays for a couple of seconds, while the next card is already
+  in play.
+- **Each boss once**: Steve's glue, Carla's swap, Ivan's blank trays, Dan's
+  fire, and the speech bubble under them.
+- **Daily**: play it, then check the DAILY door says the streak; play it again
+  and the bonus is not paid twice. Change the phone's date to tomorrow and the
+  door shows a new number with a !.
+- **My List**: type tasks with the phone keyboard, sort them, tick one off,
+  close and reopen the app - the plan is still there.
+- **Settings > Bigger text and Calm screen**: both should change the round at
+  once, not just the sheets.
+- **HUAWEI bridge**: `adb logcat -s TaskSorterGames` should print an
+  `achievement ...` line when a badge is earned and a `score daily = ...` line
+  after a daily round.
 
 ---
 

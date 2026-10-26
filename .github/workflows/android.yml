@@ -55,7 +55,7 @@ jobs:
         working-directory: android
         run: |
           APK=app/build/outputs/apk/debug/app-debug.apk
-          for f in assets/index.html assets/css/style.css assets/js/main.js \
+          for f in assets/index.html assets/css/game.css assets/js/main.js assets/js/stage.js assets/js/arena.js \
                    assets/assets/fonts/fredoka-variable.woff2; do
             unzip -l "$APK" | grep -q " $f\$" || { echo "MISSING FROM APK: $f"; exit 1; }
           done
