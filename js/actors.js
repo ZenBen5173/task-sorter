@@ -153,11 +153,11 @@ var Actors = (function () {
     Gfx.drawSprite(c, 'hero', 0, top + h / 2, w, h, flash);
 
     if (this.armour) {
-      Gfx.drawSprite(c, this.armour, left + 0, top + h * 0.62, w * 0.34, w * 0.34,
+      Gfx.drawSprite(c, this.armour, left + w * 0.1, top + h * 0.66, w * 0.36, w * 0.36,
         { rot: -8 * Math.PI / 180, tint: flash.tint, tintAmt: flash.tintAmt });
     }
     if (this.weapon) {
-      Gfx.drawSprite(c, this.weapon, left + w * 0.93, top + h * 0.53, w * 0.4, w * 0.4,
+      Gfx.drawSprite(c, this.weapon, left + w * 0.9, top + h * 0.56, w * 0.42, w * 0.42,
         { rot: 28 * Math.PI / 180 + this.lean.x * 0.08, tint: flash.tint, tintAmt: flash.tintAmt });
     }
     c.restore();
@@ -321,7 +321,9 @@ var Actors = (function () {
     var sq = this.sq.x + wind * 0.08;
     c.scale(1 / Math.max(0.6, sq), sq);
     c.globalAlpha = 1 - this.ko * 0.85;
-    Gfx.drawSprite(c, this.sprite, 0, 0, s, s, {
+    /* a hit screws their eyes shut */
+    var pic = this.flash > 0.25 && Gfx.sprite(this.sprite + '_hurt') ? this.sprite + '_hurt' : this.sprite;
+    Gfx.drawSprite(c, pic, 0, 0, s, s, {
       tint: this.flash > 0 ? this.flashColor : (wind > 0 ? '#ff6a5a' : null),
       tintAmt: this.flash > 0 ? this.flash : wind * 0.35
     });

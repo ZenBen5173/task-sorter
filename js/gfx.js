@@ -516,7 +516,10 @@ var Gfx = (function () {
 
   function sprite(name) {
     if (sprites[name]) return sprites[name];
-    if (window.SPRITE_OVERRIDES && SPRITE_OVERRIDES[name]) {
+    /* the characters and their gear are inked by js/doodle.js */
+    if (window.Doodle && Doodle.has(name)) {
+      sprites[name] = Doodle.get(name);
+    } else if (window.SPRITE_OVERRIDES && SPRITE_OVERRIDES[name]) {
       sprites[name] = loadImage(SPRITE_OVERRIDES[name]);
     } else if (window.SPRITE_DATA && SPRITE_DATA[name]) {
       sprites[name] = rasterise(SPRITE_DATA[name]);
@@ -538,7 +541,7 @@ var Gfx = (function () {
     var k;
     if (window.SPRITE_OVERRIDES) for (k in SPRITE_OVERRIDES) sprite(k);
     if (window.SPRITE_DATA) for (k in SPRITE_DATA) sprite(k);
-    if (window.PET_SHEETS) for (k in PET_SHEETS) petImage(k);
+    if (window.PET_SHEETS) for (k in PET_SHEETS) if (!(window.Doodle && Doodle.isPet(k))) petImage(k);
     /* The fonts count as one more thing to wait for. Answered by
        whichever comes first - the fonts arriving, or a timeout, because
        a font that never answers must not hold the game hostage - and
@@ -577,7 +580,7 @@ var Gfx = (function () {
     o = o || {};
     if (!h) h = w * natH(img) / natW(img);
     ctx.save();
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = !!img.doodle;
     if (o.alpha !== undefined) ctx.globalAlpha *= o.alpha;
     ctx.translate(cx, cy);
     if (o.rot) ctx.rotate(o.rot);
@@ -623,6 +626,7 @@ var Gfx = (function () {
   /** Draws frame `frame` of pet `key` standing with its feet on
       (cx, footY). Pets are drawn facing left; `flipX` turns them round. */
   function drawPet(ctx, key, cx, footY, box, frame, o) {
+    if (window.Doodle && Doodle.isPet(key)) { drawDoodlePet(ctx, key, cx, footY, box, frame, o || {}); return; }
     var sheet = window.PET_SHEETS && PET_SHEETS[key];
     if (!sheet) return;
     var img = petImage(key);
@@ -643,6 +647,26 @@ var Gfx = (function () {
     var sx = natW(img) / sheet.width, sy = natH(img) / sheet.height;
     ctx.drawImage(img, f * sheet.cellW * sx, 0, sheet.cellW * sx, sheet.cellH * sy,
                   -w / 2, -h, w, h);
+    ctx.restore();
+  }
+
+  /** A doodled pet has no frames to walk: it breathes and bobs on the
+      same frame counter a sheet would have used. Drawn facing left,
+      like the sheets were. */
+  function drawDoodlePet(ctx, key, cx, footY, box, frame, o) {
+    var img = Doodle.get(key);
+    var w = box * 1.05, h = w * img.height / img.width;
+    var n = petFrameCount(key), ph = ((frame || 0) % n) / n * Math.PI * 2;
+    var bob = Math.abs(Math.sin(ph)) * box * 0.05;
+    var br = 1 + Math.sin(ph * 2) * 0.025;
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    if (o.alpha !== undefined) ctx.globalAlpha *= o.alpha;
+    ctx.translate(cx, footY - bob);
+    ctx.scale((o.sx || 1) / br, (o.sy || 1) * br);
+    if (o.flipX) ctx.scale(-1, 1);
+    /* the canvas has a margin under the feet: sink it by that much */
+    ctx.drawImage(img, -w / 2, -h * 0.955, w, h);
     ctx.restore();
   }
 

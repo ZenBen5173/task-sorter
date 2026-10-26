@@ -227,7 +227,8 @@ orange.
 
 | File | What it does |
 |---|---|
-| `js/sprites.js` | **The pixel art.** Grids, and the PNGs that replaced some of them |
+| `js/doodle.js` | **The characters.** Hero, gear, bosses and pets as shapes, inked once into canvases |
+| `js/sprites.js` | **The pixel icons.** Small grids for the tab and badge icons |
 | `js/pets.js` | **The pet collection:** the thirteen sheets, and how they are played |
 | `js/themes.js` | **The backgrounds** you can pick |
 | `js/cloud.js` | **Accounts** and saving your progress online |
@@ -340,9 +341,9 @@ character and they jump; tap a pet and it hops.
 The doors carry no subtitles. A red **!** on GEAR means you can afford
 something; on DAILY it means today's round is waiting.
 
-The hero is drawn at **24x32**, chibi proportions on purpose - a big head and a
-short body, which is what the pets are, so the party looks like it came from
-one game. The figure is a composite, not thirty drawings: the shield and the
+The hero is a marker doodle (see **The characters** below), chibi proportions
+on purpose - a big head and a short body, which is what the pets are, so the
+party looks like it came from one game. The figure is a composite, not thirty drawings: the shield and the
 weapon are laid over the figure at the points its hands are, in percent of the
 figure, so one set of numbers works at every size the game draws it.
 
@@ -440,9 +441,9 @@ real thing from a desk. The design was drawn first, on Claude's Design canvas
 - **Three typefaces, each with one job.** Bungee for anything loud, Kalam
   handwriting for anything you read, IBM Plex Mono for typed labels. All three
   ship with the game (`assets/fonts/`).
-- **The characters stay pixel art.** The hero, the pets and the bosses are
-  pixel figures standing on a real desk - like stickers on it - which is a
-  deliberate mix, not a leftover.
+- **The characters are marker doodles.** The hero, the gear, the bosses and
+  the pets are drawn the way you would doodle on the desk: a wobbly ink line,
+  with the colour printed slightly off it.
 
 The props are drawn in `js/desk.js` (trays, index card, card back, timer, note)
 and `js/gfx.js` (tape, pins, the rubber stamp, the paper `panel` every box
@@ -707,9 +708,8 @@ so adding an item is one line.
 ### The pet collection
 
 Thirteen pets, brought over whole from **MyTask** with their own art and their
-own rarity. They are animated sprite sheets an artist drew, not 16x16 grids
-typed into `js/sprites.js`, so they live in `js/pets.js` and are played their
-own way - see **Animated pets** below.
+own rarity. They are doodles like everyone else (`js/doodle.js`); their names,
+prices and speeds live in `js/pets.js`.
 
 | Rarity | Pets | Gate |
 |---|---|---|
@@ -729,8 +729,6 @@ thirteen of them from being one of them and twelve trophies.
 All three legendaries sit behind a **battle** rather than a price, so the
 collection cannot be finished by grinding coins alone. That is what Battle mode
 is for.
-
-Art and licences: `assets/pets/CREDITS.md`.
 
 Each slot has a different job, and the jobs come from how you pass a level.
 Passing is decided by accuracy alone, so **armour protects your accuracy**,
@@ -818,62 +816,31 @@ so the wait went with it.
 
 ---
 
-## Swapping in real pixel art
+## The characters
 
-Open `js/sprites.js`, drop a PNG into `assets/sprites/`, and uncomment the
-matching line in `SPRITE_OVERRIDES`. That is the only change needed.
+Everyone with a face is drawn in `js/doodle.js` - the hero, the ten pieces of
+gear, the four bosses and the thirteen pets. Each is a short list of polygons,
+ellipses and pen strokes on its own little grid. The first time one is asked
+for, it is inked once into a canvas big enough for a phone screen, and from
+then on it is an ordinary sprite: `Gfx.sprite('steve')` and
+`Sprites.apply(el, 'duck')` hand it out under the name the pixel art had.
 
-Four sprites so far: `bang` (Do Now), `cal` (Do Later), `arrow` (Give Away),
-`bin` (Drop).
+**How a shape is inked.** The colour goes down first, nudged down and to the
+right. Then the outline, on the true spot, with every edge cut into short steps
+and each step pushed about a little. The wobble is worked out from where the
+point is, so the same shape always wobbles the same way and nothing shimmers.
+Eyes and their shine are solid ink and sit exactly where they are drawn.
 
----
+**A hit shows on the face.** Each boss has a second drawing, `steve_hurt` and
+so on, with the eyes screwed shut; it is shown while they flash from a hit.
 
-## Animated pets
+**Pets bob instead of walking frames.** On the stage a pet breathes and bobs
+on the same frame counter a sheet used to step; in the shop sheet CSS does the
+bob (`.pet-ink`), and stops it for anyone who asked for less motion.
 
-The thirteen pets are the one thing in the game that is not drawn in code. Each
-is a **sprite sheet**: one long strip of frames. On the stage they are sliced a
-frame at a time onto the canvas (`Gfx.drawPet`), and they walk: the one you
-equip trails your character at a pet's distance, the rest wander about the home
-screen and turn to face the way they are going. In the shop sheet, which is
-HTML, the same sheet is played by sliding `background-position` one cell to the
-left on a timer.
-
-**One timer for the whole game.** The shop shows fourteen pets at once, and
-fourteen separate intervals would be fourteen things to start, stop and leak.
-Every pet in the shop goes into one list that a single ticker walks. It drops
-anything that has left the page, and **skips anything whose sheet is not open**
-- otherwise the shop's fourteen would keep running frame by frame behind a
-round you were in the middle of. It asks by CSS class rather than by
-measuring, because reading a position makes the browser lay the page out, and
-that is the one thing a 25-times-a-second timer must never do.
-
-**Adding a pet** is a sheet in `assets/pets/` and one entry in `PET_SHEETS`:
-
-```js
-kitten: {
-  name: 'Kitten', src: 'assets/pets/kitten.png',
-  cellW: 35, cellH: 48, width: 350, height: 48,
-  frames: 10, fps: 12, body: { w: 34, h: 48 }, offset: 0
-},
-```
-
-### Why `body` and `offset` exist
-
-**A cell is not a creature.** The Phoenixling is a 23x21 bird adrift in a 40x56
-cell, because the cell has to be tall enough for its rebirth animation. The
-Dragon fills 79x41 of its 83x48. Scale both to the same cell height and the
-bird comes out half the size of the dragon - because it is.
-
-So a pet is scaled off `body`, the part that is actually drawn, and `offset`
-lifts it off the floor of its cell into the middle of its box. There is a
-second cap on the **cell**: without it the Phoenixling's bird would match the
-others while its canvas grew to two and a half tiles tall, hanging over
-everything around it. The bird ends up a little smaller than a creature that
-fills its own cell, which is the honest answer - it is a smaller creature.
-
-The frame that hangs outside its box is transparent, so it never covers
-anything, and it is `pointer-events: none`, so a tap meant for the tile next
-door never buys a Phoenixling instead.
+**Adding a pet** is a shape list in `PETS` in `js/doodle.js` (drawn facing
+right on an 80 x 72 grid; it is flipped to face left like the old sheets) and
+one entry in `PET_SHEETS` in `js/pets.js` for its name and speed.
 
 ---
 

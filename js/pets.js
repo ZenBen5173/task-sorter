@@ -1,98 +1,73 @@
 /* ============================================================
-   pets.js  -  the animated pet collection
+   pets.js  -  the thirteen pets
    ------------------------------------------------------------
-   The thirteen buddies from MyTask, brought across whole. Every
-   one is a real sprite sheet drawn by an artist, not a 16x16 grid
-   typed out in js/sprites.js - so they get their own file and
-   their own way of being drawn.
+   Their names, and the frame counter each one bobs on. The pictures
+   are marker doodles in js/doodle.js; on the stage Gfx.drawPet draws
+   them, and in the shop sheet `apply` puts one in a box that CSS
+   bobs up and down.
 
-   HOW THEY ARE PLAYED
-   A sheet is one long strip of frames. The pet is a box with the
-   strip as its background, and playing it is nothing more than
-   sliding `background-position` one cell to the left on a timer.
-   No canvas, no redraw per frame, and it costs nothing on a screen
-   that already has cards flying about.
+   The cell sizes and `body` below are left from the sprite sheets
+   these replaced; `frames` and `fps` still set the pace of the bob.
 
-   ONE TIMER FOR THE WHOLE GAME. The shop shows fourteen pets at
-   once; fourteen separate intervals would be fourteen things to
-   start, stop and leak. Instead every pet on screen is registered
-   in one list and a single ticker walks it, dropping anything that
-   has left the page. See `step` at the bottom.
-
-   ADDING A PET: drop the sheet in assets/pets/ and add an entry.
-     cellW, cellH   one frame, in real pixels
-     width, height  the whole sheet, so the background can scale
-     frames, fps    how many cells and how fast to walk them
-     body           the biggest box the creature actually fills
-     offset         how far its middle sits below the cell's middle
-     name           what the shop calls it
-
-   WHY `body` AND `offset` EXIST
-   A cell is not a creature. The Phoenixling is a 23x21 bird adrift
-   in a 40x56 cell, because the cell is tall enough for the rebirth
-   animation; the Dragon fills 79x41 of its 83x48. Scale both to the
-   same cell height and the bird comes out half the size of the
-   dragon, because it is. So the scale is worked out from `body`,
-   the part that is actually drawn, and `offset` slides the creature
-   off the floor of its cell and into the middle of its box.
-
-   ART AND LICENCES: see assets/pets/CREDITS.md.
+   ONE TIMER FOR THE WHOLE GAME is kept for a sheet-drawn pet, should
+   one ever come back: every one on screen is in one list that a
+   single ticker walks, dropping anything that has left the page.
    ============================================================ */
 
 var PET_SHEETS = {
 
   duck: {
-    name: 'Duck', src: 'assets/pets/duck.png',
+    name: 'Duck',
     cellW: 31, cellH: 48, width: 310, height: 48,
     frames: 10, fps: 12, body: { w: 30, h: 48 }, offset: 0
   },
   kitten: {
-    name: 'Kitten', src: 'assets/pets/kitten.png',
+    name: 'Kitten',
     cellW: 35, cellH: 48, width: 350, height: 48,
     frames: 10, fps: 12, body: { w: 34, h: 48 }, offset: 0
   },
   mushroom: {
-    name: 'Mushroom', src: 'assets/pets/mushroom.png',
+    name: 'Mushroom',
     cellW: 45, cellH: 48, width: 450, height: 48,
     frames: 10, fps: 12, body: { w: 45, h: 48 }, offset: 0
   },
   hatchling: {
-    name: 'Hatchling', src: 'assets/pets/hatchling.png',
+    name: 'Hatchling',
     cellW: 24, cellH: 36, width: 120, height: 36,
     frames: 5, fps: 12, body: { w: 24, h: 36 }, offset: 0
   },
   bunny: {
-    name: 'Bunny', src: 'assets/pets/bunny.png',
+    name: 'Bunny',
     cellW: 31, cellH: 48, width: 248, height: 48,
     frames: 8, fps: 12, body: { w: 31, h: 48 }, offset: 0
   },
   slime: {
-    name: 'Adventurer', src: 'assets/pets/slime.png',
+    name: 'Adventurer',
     cellW: 44, cellH: 48, width: 440, height: 48,
     frames: 10, fps: 12, body: { w: 44, h: 48 }, offset: 0
   },
   teddy_bear: {
-    name: 'Teddy Bear', src: 'assets/pets/teddy_bear.png',
+    name: 'Teddy Bear',
     cellW: 32, cellH: 48, width: 320, height: 48,
     frames: 10, fps: 12, body: { w: 32, h: 48 }, offset: 0
   },
   penguin: {
-    name: 'Penguin', src: 'assets/pets/penguin.png',
+    name: 'Penguin',
     cellW: 31, cellH: 48, width: 310, height: 48,
     frames: 10, fps: 12, body: { w: 30, h: 48 }, offset: 0
   },
   zombie: {
-    name: 'Zombie', src: 'assets/pets/zombie.png',
+    name: 'Zombie',
     cellW: 38, cellH: 48, width: 342, height: 48,
     frames: 9, fps: 12, body: { w: 37, h: 48 }, offset: 0
   },
   flame_sprite: {
-    name: 'Flame Sprite', src: 'assets/pets/flame_sprite.png',
+    name: 'Flame Sprite',
     cellW: 26, cellH: 18, width: 338, height: 18,
     frames: 13, fps: 12, body: { w: 26, h: 18 }, offset: 0
   },
   polar_bear: {
-    name: 'Polar Bear', src: 'assets/pets/polar_bear.png',
+    name: 'Polar Bear',
     cellW: 32, cellH: 48, width: 320, height: 48,
     frames: 10, fps: 12, body: { w: 32, h: 48 }, offset: 0
   },
@@ -100,14 +75,14 @@ var PET_SHEETS = {
      down to a strip. It is the widest creature in the set by a long
      way, so it ends up the smallest on screen for its box. */
   dragon: {
-    name: 'Dragon', src: 'assets/pets/dragon.png',
+    name: 'Dragon',
     cellW: 83, cellH: 48, width: 1328, height: 48,
     frames: 16, fps: 12, body: { w: 79, h: 41 }, offset: 4
   },
   /* The idle bird sits on the floor of a cell built tall enough for
      the rebirth animation, hence the big offset. */
   phoenix: {
-    name: 'Phoenixling', src: 'assets/pets/phoenix.png',
+    name: 'Phoenixling',
     cellW: 40, cellH: 56, width: 640, height: 112,
     frames: 4, fps: 6, body: { w: 23, h: 21 }, offset: 15
   }
@@ -147,6 +122,17 @@ var Pets = (function () {
     el.innerHTML = '';
     el.classList.add('pet-art');
     el.style.backgroundImage = '';     // clear any 16x16 sprite left behind
+
+    /* A doodled pet is one picture that bobs (CSS does the bob). */
+    if (window.Doodle && Doodle.isPet(key)) {
+      var ink = document.createElement('span');
+      ink.className = 'pet-ink';
+      ink.style.width = ink.style.height = Math.round(box * 1.2) + 'px';
+      ink.style.backgroundImage = 'url("' + Doodle.url(key) + '")';
+      ink.style.animationDelay = -(Math.random() * 1.2).toFixed(2) + 's';
+      el.appendChild(ink);
+      return true;
+    }
 
     /* Scaled off the body, so a small bird on a tall canvas comes out
        the same size as a creature that fills its cell. Capped, or the

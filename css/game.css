@@ -127,6 +127,10 @@ html, body {
   image-rendering: pixelated;
 }
 .pet-art { display: flex; align-items: center; justify-content: center; overflow: visible; background: none; }
+.ink-art { image-rendering: auto; }
+.pet-ink { display: block; flex: 0 0 auto; background: no-repeat center bottom / contain; pointer-events: none; transform-origin: 50% 100%; animation: pet-bob 1.2s ease-in-out infinite; }
+@keyframes pet-bob { 50% { transform: translateY(-6%) scale(1.03, .97); } }
+@media (prefers-reduced-motion: reduce) { .pet-ink { animation: none; } }
 .pet-frame { display: block; flex: 0 0 auto; background-repeat: no-repeat; pointer-events: none; image-rendering: pixelated; }
 
 /* ---------------- buttons ----------------
