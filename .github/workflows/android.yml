@@ -56,7 +56,7 @@ jobs:
         run: |
           APK=app/build/outputs/apk/debug/app-debug.apk
           for f in assets/index.html assets/css/game.css assets/js/main.js assets/js/stage.js assets/js/arena.js \
-                   assets/assets/fonts/fredoka-variable.woff2; do
+                   assets/assets/fonts/bungee-400.woff2; do
             unzip -l "$APK" | grep -q " $f\$" || { echo "MISSING FROM APK: $f"; exit 1; }
           done
           echo "APK contains the game:"
