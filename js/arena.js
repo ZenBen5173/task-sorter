@@ -488,6 +488,11 @@ var Arena = (function () {
     Haptics.good();
 
     var popAt = { x: tr.cx, y: tr.cy + (tr.y < L.rest.y ? tr.h * 0.62 : -tr.h * 0.62) };
+    /* A streak milestone puts its banner just above the bottom trays -
+       exactly where a bottom tray's points pop - so on that sort the
+       points rise clear of it instead of printing through it. */
+    var milestone = r.streak === 5 || r.streak === 8 || (r.streak > 8 && r.streak % 5 === 0);
+    if (milestone && tr.y >= L.rest.y) popAt.y -= 48;
     if (r.mine) {
       pop(BOXES[r.box].label.toUpperCase(), popAt.x, popAt.y, '#ffffff', 15);
       if (hero) hero.cheer(0.5);
@@ -523,7 +528,7 @@ var Arena = (function () {
     Spring.kick(hud.comboPunch, 5);
     if (hero) hero.cheer(Math.min(1, 0.3 + r.streak * 0.08));
     /* Milestones in a streak get their own moment. */
-    if (r.streak === 5 || r.streak === 8 || (r.streak > 8 && r.streak % 5 === 0)) {
+    if (milestone) {
       banner(r.streak >= 8 ? 'MAX COMBO!' : 'COMBO x' + r.streak, {
         color: r.streak >= 8 ? '#ff7ad9' : '#ffb43a', size: 22, life: 900,
         y: L.bottom - L.trayH - 34, slot: 'low', rays: r.streak === 8
@@ -1524,7 +1529,10 @@ var Arena = (function () {
       var a = k > 0.7 ? 1 - (k - 0.7) / 0.3 : 1;
       c.save();
       c.globalAlpha = a;
-      c.translate(p.x, p.y - rise);
+      /* Kept on the screen: a corner tray's points would otherwise
+         print half off the edge. */
+      var half = Gfx.measure(c, p.text, { font: 'arcade', size: p.size }) / 2 + 8;
+      c.translate(Gfx.clamp(p.x, half, W - half), p.y - rise);
       c.scale(s, s);
       Gfx.text(c, p.text, 0, 0, { font: 'arcade', size: p.size, color: p.color, stroke: '#2a1e12', strokeW: Math.max(4, p.size * 0.3) });
       c.restore();
