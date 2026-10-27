@@ -159,7 +159,7 @@ before the buttons.
 
 **The game pointed at real life.** Open MY LIST on the home screen, type in what
 is actually on your plate - "Science project due Friday", "Reply to grandma" -
-and press **Sort my list**. It plays like a round of your own cards: same four
+and press **Sort**. It plays like a round of your own cards: same four
 trays, same drag, no clock, **no score and no wrong answers**, because only you
 know whether your project is a Do Now.
 
@@ -548,7 +548,7 @@ Score swings enormously - a x8 streak with Perfect bonuses is worth more than
 ten times a careless sort. A near-perfect test run scored 249,708 against an
 early target of 3,000. Any score target is therefore either trivial or
 impossible, so passing tests the thing the game is actually about: getting them
-right, and not drowning. Score still drives your grade and the leaderboard.
+right, and not drowning. Score is what goes on the leaderboard (once HUAWEI Game Service is connected); the grade comes from accuracy and your best streak.
 
 ---
 
@@ -709,7 +709,7 @@ so adding an item is one line.
 
 Thirteen pets, brought over whole from **MyTask** with their own art and their
 own rarity. They are doodles like everyone else (`js/doodle.js`); their names,
-prices and speeds live in `js/pets.js`.
+prices and bonuses live in `js/shop.js`.
 
 | Rarity | Pets | Gate |
 |---|---|---|
@@ -768,7 +768,7 @@ A locked tile shows the reason on its price tag (*"Reach level 3"*,
 and do. The top item in each group is gated behind a **boss fight**, which is
 what gives the Boss screen a purpose beyond coins.
 
-There are 18 items: six per group, five of them buyable.
+There are 24 things to buy: 13 pets, 5 shields and 5 weapons, plus an empty slot in each group.
 
 ### The full-set bonus
 
@@ -776,11 +776,11 @@ Wear a pet **and** armour **and** a weapon at the same time and every coin
 payout goes up by **25%** — levels and battles both.
 
 It is deliberately about filling all three slots rather than owning expensive
-gear, so the cheapest full set (Paper Crane + Wood Shield + Dagger, 370 coins) earns
+gear, so the cheapest full set (Duck + Wood Shield + Dagger, 340 coins) earns
 the bonus just as well as the priciest one. That gives a new player something
 reachable to aim for instead of grinding for one costly item.
 
-The Character screen shows a gold **Full set!** banner when it is active, and a
+The Gear screen shows a gold **FULL SET** banner when it is active, and a
 greyed-out reminder when it is not. `setBonus` in `js/shop.js` controls it.
 
 ### Coins
@@ -888,8 +888,8 @@ timer stays honest even if the app goes to the background.
       record the soundtrack separately, or play over it)
 - [x] Store screenshots, 1080 x 1920 - `store/screenshots/`
 - [x] Store text: name, short and long description - `store/listing.md`
-- [x] An installable Android app — `android/`, about 3.4 MB
-- [x] Under **100 MB** — the APK is 3.4 MB, the game itself under 1 MB
+- [x] An installable Android app — `android/`, about 4 MB
+- [x] Under **100 MB** — the APK is about 4 MB, the game itself under 1 MB
 - [x] **Run the APK.** Done on an Android 15 emulator (Pixel 7, API 35): save
       survives a cold start, touch and the back button behave, portrait holds,
       it clears a notch, 60 fps, works with the network off. Three bugs found
@@ -963,7 +963,7 @@ break it and it starts again from the bottom. That one idea does more for
 
 ## The Android app
 
-`android/` wraps the game into an APK. About 3.4 MB.
+`android/` wraps the game into an APK. About 4 MB.
 
 **There is no second copy of the game in there.** The obvious approach is to
 copy `index.html`, `css`, `js` and `assets` into the Android assets folder and
@@ -973,8 +973,9 @@ repository root at build time instead, so the app and the website are built
 from the same files and cannot drift.
 
 Nothing in `js/` changed for the app to exist, and nothing in it knows it is
-inside one. One Activity, one WebView, no bridge - so there is still only one
-game to test.
+inside one. One Activity, one WebView, and one optional bridge (`GameServices`,
+for HUAWEI Game Service) that the game treats as a no-op when it is
+missing - so there is still only one game to test.
 
 **It is served over https, not loaded from `file://`.** The usual way is
 `loadUrl("file:///android_asset/index.html")` and it mostly works, which is
@@ -1036,8 +1037,8 @@ and why.
 
 It is not a working feature. Playing a real person needs a server on the
 internet to pair two players and pass their moves between the phones, and
-this game has no server - it is files that run on the phone and never go
-online.
+this game has no server for that - the game itself is files that run on
+the phone, and only the optional cloud save goes online.
 
 There is deliberately **no pretend matchmaking**: no fake "searching for
 players..." spinner and no computer opponent dressed up as a human. Anyone
