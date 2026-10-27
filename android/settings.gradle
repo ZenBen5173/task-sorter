@@ -8,9 +8,12 @@
 pluginManagement {
   repositories { google(); mavenCentral(); gradlePluginPortal() }
 }
+/* HUAWEI publishes HMS Core and its Gradle plugin on its own Maven
+   repository, not on Google's or Maven Central. */
+def huaweiRepo = 'https://developer.huawei.com/repo/'
 dependencyResolutionManagement {
   repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-  repositories { google(); mavenCentral() }
+  repositories { google(); mavenCentral(); maven { url huaweiRepo } }
 }
 rootProject.name = "Task Sorter"
 include ":app"

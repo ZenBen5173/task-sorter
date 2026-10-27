@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int BACKDROP = Color.parseColor("#7a4f2a");
 
     private WebView web;
+    private GameServices games;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -107,14 +108,23 @@ public class MainActivity extends AppCompatActivity {
         web.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
 
-        /* Badges and scores, for HUAWEI Game Service once it is connected.
-           See GameServices.java and js/services.js. */
-        web.addJavascriptInterface(new GameServices(), "HuaweiGames");
+        /* Badges and scores, for HUAWEI Game Service. See
+           GameServices.java and js/services.js. */
+        games = new GameServices(this);
+        web.addJavascriptInterface(games, "HuaweiGames");
 
         setContentView(web);
         web.loadUrl("https://appassets.androidplatform.net/index.html");
 
         wireBackButton();
+        games.start();
+    }
+
+    /* HUAWEI's sign-in sheet reports back here. */
+    @Override
+    protected void onActivityResult(int request, int result, android.content.Intent data) {
+        super.onActivityResult(request, result, data);
+        if (request == GameServices.SIGN_IN) games.onSignInResult(data);
     }
 
     /**

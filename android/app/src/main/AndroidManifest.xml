@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- The cloud save only. Everything the game needs to be played -
          the code, the art, the fonts, the soundtrack - is inside the
@@ -14,7 +15,11 @@
          switched off in Settings. -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- tools:replace: the HMS game library asks for allowBackup="false".
+         Ours stays true, so a phone backup keeps the player's save. -->
     <application
+        tools:replace="android:allowBackup"
+        android:name=".TaskSorterApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"

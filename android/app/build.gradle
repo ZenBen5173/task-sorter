@@ -1,5 +1,15 @@
 plugins { id 'com.android.application' }
 
+/* HUAWEI Game Service is switched on by one file: agconnect-services.json,
+   downloaded from the app's AppGallery Connect project into this folder.
+   With it, the AGC plugin reads the app id from it and GameServices signs
+   the player in with their HUAWEI ID and sends badges and scores to
+   Analytics Kit. Without it - in CI, or on
+   a machine that has not got it yet - the APK still builds and the game
+   plays exactly the same, with GameServices only writing to the log. */
+def hmsReady = file('agconnect-services.json').exists()
+if (hmsReady) apply plugin: 'com.huawei.agconnect'
+
 android {
   namespace 'com.tasksorter.game'
   compileSdk 35
@@ -14,7 +24,10 @@ android {
     targetSdk 35
     versionCode 1
     versionName "1.0"
+    buildConfigField 'boolean', 'HMS_READY', String.valueOf(hmsReady)
   }
+
+  buildFeatures { buildConfig true }
 
   buildTypes {
     release {
@@ -46,6 +59,12 @@ dependencies {
      over https rather than loaded from file://. */
   implementation 'androidx.webkit:webkit:1.12.1'
   implementation 'androidx.appcompat:appcompat:1.7.0'
+
+  /* HUAWEI ID sign-in through Game Service, and Analytics Kit for badges
+     and scores. See GameServices.java. */
+  implementation 'com.huawei.hms:game:6.16.2.300'
+  implementation 'com.huawei.hms:hwid:6.12.0.300'
+  implementation 'com.huawei.hms:hianalytics:6.12.0.301'
 }
 
 /* ---- the game goes in as assets ----
