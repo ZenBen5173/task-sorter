@@ -426,6 +426,8 @@ var Stage = (function () {
     return { x: (e.clientX - r.left) - colX, y: (e.clientY - r.top) };
   }
 
+  var ghost = null;   // the last canvas tap: where and when it lifted
+
   function bindInput() {
     cv.addEventListener('pointerdown', function (e) {
       if (trans || inputBlocked) return;
@@ -438,9 +440,25 @@ var Stage = (function () {
       if (scene && scene.pointer) scene.pointer('move', p.x, p.y, e);
     });
     cv.addEventListener('pointerup', function (e) {
+      if (e.pointerType !== 'mouse') ghost = { t: Date.now(), x: e.clientX, y: e.clientY };
       var p = toLocal(e);
       if (scene && scene.pointer) scene.pointer('up', p.x, p.y, e);
     });
+    /* GHOST CLICKS. A canvas button fires on pointerup, and a sheet can
+       open under the finger in that same moment. Android Chrome then
+       sends the tap's own "click" a beat later - and it lands on
+       whatever is now under the finger: the dimmed backdrop, which
+       closes the sheet it just opened, or a control inside the sheet.
+       iPad Safari aims that click at the canvas instead, which is why
+       it only went wrong on Android. Swallow the click that belongs to
+       a canvas tap. */
+    document.addEventListener('click', function (e) {
+      if (!ghost || e.target === cv) return;
+      if (Date.now() - ghost.t < 600 && Math.abs(e.clientX - ghost.x) < 30 && Math.abs(e.clientY - ghost.y) < 30) {
+        e.preventDefault(); e.stopPropagation();
+      }
+      ghost = null;
+    }, true);
     cv.addEventListener('pointercancel', function (e) {
       var p = toLocal(e);
       if (scene && scene.pointer) scene.pointer('cancel', p.x, p.y, e);
