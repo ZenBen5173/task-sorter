@@ -300,7 +300,11 @@ var Music = (function () {
   var FOR_SCREEN = {
     play: 'play', rush: 'rush', battle: 'battle',
     title: 'title',
-    home: 'menu', map: 'menu', gear: 'menu', bosses: 'menu'
+    home: 'menu', map: 'menu', gear: 'menu', bosses: 'menu',
+    /* The menu screens ask for their tune BY NAME ('menu'), not by
+       screen - so the name has to be here too, or every menu screen
+       is silent. */
+    menu: 'menu'
     /* `results` and `vs` are deliberately missing: each plays its own
        moment over silence, and a loop under a fanfare is mud. */
   };
