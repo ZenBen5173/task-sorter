@@ -164,15 +164,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
   /* THE FIRST TAP UNLOCKS THE SOUND. Nothing is allowed to make a noise
      until the person has touched the page; this asks again on the first
-     real gesture, then takes itself off. */
+     real gesture, then takes itself off.
+     Android Chrome does not count a finger going DOWN as a gesture -
+     only lifting it - so a resume asked for on pointerdown is refused
+     there and the game stayed silent. Listen for the lift too, and only
+     stop listening once the sound is actually running. */
   (function () {
+    var EVENTS = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'];
     function wake() {
       if (window.Music) Music.wake();
-      document.removeEventListener('pointerdown', wake, true);
-      document.removeEventListener('keydown', wake, true);
+      var a = window.UI && UI.sound && UI.sound.ctx();
+      if (a && a.state === 'running') {
+        EVENTS.forEach(function (t) { document.removeEventListener(t, wake, true); });
+      }
     }
-    document.addEventListener('pointerdown', wake, true);
-    document.addEventListener('keydown', wake, true);
+    EVENTS.forEach(function (t) { document.addEventListener(t, wake, true); });
   })();
 
   /* A game has no business singing to a tab nobody is looking at, and on
